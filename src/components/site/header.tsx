@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import { Wordmark } from "@/components/brand/logo";
 import { GithubIcon } from "@/components/icons/github";
+import { ThemeToggle } from "@/components/site/theme-toggle";
+import { UserMenu } from "@/components/site/user-menu";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/messages";
 
@@ -15,9 +17,9 @@ export function SiteHeader() {
         </Link>
         <nav className="flex items-center gap-1">
           <Button asChild variant="ghost" size="xl">
-            <Link href="/harta">
+            <Link href="/harta" aria-label={t.nav.map}>
               <MapPin aria-hidden="true" />
-              {t.nav.map}
+              <span className="hidden sm:inline">{t.nav.map}</span>
             </Link>
           </Button>
           <Button asChild variant="ghost" size="icon-xl" aria-label={t.nav.github}>
@@ -25,6 +27,8 @@ export function SiteHeader() {
               <GithubIcon />
             </a>
           </Button>
+          <ThemeToggle />
+          <UserMenu />
         </nav>
       </div>
     </header>
