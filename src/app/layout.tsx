@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 
 import { SITE_URL } from "@/lib/site";
 
@@ -37,7 +38,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ro" className={`${inter.variable} ${bricolage.variable} antialiased`}>
-      <body className="bg-background text-foreground flex min-h-dvh flex-col">{children}</body>
+      <body className="bg-background text-foreground flex min-h-dvh flex-col">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
