@@ -31,3 +31,6 @@ Thumbs.db
 !.vscode/extensions.json
 *.log
 map-check.png
+
+# planning docs stay local until they document the app itself
+docs/
