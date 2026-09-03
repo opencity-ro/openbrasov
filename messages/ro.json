@@ -1,0 +1,53 @@
+{
+  "brand": {
+    "name": "Open Brașov",
+    "tagline": "Platformă civică open source pentru Brașov"
+  },
+  "nav": {
+    "map": "Harta",
+    "report": "Sesizează",
+    "github": "Cod sursă pe GitHub"
+  },
+  "home": {
+    "eyebrow": "Platforma civică din Brașov",
+    "title": "Fotografiezi. AI-ul scrie. Instituția primește.",
+    "subtitle": "O groapă, un stâlp căzut, gunoi lăsat pe stradă. Faci o poză, noi generăm sesizarea oficială cu temei legal și o trimiți instituției responsabile din emailul tău. Durează două minute.",
+    "ctaMap": "Vezi harta",
+    "ctaReport": "Sesizează o problemă",
+    "ctaReportSoon": "În curând",
+    "steps": [
+      {
+        "title": "Fotografiezi problema",
+        "body": "Orice problemă din spațiul public al Brașovului, direct de pe telefon."
+      },
+      {
+        "title": "AI-ul scrie sesizarea",
+        "body": "Text oficial, temei legal, instituția responsabilă. Tu verifici și aprobi."
+      },
+      {
+        "title": "Instituția primește",
+        "body": "Sesizarea pleacă din emailul tău către Primărie, Poliția Locală sau operatorul responsabil."
+      }
+    ],
+    "openSourceTitle": "Deschis de la primul commit",
+    "openSourceBody": "Codul este public sub licență AGPL-3.0. Poți verifica cum funcționează, raporta probleme sau contribui."
+  },
+  "map": {
+    "title": "Harta sesizărilor",
+    "emptyTitle": "Încă nu sunt sesizări",
+    "emptyBody": "Harta se va umple pe măsură ce brașovenii raportează probleme. În curând.",
+    "locate": "Localizează-mă",
+    "loading": "Se încarcă harta…"
+  },
+  "footer": {
+    "independent": "Proiect independent, neafiliat Primăriei Brașov sau altei instituții publice.",
+    "license": "Licență AGPL-3.0",
+    "terms": "Termeni",
+    "privacy": "Confidențialitate"
+  },
+  "legal": {
+    "draft": "Document în lucru. Versiunea finală apare înainte de lansarea publică.",
+    "termsTitle": "Termeni și condiții",
+    "privacyTitle": "Politica de confidențialitate"
+  }
+}

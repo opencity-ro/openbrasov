@@ -32,8 +32,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ro" className={`${inter.variable} ${bricolage.variable} h-full antialiased`}>
-      <body className="bg-background text-foreground flex min-h-full flex-col">{children}</body>
+    <html lang="ro" className={`${inter.variable} ${bricolage.variable} antialiased`}>
+      <body className="bg-background text-foreground flex min-h-dvh flex-col">{children}</body>
     </html>
   );
 }
