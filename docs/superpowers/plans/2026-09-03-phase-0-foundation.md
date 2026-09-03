@@ -31,6 +31,7 @@
 **Files:** none.
 
 **Interfaces:**
+
 - Produces: GitHub org slug (`opencity-ro`), machine account `openbrasov-ro` as org member with write access, Vercel account on `openbrasov@gmail.com`, Supabase project URL + publishable key, Vercel GitHub App installed on the org.
 
 - [ ] **Step 1: Create GitHub organization**
@@ -58,36 +59,44 @@ supabase.com → sign up with email `openbrasov@gmail.com` → New organization 
 ## Task 1: Scaffold Next.js 16 app with pnpm
 
 **Files:**
+
 - Create: `package.json`, `pnpm-lock.yaml`, `tsconfig.json`, `next.config.ts`, `eslint.config.mjs`, `postcss.config.mjs`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/globals.css`, `public/*` (generated), `.nvmrc`, `.editorconfig`, `.prettierrc`, `.prettierignore`
 - Modify: `.gitignore`
 
 **Interfaces:**
+
 - Produces: `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm format`, `pnpm format:check` scripts. Import alias `@/*` → `src/*`.
 
 - [ ] **Step 1: Enable pnpm via corepack**
 
 Run:
+
 ```bash
 corepack enable && corepack prepare pnpm@latest --activate && pnpm -v
 ```
+
 Expected: prints a `10.x.x` version.
 
 - [ ] **Step 2: Scaffold into the existing directory**
 
 Run from `C:/My Folders/IT/open-brasov`:
+
 ```bash
 pnpm dlx create-next-app@latest . --ts --tailwind --eslint --app --src-dir --use-pnpm --import-alias "@/*" --yes
 ```
+
 Expected: "Success! Created open-brasov" and files `package.json`, `src/app/page.tsx`, `next.config.ts` exist. (`create-next-app` accepts a non-empty dir when it only contains `.git`, `.gitignore`, `docs`, `LICENSE`, `README.md`.) If it refuses because `AGENTS.md` or `README.md` conflict, delete the generated conflicts and re-run.
 
 - [ ] **Step 3: Pin Node and set package metadata**
 
 Create `.nvmrc`:
+
 ```
 22
 ```
 
 Edit `package.json` so the top looks like this (keep the generated `dependencies`/`devDependencies`, keep the `packageManager` field create-next-app wrote):
+
 ```json
 {
   "name": "openbrasov",
@@ -117,11 +126,13 @@ Edit `package.json` so the top looks like this (keep the generated `dependencies
 - [ ] **Step 4: Add Prettier and editor config**
 
 Run:
+
 ```bash
 pnpm add -D prettier prettier-plugin-tailwindcss
 ```
 
 Create `.prettierrc`:
+
 ```json
 {
   "semi": true,
@@ -133,6 +144,7 @@ Create `.prettierrc`:
 ```
 
 Create `.prettierignore`:
+
 ```
 .next
 node_modules
@@ -144,6 +156,7 @@ CHANGELOG.md
 ```
 
 Create `.editorconfig`:
+
 ```
 root = true
 
@@ -160,11 +173,13 @@ trim_trailing_whitespace = false
 ```
 
 Create `.gitattributes` (forces LF so Windows checkouts do not flip line endings):
+
 ```
 * text=auto eol=lf
 ```
 
 Replace `.gitignore` with:
+
 ```
 # deps
 node_modules/
@@ -197,9 +212,11 @@ Thumbs.db
 - [ ] **Step 5: Verify scripts run**
 
 Run:
+
 ```bash
 pnpm typecheck && pnpm lint && pnpm format && pnpm build
 ```
+
 Expected: all exit 0; build prints the route table with `/`.
 
 - [ ] **Step 6: Commit**
@@ -216,23 +233,27 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ## Task 2: Open source hygiene files
 
 **Files:**
+
 - Create: `LICENSE`, `README.md` (overwrite generated), `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `.github/CODEOWNERS`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/ISSUE_TEMPLATE/bug.yml`, `.github/ISSUE_TEMPLATE/feature.yml`, `.github/ISSUE_TEMPLATE/config.yml`, `.github/dependabot.yml`
 - Delete: `AGENTS.md` if create-next-app generated one (we keep agent guidance in `docs/`).
 
 **Interfaces:**
+
 - Produces: nothing code-level; conventions referenced by CI (PR template) and release-please (CHANGELOG link in README).
 
 - [ ] **Step 1: Add AGPL-3.0 license**
 
 Run (downloads the canonical text):
+
 ```bash
 curl -fsSL https://www.gnu.org/licenses/agpl-3.0.txt -o LICENSE && head -3 LICENSE
 ```
+
 Expected: first line `                    GNU AFFERO GENERAL PUBLIC LICENSE`.
 
 - [ ] **Step 2: Write README.md**
 
-```markdown
+````markdown
 # Open Brașov
 
 Platformă civică open source pentru Brașov. Fotografiezi o problemă din oraș, AI-ul scrie sesizarea oficială, tu o trimiți instituției responsabile, comunitatea urmărește rezolvarea.
@@ -255,6 +276,7 @@ pnpm install
 cp .env.example .env.local   # completează cheile Supabase
 pnpm dev
 ```
+````
 
 Comenzi utile: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm build`.
 
@@ -265,7 +287,8 @@ Citește [CONTRIBUTING.md](CONTRIBUTING.md). Titlurile PR-urilor respectă [Conv
 ## Licență
 
 [AGPL-3.0](LICENSE). Dacă rulezi o versiune modificată ca serviciu, trebuie să publici codul sursă.
-```
+
+````
 
 - [ ] **Step 3: Write CONTRIBUTING.md**
 
@@ -281,7 +304,7 @@ Citește [CONTRIBUTING.md](CONTRIBUTING.md). Titlurile PR-urilor respectă [Conv
 7. Fără emoji ca iconițe; folosim `lucide-react`.
 
 Release-urile sunt automate: release-please deschide un PR de release după fiecare merge în `main`; merge-ul lui publică tag-ul și GitHub Release-ul.
-```
+````
 
 - [ ] **Step 4: Write SECURITY.md**
 
@@ -304,11 +327,13 @@ Acest proiect adoptă [Contributor Covenant 2.1](https://www.contributor-covenan
 - [ ] **Step 6: GitHub community files**
 
 Create `.github/CODEOWNERS`:
+
 ```
 * @rafail3
 ```
 
 Create `.github/PULL_REQUEST_TEMPLATE.md`:
+
 ```markdown
 ## Ce schimbă
 
@@ -326,6 +351,7 @@ Create `.github/PULL_REQUEST_TEMPLATE.md`:
 ```
 
 Create `.github/ISSUE_TEMPLATE/bug.yml`:
+
 ```yaml
 name: Bug
 description: Ceva nu funcționează
@@ -346,6 +372,7 @@ body:
 ```
 
 Create `.github/ISSUE_TEMPLATE/feature.yml`:
+
 ```yaml
 name: Propunere
 description: O funcționalitate nouă sau o îmbunătățire
@@ -364,6 +391,7 @@ body:
 ```
 
 Create `.github/ISSUE_TEMPLATE/config.yml`:
+
 ```yaml
 blank_issues_enabled: false
 contact_links:
@@ -373,6 +401,7 @@ contact_links:
 ```
 
 Create `.github/dependabot.yml`:
+
 ```yaml
 version: 2
 updates:
@@ -409,24 +438,29 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ## Task 3: GitHub Actions — CI, release-please, PR title
 
 **Files:**
+
 - Create: `.github/workflows/ci.yml`, `.github/workflows/release-please.yml`, `.github/workflows/pr-title.yml`, `release-please-config.json`, `.release-please-manifest.json`
 
 **Interfaces:**
+
 - Consumes: scripts `lint`, `typecheck`, `test` (Task 5 adds `test`; until then `pnpm test` must exist — Step 1 adds a placeholder), `build`, `test:e2e` (Task 11).
 - Produces: required status checks named `CI / check` and `CI / e2e` used by branch protection in Task 12.
 
 - [ ] **Step 1: Add placeholder test scripts so CI is green before Task 5/11**
 
 Edit `package.json` scripts, add:
+
 ```json
 "test": "echo \"no unit tests yet\" && exit 0",
 "test:e2e": "echo \"no e2e tests yet\" && exit 0"
 ```
+
 (Task 5 and Task 11 replace these.)
 
 - [ ] **Step 2: Write ci.yml**
 
 Create `.github/workflows/ci.yml`:
+
 ```yaml
 name: CI
 
@@ -494,6 +528,7 @@ jobs:
 - [ ] **Step 3: Write release-please workflow and config**
 
 Create `.github/workflows/release-please.yml`:
+
 ```yaml
 name: release-please
 
@@ -517,6 +552,7 @@ jobs:
 ```
 
 Create `release-please-config.json`:
+
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
@@ -541,16 +577,19 @@ Create `release-please-config.json`:
 ```
 
 Create `.release-please-manifest.json`:
+
 ```json
 {
   ".": "0.0.0"
 }
 ```
+
 (First release becomes `0.1.0` because the history contains `feat:` commits and `bump-minor-pre-major` is on.)
 
 - [ ] **Step 4: Write pr-title.yml**
 
 Create `.github/workflows/pr-title.yml`:
+
 ```yaml
 name: PR title
 
@@ -589,9 +628,11 @@ jobs:
 - [ ] **Step 5: Validate YAML locally and commit**
 
 Run:
+
 ```bash
 pnpm dlx yaml-lint .github/workflows/*.yml 2>/dev/null || node -e "const y=require('js-yaml')" 2>/dev/null; pnpm format:check
 ```
+
 If neither linter is available just ensure `pnpm format:check` passes (Prettier parses YAML).
 
 ```bash
@@ -606,19 +647,23 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ## Task 4: Design tokens, fonts, shadcn/ui base
 
 **Files:**
+
 - Create: `components.json`, `src/lib/utils.ts` (by shadcn), `src/components/ui/button.tsx` (by shadcn)
 - Modify: `src/app/globals.css`, `src/app/layout.tsx`
 
 **Interfaces:**
+
 - Produces: Tailwind classes `bg-primary`, `text-primary-foreground`, `bg-accent`, `bg-background`, `text-muted-foreground`, `border-border`, `font-heading`, `font-sans`, `rounded-lg` (=8px) `rounded-2xl` (=16px); `cn()` from `@/lib/utils`; `Button` from `@/components/ui/button` with variants `default | accent | outline | ghost | link` and sizes `default | sm | lg | icon`.
 
 - [ ] **Step 1: Initialise shadcn with Radix base**
 
 Run:
+
 ```bash
 pnpm dlx shadcn@latest init -y -b radix
 pnpm dlx shadcn@latest add -y button
 ```
+
 Expected: `components.json` created, `src/lib/utils.ts` and `src/components/ui/button.tsx` exist, `src/app/globals.css` now contains `@theme inline` and `:root` blocks.
 
 - [ ] **Step 2: Replace token values in globals.css**
@@ -699,12 +744,14 @@ Open `src/app/globals.css`. Keep the `@import` lines, `@custom-variant dark`, th
 ```
 
 Then, inside the existing `@theme inline { … }` block, add these two lines (fonts come from `next/font` CSS variables set in layout):
+
 ```css
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-bricolage), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+--font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+--font-heading: var(--font-bricolage), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 ```
 
 At the end of the file append:
+
 ```css
 @layer base {
   html {
@@ -735,6 +782,7 @@ At the end of the file append:
 - [ ] **Step 3: Add an `accent` button variant**
 
 In `src/components/ui/button.tsx`, inside `variants.variant`, add after `default`:
+
 ```ts
         accent: "bg-accent text-accent-foreground hover:bg-accent/90",
 ```
@@ -742,6 +790,7 @@ In `src/components/ui/button.tsx`, inside `variants.variant`, add after `default
 - [ ] **Step 4: Load fonts in the root layout**
 
 Replace `src/app/layout.tsx` with:
+
 ```tsx
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
@@ -787,6 +836,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 - [ ] **Step 5: Smoke-check the tokens visually**
 
 Replace `src/app/page.tsx` temporarily with:
+
 ```tsx
 import { Button } from "@/components/ui/button";
 
@@ -804,6 +854,7 @@ export default function Page() {
   );
 }
 ```
+
 Run `pnpm dev`, open http://localhost:3000. Expected: cream background, green primary button, amber accent button, heading in Bricolage Grotesque (visibly different letterforms from the body text), diacritics render with comma-below.
 
 - [ ] **Step 6: Lint, typecheck, commit**
@@ -821,10 +872,12 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ## Task 5: Validated env + Vitest setup
 
 **Files:**
+
 - Create: `src/lib/env.ts`, `src/lib/env.test.ts`, `vitest.config.ts`, `vitest.setup.ts`, `.env.example`
 - Modify: `package.json` (scripts, devDeps), `tsconfig.json` (`types`, exclude e2e)
 
 **Interfaces:**
+
 - Produces: `env` object `{ NEXT_PUBLIC_SUPABASE_URL: string; NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: string }` exported from `@/lib/env`; `pnpm test` runs Vitest once, `pnpm test:watch` watches.
 
 - [ ] **Step 1: Install Vitest toolchain**
@@ -836,6 +889,7 @@ pnpm add -D vitest @vitejs/plugin-react jsdom @testing-library/react @testing-li
 - [ ] **Step 2: Configure Vitest**
 
 Create `vitest.config.ts`:
+
 ```ts
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -854,6 +908,7 @@ export default defineConfig({
 ```
 
 Create `vitest.setup.ts`:
+
 ```ts
 import "@testing-library/jest-dom/vitest";
 ```
@@ -861,6 +916,7 @@ import "@testing-library/jest-dom/vitest";
 In `tsconfig.json`, add `"vitest/jsdom"` to `compilerOptions.types` (create the array if missing) and make sure `exclude` contains `"node_modules"` only; `tests/` (Playwright) gets its own tsconfig in Task 11.
 
 Replace the placeholder scripts in `package.json`:
+
 ```json
 "test": "vitest run",
 "test:watch": "vitest"
@@ -869,6 +925,7 @@ Replace the placeholder scripts in `package.json`:
 - [ ] **Step 3: Write the failing env test**
 
 Create `src/lib/env.test.ts`:
+
 ```ts
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -893,7 +950,9 @@ describe("env", () => {
   it("exposes validated public Supabase variables", async () => {
     const { env } = await loadEnv({});
     expect(env.NEXT_PUBLIC_SUPABASE_URL).toBe(VALID.NEXT_PUBLIC_SUPABASE_URL);
-    expect(env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).toBe(VALID.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+    expect(env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).toBe(
+      VALID.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    );
   });
 
   it("throws a readable error when the URL is invalid", async () => {
@@ -922,6 +981,7 @@ pnpm add zod
 ```
 
 Create `src/lib/env.ts`:
+
 ```ts
 import { z } from "zod";
 
@@ -955,11 +1015,13 @@ Expected: `3 passed`.
 - [ ] **Step 7: Add .env.example and local env**
 
 Create `.env.example`:
+
 ```
 # Supabase → Project Settings → API Keys
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 ```
+
 Copy to `.env.local` and fill in the real values from Task 0 Step 4 (`.env.local` is git-ignored).
 
 - [ ] **Step 8: Lint, typecheck, commit**
@@ -977,9 +1039,11 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ## Task 6: Supabase clients and initial migration
 
 **Files:**
+
 - Create: `src/lib/supabase/client.ts`, `src/lib/supabase/server.ts`, `src/proxy.ts`, `supabase/config.toml` (generated), `supabase/migrations/20260903000000_init.sql`, `supabase/.gitignore` (generated)
 
 **Interfaces:**
+
 - Consumes: `env` from `@/lib/env`.
 - Produces: `createClient()` from `@/lib/supabase/client` (browser), `createClient()` from `@/lib/supabase/server` (server, async), `proxy()` in `src/proxy.ts` refreshing the session cookie. Phase 1 imports these unchanged.
 
@@ -990,24 +1054,30 @@ pnpm add @supabase/supabase-js @supabase/ssr
 pnpm add -D supabase
 pnpm exec supabase init
 ```
+
 Expected: `supabase/config.toml` created. Answer `N` if prompted about VS Code/IntelliJ settings.
 
 - [ ] **Step 2: Browser client**
 
 Create `src/lib/supabase/client.ts`:
+
 ```ts
 import { createBrowserClient } from "@supabase/ssr";
 
 import { env } from "@/lib/env";
 
 export function createClient() {
-  return createBrowserClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+  return createBrowserClient(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  );
 }
 ```
 
 - [ ] **Step 3: Server client**
 
 Create `src/lib/supabase/server.ts`:
+
 ```ts
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -1017,26 +1087,33 @@ import { env } from "@/lib/env";
 export async function createClient() {
   const cookieStore = await cookies();
 
-  return createServerClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
-        } catch {
-          // Called from a Server Component: cookies are read-only there. The proxy refreshes sessions.
-        }
+  return createServerClient(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options),
+            );
+          } catch {
+            // Called from a Server Component: cookies are read-only there. The proxy refreshes sessions.
+          }
+        },
       },
     },
-  });
+  );
 }
 ```
 
 - [ ] **Step 4: Proxy (Next 16 name for middleware)**
 
 Create `src/proxy.ts`:
+
 ```ts
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
@@ -1072,13 +1149,16 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icons/|.*\\.(?:svg|png|jpg|jpeg|webp|ico|txt|xml|webmanifest)$).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|icons/|.*\\.(?:svg|png|jpg|jpeg|webp|ico|txt|xml|webmanifest)$).*)",
+  ],
 };
 ```
 
 - [ ] **Step 5: Initial migration**
 
 Create `supabase/migrations/20260903000000_init.sql`:
+
 ```sql
 -- Phase 0: only the extension Phase 1 needs for report coordinates.
 create extension if not exists postgis with schema extensions;
@@ -1102,15 +1182,18 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ## Task 7: Brand components (Logo, Wordmark)
 
 **Files:**
+
 - Create: `src/components/brand/logo.tsx`, `src/components/brand/logo.test.tsx`, `public/logo.svg`, `public/favicon.svg`
 - Delete: generated `public/*.svg` from create-next-app (`next.svg`, `vercel.svg`, `file.svg`, `globe.svg`, `window.svg`) and `src/app/favicon.ico`
 
 **Interfaces:**
+
 - Produces: `<LogoMark size?: number className?: string />` (SVG symbol, `role="img"`, `aria-label="Open Brașov"`), `<Wordmark className?: string />` (mark + text), both from `@/components/brand/logo`.
 
 - [ ] **Step 1: Write the failing test**
 
 Create `src/components/brand/logo.test.tsx`:
+
 ```tsx
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
@@ -1138,6 +1221,7 @@ Expected: FAIL, `Failed to resolve import "./logo"`.
 - [ ] **Step 3: Implement the components**
 
 Create `src/components/brand/logo.tsx`:
+
 ```tsx
 import { cn } from "@/lib/utils";
 
@@ -1181,6 +1265,7 @@ export function Wordmark({ className }: { className?: string }) {
 ```
 
 Create `public/logo.svg` (same drawing with literal colours, used for OG/social):
+
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 32 32" fill="none">
   <path d="M16 2C9.925 2 5 6.925 5 13c0 7.5 11 17 11 17s11-9.5 11-17c0-6.075-4.925-11-11-11Z" fill="#1B5E3B"/>
@@ -1192,6 +1277,7 @@ Create `public/logo.svg` (same drawing with literal colours, used for OG/social)
 Create `public/favicon.svg` with identical content to `public/logo.svg`.
 
 Delete the boilerplate assets:
+
 ```bash
 rm -f public/next.svg public/vercel.svg public/file.svg public/globe.svg public/window.svg src/app/favicon.ico
 ```
@@ -1216,16 +1302,19 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ## Task 8: Romanian strings and landing page
 
 **Files:**
+
 - Create: `messages/ro.json`, `src/lib/messages.ts`, `src/components/site/header.tsx`, `src/components/site/footer.tsx`
 - Modify: `src/app/page.tsx` (replace token smoke page), `tsconfig.json` (`resolveJsonModule` true — already default in Next)
 
 **Interfaces:**
+
 - Consumes: `Wordmark` from `@/components/brand/logo`, `Button` from `@/components/ui/button`.
 - Produces: `t` object from `@/lib/messages` (typed as the JSON shape); `<SiteHeader />`, `<SiteFooter />` from `@/components/site/*`. Task 9 reuses `SiteHeader` and `t.map.*`.
 
 - [ ] **Step 1: Strings file**
 
 Create `messages/ro.json`:
+
 ```json
 {
   "brand": {
@@ -1283,6 +1372,7 @@ Create `messages/ro.json`:
 ```
 
 Create `src/lib/messages.ts`:
+
 ```ts
 import ro from "../../messages/ro.json";
 
@@ -1293,6 +1383,7 @@ export type Messages = typeof ro;
 - [ ] **Step 2: Header and footer**
 
 Create `src/components/site/header.tsx`:
+
 ```tsx
 import { Github, MapPin } from "lucide-react";
 import Link from "next/link";
@@ -1328,6 +1419,7 @@ export function SiteHeader() {
 ```
 
 Create `src/components/site/footer.tsx`:
+
 ```tsx
 import Link from "next/link";
 
@@ -1361,6 +1453,7 @@ export function SiteFooter() {
 - [ ] **Step 3: Landing page**
 
 Replace `src/app/page.tsx`:
+
 ```tsx
 import { Camera, Landmark, Sparkles } from "lucide-react";
 import Link from "next/link";
@@ -1435,6 +1528,7 @@ export default function HomePage() {
 - [ ] **Step 4: Legal placeholder pages**
 
 Create `src/app/termeni/page.tsx`:
+
 ```tsx
 import type { Metadata } from "next";
 
@@ -1477,15 +1571,18 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ## Task 9: MapLibre map and /harta page
 
 **Files:**
+
 - Create: `src/components/map/brasov-map.tsx`, `src/components/map/map-config.ts`, `src/components/map/map-config.test.ts`, `src/app/harta/page.tsx`
 
 **Interfaces:**
+
 - Consumes: `SiteHeader`, `t.map.*`.
 - Produces: `BRASOV_CENTER: [number, number]`, `BRASOV_BOUNDS: [[number, number], [number, number]]`, `MAP_STYLE_URL`, `DEFAULT_ZOOM` from `@/components/map/map-config`; `<BrasovMap className? />` client component. Phase 1 adds a `reports` prop to `BrasovMap` without changing its mounting contract.
 
 - [ ] **Step 1: Write the failing config test**
 
 Create `src/components/map/map-config.test.ts`:
+
 ```ts
 import { describe, expect, it } from "vitest";
 
@@ -1516,6 +1613,7 @@ Expected: FAIL, cannot resolve `./map-config`.
 - [ ] **Step 3: Implement config**
 
 Create `src/components/map/map-config.ts`:
+
 ```ts
 /** [lng, lat] — Piața Sfatului area. */
 export const BRASOV_CENTER: [number, number] = [25.5887, 45.6427];
@@ -1547,6 +1645,7 @@ pnpm add maplibre-gl
 ```
 
 Create `src/components/map/brasov-map.tsx`:
+
 ```tsx
 "use client";
 
@@ -1638,6 +1737,7 @@ export function BrasovMap({ className }: BrasovMapProps) {
 - [ ] **Step 6: /harta page with empty state**
 
 Create `src/app/harta/page.tsx`:
+
 ```tsx
 import type { Metadata } from "next";
 import { MapPinOff } from "lucide-react";
@@ -1693,18 +1793,23 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ## Task 10: SEO, PWA manifest, OG image
 
 **Files:**
+
 - Create: `src/app/robots.ts`, `src/app/sitemap.ts`, `src/app/manifest.ts`, `src/app/icon.svg` (copy of `public/favicon.svg`), `src/app/opengraph-image.tsx`, `src/lib/site.ts`
 
 **Interfaces:**
+
 - Produces: `SITE_URL` from `@/lib/site` (reads `NEXT_PUBLIC_SITE_URL`, falls back to `https://openbrasov.ro`).
 
 - [ ] **Step 1: Site constant**
 
 Create `src/lib/site.ts`:
+
 ```ts
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://openbrasov.ro";
 ```
+
 Add to `.env.example`:
+
 ```
 # Public origin, used for sitemap/OG. Vercel preview: leave unset.
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
@@ -1713,6 +1818,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 - [ ] **Step 2: robots, sitemap, manifest**
 
 Create `src/app/robots.ts`:
+
 ```ts
 import type { MetadataRoute } from "next";
 
@@ -1727,6 +1833,7 @@ export default function robots(): MetadataRoute.Robots {
 ```
 
 Create `src/app/sitemap.ts`:
+
 ```ts
 import type { MetadataRoute } from "next";
 
@@ -1738,12 +1845,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}/harta`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${SITE_URL}/termeni`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
-    { url: `${SITE_URL}/confidentialitate`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
+    {
+      url: `${SITE_URL}/confidentialitate`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.2,
+    },
   ];
 }
 ```
 
 Create `src/app/manifest.ts`:
+
 ```ts
 import type { MetadataRoute } from "next";
 
@@ -1769,6 +1882,7 @@ Copy `public/favicon.svg` to `src/app/icon.svg` (Next serves it as the favicon a
 - [ ] **Step 3: OG image**
 
 Create `src/app/opengraph-image.tsx`:
+
 ```tsx
 import { ImageResponse } from "next/og";
 
@@ -1780,38 +1894,36 @@ export const contentType = "image/png";
 
 export default function OpenGraphImage() {
   return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          padding: 96,
-          background: "#fafaf7",
-          color: "#14261d",
-          fontFamily: "sans-serif",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 999,
-              background: "#1b5e3b",
-              display: "flex",
-            }}
-          />
-          <div style={{ fontSize: 40, fontWeight: 700 }}>{t.brand.name}</div>
-        </div>
-        <div style={{ marginTop: 48, fontSize: 72, fontWeight: 700, lineHeight: 1.1 }}>
-          {t.home.title}
-        </div>
-        <div style={{ marginTop: 32, fontSize: 32, color: "#5b6b62" }}>{t.brand.tagline}</div>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: 96,
+        background: "#fafaf7",
+        color: "#14261d",
+        fontFamily: "sans-serif",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 999,
+            background: "#1b5e3b",
+            display: "flex",
+          }}
+        />
+        <div style={{ fontSize: 40, fontWeight: 700 }}>{t.brand.name}</div>
       </div>
-    ),
+      <div style={{ marginTop: 48, fontSize: 72, fontWeight: 700, lineHeight: 1.1 }}>
+        {t.home.title}
+      </div>
+      <div style={{ marginTop: 32, fontSize: 32, color: "#5b6b62" }}>{t.brand.tagline}</div>
+    </div>,
     size,
   );
 }
@@ -1820,6 +1932,7 @@ export default function OpenGraphImage() {
 - [ ] **Step 4: Metadata base in layout**
 
 In `src/app/layout.tsx`, add `metadataBase: new URL(SITE_URL)` to `metadata` and import `SITE_URL` from `@/lib/site`; also add:
+
 ```ts
   openGraph: { type: "website", locale: "ro_RO", siteName: "Open Brașov" },
 ```
@@ -1841,10 +1954,12 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ## Task 11: Playwright smoke tests
 
 **Files:**
+
 - Create: `playwright.config.ts`, `tests/e2e/smoke.spec.ts`, `tests/tsconfig.json`
 - Modify: `package.json` (`test:e2e`), `tsconfig.json` (`exclude` tests)
 
 **Interfaces:**
+
 - Consumes: `data-testid="map-canvas"` from `BrasovMap`, `h1` on `/`.
 - Produces: `pnpm test:e2e` used by CI job `e2e`.
 
@@ -1858,6 +1973,7 @@ pnpm exec playwright install chromium
 - [ ] **Step 2: Config**
 
 Create `playwright.config.ts`:
+
 ```ts
 import { defineConfig, devices } from "@playwright/test";
 
@@ -1884,7 +2000,8 @@ export default defineConfig({
     timeout: 180_000,
     reuseExistingServer: !process.env.CI,
     env: {
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://example.supabase.co",
+      NEXT_PUBLIC_SUPABASE_URL:
+        process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://example.supabase.co",
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
         process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "sb_publishable_dummy",
       NEXT_PUBLIC_SITE_URL: baseURL,
@@ -1894,6 +2011,7 @@ export default defineConfig({
 ```
 
 Create `tests/tsconfig.json`:
+
 ```json
 {
   "extends": "../tsconfig.json",
@@ -1905,6 +2023,7 @@ Create `tests/tsconfig.json`:
 In root `tsconfig.json` add `"tests"` to `exclude` (so `pnpm typecheck` ignores Playwright files, which use their own config).
 
 Replace the placeholder script in `package.json`:
+
 ```json
 "test:e2e": "playwright test"
 ```
@@ -1912,6 +2031,7 @@ Replace the placeholder script in `package.json`:
 - [ ] **Step 3: Write the smoke tests**
 
 Create `tests/e2e/smoke.spec.ts`:
+
 ```ts
 import { expect, test } from "@playwright/test";
 
@@ -1964,6 +2084,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 **Files:** none new. Uses `gh` CLI (logged in as `rafail3`).
 
 **Interfaces:**
+
 - Consumes: org `opencity-ro` from Task 0.
 - Produces: remote `origin`, branch protection on `main`, release PR → tag `v0.1.0`.
 
@@ -1974,6 +2095,7 @@ gh repo create opencity-ro/openbrasov --public --source=. --remote=origin --push
   --description "Platformă civică open source pentru Brașov: fotografiezi o problemă, AI-ul scrie sesizarea, instituția o primește." \
   --homepage "https://openbrasov.ro"
 ```
+
 Expected: `✓ Created repository opencity-ro/openbrasov on GitHub` and the push of `main`.
 
 - [ ] **Step 2: Merge strategy, auto-delete branches, topics**
@@ -2000,6 +2122,7 @@ gh run list --repo opencity-ro/openbrasov --limit 5
 gh run watch --repo opencity-ro/openbrasov --exit-status
 gh pr list --repo opencity-ro/openbrasov
 ```
+
 Expected: `CI` succeeded; a PR titled `chore(main): release 0.1.0` opened by `github-actions[bot]`. If CI fails, fix locally, commit with a conventional prefix, push to `main` (protection is not on yet), re-check.
 
 - [ ] **Step 5: Merge the release PR**
@@ -2008,6 +2131,7 @@ Expected: `CI` succeeded; a PR titled `chore(main): release 0.1.0` opened by `gi
 gh pr merge --repo opencity-ro/openbrasov --squash --auto "$(gh pr list --repo opencity-ro/openbrasov --search 'chore(main): release' --json number -q '.[0].number')"
 gh release list --repo opencity-ro/openbrasov
 ```
+
 Expected: release `v0.1.0` listed, `CHANGELOG.md` present on `main`, `package.json` version `0.1.0`. Pull locally: `git pull --ff-only`.
 
 - [ ] **Step 6: Branch protection**
@@ -2027,6 +2151,7 @@ cat > /tmp/protection.json <<'EOF'
 EOF
 gh api -X PUT repos/opencity-ro/openbrasov/branches/main/protection --input /tmp/protection.json
 ```
+
 Note: the `contexts` names must match the job names shown in the Checks tab (`check`, `e2e`, and the pr-title job name). If `Validate PR title` differs, run `gh api repos/opencity-ro/openbrasov/commits/main/check-runs -q '.check_runs[].name'` and use the exact strings. From now on all work goes through PRs.
 
 - [ ] **Step 7: Enable Dependabot security updates and secret scanning**
@@ -2043,6 +2168,7 @@ gh api -X PUT repos/opencity-ro/openbrasov/vulnerability-alerts
 **Files:** none.
 
 **Interfaces:**
+
 - Consumes: Vercel account (Task 0 Step 3), `openbrasov-ro` GitHub account, Supabase URL + key.
 - Produces: production URL `https://openbrasov.vercel.app` (name may vary) and preview deploys on PRs.
 
@@ -2057,10 +2183,11 @@ Vercel → Add New → Project → "Import Git Repository" → GitHub → "Add G
 - [ ] **Step 3: Import and configure**
 
 Import `opencity-ro/openbrasov`. Framework preset: Next.js (auto). Root directory `/`. Environment variables (Production + Preview):
+
 - `NEXT_PUBLIC_SUPABASE_URL` = Supabase Project URL
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` = publishable key
 - `NEXT_PUBLIC_SITE_URL` = `https://openbrasov.ro` (Production only)
-Deploy.
+  Deploy.
 
 - [ ] **Step 4: Verify**
 

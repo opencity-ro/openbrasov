@@ -45,15 +45,15 @@ Slogan: **„Tu fotografiezi. AI-ul scrie. Autoritățile primesc.”**
 
 ## Gamification (`/puncte-civice`)
 
-| Acțiune | Puncte |
-|---|---|
-| Trimiți sesizare | +50 |
-| Primești upvote | +10 |
-| Escaladezi la Prefectură | +50 |
-| Confirmi cu poză rezolvarea sesizării tale | +30 |
-| Confirmi cu poză rezolvarea sesizării altcuiva (misiune civică) | +100 |
-| Confirmi pe teren că problema persistă (max 5/zi) | +15 |
-| Răspunzi la sondaj de cartier | +100 |
+| Acțiune                                                         | Puncte |
+| --------------------------------------------------------------- | ------ |
+| Trimiți sesizare                                                | +50    |
+| Primești upvote                                                 | +10    |
+| Escaladezi la Prefectură                                        | +50    |
+| Confirmi cu poză rezolvarea sesizării tale                      | +30    |
+| Confirmi cu poză rezolvarea sesizării altcuiva (misiune civică) | +100   |
+| Confirmi pe teren că problema persistă (max 5/zi)               | +15    |
+| Răspunzi la sondaj de cartier                                   | +100   |
 
 Puncte disponibile pentru răscumpărare după 30 zile; recompense de la afaceri locale (`/recompense`, formular pentru business). Badge-uri, streak, clasament. Verificare pe teren = distanță GPS în intervale (<50m, 50–150m, >150m), nu coordonate exacte.
 

@@ -1,9 +1,32 @@
+# deps
 node_modules/
+
+# next
 .next/
+out/
+next-env.d.ts
+
+# env
 .env
 .env*.local
+
+# vercel
 .vercel/
+
+# tests
 coverage/
 playwright-report/
 test-results/
+blob-report/
+
+# supabase
+supabase/.temp/
+supabase/.branches/
+
+# os / editors
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log

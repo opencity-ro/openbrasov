@@ -15,24 +15,24 @@ Repo public, pipeline de release automat și un site deployat care afișează id
 
 ## 2. Decizii fixate
 
-| Decizie | Alegere | Motiv |
-|---|---|---|
-| Nume / domeniu | Open Brașov / `openbrasov.ro`, alias `bv.help`; umbrelă viitoare OpenCity / `opencity.ro` | liber, local, „open” = open source + oraș transparent |
-| Licență | AGPL-3.0 | protejează caracterul civic: cine rulează o copie modificată publică codul |
-| Framework | Next.js 16 (App Router, TypeScript strict, React 19) | ecosistem, Vercel, contributori |
-| Styling | Tailwind CSS v4 + shadcn/ui (Radix) + Motion (Framer Motion) | cerut explicit; standard actual |
-| Forms / data | react-hook-form + zod, TanStack Query | validare tipată, cache client |
-| Icons | lucide-react | consistent, fără emoji ca iconițe |
-| Toasts | sonner | |
-| Backend | Supabase (Postgres, Auth, Storage) | free tier suficient, RLS, magic link nativ |
-| Hărți | MapLibre GL JS + tile-uri OpenFreeMap | gratuit, fără cheie, fără limite; Mapbox cere card |
-| Email | Resend (SMTP custom pentru Supabase Auth + tranzacțional) | Supabase SMTP default e limitat la ~2 email/oră |
-| AI | Anthropic Claude (Faza 2) | vision + text, DPA |
-| Analytics | PostHog EU, opt-in prin cookie banner (Faza 1) | |
-| Hosting | Vercel Hobby | free, preview deploy pe PR |
-| Package manager | pnpm, Node 22 LTS | |
-| Teste | Vitest (unit) + Playwright (e2e smoke) | |
-| Limbă UI | Română; strings în `messages/ro.json` de la început pentru i18n ulterior | |
+| Decizie         | Alegere                                                                                   | Motiv                                                                      |
+| --------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Nume / domeniu  | Open Brașov / `openbrasov.ro`, alias `bv.help`; umbrelă viitoare OpenCity / `opencity.ro` | liber, local, „open” = open source + oraș transparent                      |
+| Licență         | AGPL-3.0                                                                                  | protejează caracterul civic: cine rulează o copie modificată publică codul |
+| Framework       | Next.js 16 (App Router, TypeScript strict, React 19)                                      | ecosistem, Vercel, contributori                                            |
+| Styling         | Tailwind CSS v4 + shadcn/ui (Radix) + Motion (Framer Motion)                              | cerut explicit; standard actual                                            |
+| Forms / data    | react-hook-form + zod, TanStack Query                                                     | validare tipată, cache client                                              |
+| Icons           | lucide-react                                                                              | consistent, fără emoji ca iconițe                                          |
+| Toasts          | sonner                                                                                    |                                                                            |
+| Backend         | Supabase (Postgres, Auth, Storage)                                                        | free tier suficient, RLS, magic link nativ                                 |
+| Hărți           | MapLibre GL JS + tile-uri OpenFreeMap                                                     | gratuit, fără cheie, fără limite; Mapbox cere card                         |
+| Email           | Resend (SMTP custom pentru Supabase Auth + tranzacțional)                                 | Supabase SMTP default e limitat la ~2 email/oră                            |
+| AI              | Anthropic Claude (Faza 2)                                                                 | vision + text, DPA                                                         |
+| Analytics       | PostHog EU, opt-in prin cookie banner (Faza 1)                                            |                                                                            |
+| Hosting         | Vercel Hobby                                                                              | free, preview deploy pe PR                                                 |
+| Package manager | pnpm, Node 22 LTS                                                                         |                                                                            |
+| Teste           | Vitest (unit) + Playwright (e2e smoke)                                                    |                                                                            |
+| Limbă UI        | Română; strings în `messages/ro.json` de la început pentru i18n ulterior                  |                                                                            |
 
 ## 3. Identitate vizuală (proprie, diferită de bucuresti.help)
 
@@ -42,20 +42,20 @@ bucuresti.help = coral `#FF5C3A` pe alb, Plus Jakarta Sans, emoji. Noi ne difere
 
 **Paletă (tokens semantice, light mode; dark mode derivat tonal, nu inversat):**
 
-| Token | Hex | Rol |
-|---|---|---|
-| `--primary` | `#1B5E3B` | verde brad: brand, butoane primare, link-uri |
-| `--primary-foreground` | `#FFFFFF` | |
-| `--accent` | `#D97706` | chihlimbar: CTA „Sesizează”, pin sesizare deschisă |
-| `--accent-foreground` | `#1C1917` | |
-| `--background` | `#FAFAF7` | cald-neutru, nu alb pur |
-| `--foreground` | `#14261D` | verde-negru, text |
-| `--card` | `#FFFFFF` | |
-| `--muted` | `#EEF1EC` | |
-| `--muted-foreground` | `#5B6B62` | |
-| `--border` | `#DCE3DD` | |
-| `--destructive` | `#B91C1C` | |
-| `--ring` | `#1B5E3B` | |
+| Token                  | Hex       | Rol                                                |
+| ---------------------- | --------- | -------------------------------------------------- |
+| `--primary`            | `#1B5E3B` | verde brad: brand, butoane primare, link-uri       |
+| `--primary-foreground` | `#FFFFFF` |                                                    |
+| `--accent`             | `#D97706` | chihlimbar: CTA „Sesizează”, pin sesizare deschisă |
+| `--accent-foreground`  | `#1C1917` |                                                    |
+| `--background`         | `#FAFAF7` | cald-neutru, nu alb pur                            |
+| `--foreground`         | `#14261D` | verde-negru, text                                  |
+| `--card`               | `#FFFFFF` |                                                    |
+| `--muted`              | `#EEF1EC` |                                                    |
+| `--muted-foreground`   | `#5B6B62` |                                                    |
+| `--border`             | `#DCE3DD` |                                                    |
+| `--destructive`        | `#B91C1C` |                                                    |
+| `--ring`               | `#1B5E3B` |                                                    |
 
 Status sesizare (Faza 1+): deschisă = accent chihlimbar, în lucru = albastru `#2563EB`, rezolvată = primar verde, escaladată = destructive. Fiecare status are și iconiță, nu doar culoare.
 
@@ -136,12 +136,12 @@ Auth, schema DB pentru sesizări, upload, AI, PostHog, cookie banner, app nativ�
 
 Principiu: separare pe web, zero schimbări pe laptop. Contul GitHub personal rămâne singurul folosit local.
 
-| Serviciu | Cont | Detalii |
-|---|---|---|
-| GitHub org | `opencity-ro` (display „OpenCity”; fallback `opencityro`) | creată din contul personal, care e Owner. Umbrelă pentru toate proiectele viitoare; `opencity.ro` de cumpărat. |
-| GitHub repo | `opencity-ro/openbrasov`, public | commit-urile vin din contul personal |
-| GitHub machine account | `openbrasov-ro`, email `openbrasov@gmail.com` | membru al org cu acces la repo; folosit **doar** ca Login Connection pentru Vercel. Nu se loghează niciodată pe laptop. Permis de GitHub ToS (un machine account gratuit / persoană). |
-| Vercel | cont nou, `openbrasov@gmail.com`, GitHub connection = `openbrasov-ro` | Vercel GitHub App instalată pe org `opencity-ro`. Hobby deployează repo-uri **publice** din org; restricția „commit author = owner” e doar pentru repo-uri private. Fallback: deploy din GitHub Actions cu Vercel CLI + token. |
-| Supabase, Resend, Anthropic, PostHog, Cloudflare (DNS + Email Routing) | `openbrasov@gmail.com` | toate web-only |
+| Serviciu                                                               | Cont                                                                  | Detalii                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| GitHub org                                                             | `opencity-ro` (display „OpenCity”; fallback `opencityro`)             | creată din contul personal, care e Owner. Umbrelă pentru toate proiectele viitoare; `opencity.ro` de cumpărat.                                                                                                                 |
+| GitHub repo                                                            | `opencity-ro/openbrasov`, public                                      | commit-urile vin din contul personal                                                                                                                                                                                           |
+| GitHub machine account                                                 | `openbrasov-ro`, email `openbrasov@gmail.com`                         | membru al org cu acces la repo; folosit **doar** ca Login Connection pentru Vercel. Nu se loghează niciodată pe laptop. Permis de GitHub ToS (un machine account gratuit / persoană).                                          |
+| Vercel                                                                 | cont nou, `openbrasov@gmail.com`, GitHub connection = `openbrasov-ro` | Vercel GitHub App instalată pe org `opencity-ro`. Hobby deployează repo-uri **publice** din org; restricția „commit author = owner” e doar pentru repo-uri private. Fallback: deploy din GitHub Actions cu Vercel CLI + token. |
+| Supabase, Resend, Anthropic, PostHog, Cloudflare (DNS + Email Routing) | `openbrasov@gmail.com`                                                | toate web-only                                                                                                                                                                                                                 |
 
 Email public al proiectului: `contact@openbrasov.ro` prin Cloudflare Email Routing → `openbrasov@gmail.com`, după cumpărarea domeniului.
