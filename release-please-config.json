@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "bump-minor-pre-major": true,
+  "include-component-in-tag": false,
+  "changelog-sections": [
+    { "type": "feat", "section": "Funcționalități" },
+    { "type": "fix", "section": "Corecturi" },
+    { "type": "perf", "section": "Performanță" },
+    { "type": "refactor", "section": "Refactorizări", "hidden": true },
+    { "type": "docs", "section": "Documentație", "hidden": true },
+    { "type": "chore", "section": "Diverse", "hidden": true },
+    { "type": "ci", "section": "CI", "hidden": true },
+    { "type": "build", "section": "Build", "hidden": true },
+    { "type": "test", "section": "Teste", "hidden": true }
+  ],
+  "packages": {
+    ".": {}
+  }
+}
