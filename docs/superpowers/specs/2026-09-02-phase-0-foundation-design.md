@@ -34,9 +34,7 @@ Repo public, pipeline de release automat și un site deployat care afișează id
 | Teste           | Vitest (unit) + Playwright (e2e smoke)                                                    |                                                                            |
 | Limbă UI        | Română; strings în `messages/ro.json` de la început pentru i18n ulterior                  |                                                                            |
 
-## 3. Identitate vizuală (proprie, diferită de bucuresti.help)
-
-bucuresti.help = coral `#FF5C3A` pe alb, Plus Jakarta Sans, emoji. Noi ne diferențiem clar.
+## 3. Identitate vizuală
 
 **Concept:** Brașovul = munte, pădure, oraș vechi. Verde de brad ca primar, chihlimbar cald ca accent de acțiune, fundal cald-neutru. Serios cât să fie credibil pentru o petiție oficială, prietenos cât să nu pară site de primărie.
 
