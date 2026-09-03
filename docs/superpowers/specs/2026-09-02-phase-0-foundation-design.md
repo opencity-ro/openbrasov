@@ -8,7 +8,7 @@ Repo public, pipeline de release automat și un site deployat care afișează id
 
 **Livrabil verificabil:**
 
-- `github.com/openbrasov/openbrasov` public, licență AGPL-3.0.
+- `github.com/opencity-ro/openbrasov` public (organizație GitHub „OpenCity”, slug `opencity-ro`, fallback `opencityro`), licență AGPL-3.0.
 - CI verde pe `main`; release-please a produs `v0.1.0` cu CHANGELOG și GitHub Release.
 - Site pe Vercel (URL `*.vercel.app`, apoi `openbrasov.ro`): landing + `/harta` cu MapLibre + OpenFreeMap, centrată pe Brașov, fără pin-uri.
 - Supabase project creat, conectat prin env, cu o migrare inițială minimă (doar extensia PostGIS).
@@ -17,7 +17,7 @@ Repo public, pipeline de release automat și un site deployat care afișează id
 
 | Decizie | Alegere | Motiv |
 |---|---|---|
-| Nume / domeniu | Open Brașov / `openbrasov.ro`, alias `bv.help` | liber, local, „open” = open source + oraș transparent |
+| Nume / domeniu | Open Brașov / `openbrasov.ro`, alias `bv.help`; umbrelă viitoare OpenCity / `opencity.ro` | liber, local, „open” = open source + oraș transparent |
 | Licență | AGPL-3.0 | protejează caracterul civic: cine rulează o copie modificată publică codul |
 | Framework | Next.js 16 (App Router, TypeScript strict, React 19) | ecosistem, Vercel, contributori |
 | Styling | Tailwind CSS v4 + shadcn/ui (Radix) + Motion (Framer Motion) | cerut explicit; standard actual |
@@ -131,3 +131,17 @@ Auth, schema DB pentru sesizări, upload, AI, PostHog, cookie banner, app nativ�
 - Vercel Hobby interzice uz comercial; proiect civic nonprofit = ok. Dacă apar donații sau recompense de la firme, reevaluăm.
 - OpenFreeMap fără SLA; fallback: self-host tiles sau Protomaps (tot gratuit).
 - Supabase free tier: project pauzat după 7 zile de inactivitate; CI-ul nu atinge DB în Faza 0.
+
+## 11. Conturi și separare (decis 2026-09-03)
+
+Principiu: separare pe web, zero schimbări pe laptop. Contul GitHub personal rămâne singurul folosit local.
+
+| Serviciu | Cont | Detalii |
+|---|---|---|
+| GitHub org | `opencity-ro` (display „OpenCity”; fallback `opencityro`) | creată din contul personal, care e Owner. Umbrelă pentru toate proiectele viitoare; `opencity.ro` de cumpărat. |
+| GitHub repo | `opencity-ro/openbrasov`, public | commit-urile vin din contul personal |
+| GitHub machine account | `openbrasov-ro`, email `openbrasov@gmail.com` | membru al org cu acces la repo; folosit **doar** ca Login Connection pentru Vercel. Nu se loghează niciodată pe laptop. Permis de GitHub ToS (un machine account gratuit / persoană). |
+| Vercel | cont nou, `openbrasov@gmail.com`, GitHub connection = `openbrasov-ro` | Vercel GitHub App instalată pe org `opencity-ro`. Hobby deployează repo-uri **publice** din org; restricția „commit author = owner” e doar pentru repo-uri private. Fallback: deploy din GitHub Actions cu Vercel CLI + token. |
+| Supabase, Resend, Anthropic, PostHog, Cloudflare (DNS + Email Routing) | `openbrasov@gmail.com` | toate web-only |
+
+Email public al proiectului: `contact@openbrasov.ro` prin Cloudflare Email Routing → `openbrasov@gmail.com`, după cumpărarea domeniului.
