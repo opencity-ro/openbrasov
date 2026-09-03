@@ -14,11 +14,24 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      # A push made with the default GITHUB_TOKEN never starts another workflow
+      # run, so merging the release PR with it would leave the release itself
+      # unpublished. The app mints a short-lived token whose pushes do trigger
+      # workflows, and unlike a personal access token it never expires.
+      - name: Mint an app token
+        id: app-token
+        if: vars.RELEASE_APP_CLIENT_ID != ''
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
       - uses: googleapis/release-please-action@v4
         id: release
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
 
       # Release PRs only bump the version, the manifest and the changelog, so they
       # merge themselves. Auto-merge waits for the required checks; if the repo has
@@ -26,7 +39,7 @@ jobs:
       - name: Merge the release pull request
         if: steps.release.outputs.prs_created == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           PRS: ${{ steps.release.outputs.prs }}
         run: |
           NUMBER=$(jq -r '.[0].number' <<< "$PRS")
