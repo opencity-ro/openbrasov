@@ -19,6 +19,11 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          # A push made with the default GITHUB_TOKEN never starts another
+          # workflow run, so merging the release PR with it leaves the release
+          # itself unpublished. RELEASE_TOKEN (a personal access token) makes the
+          # merge commit trigger this workflow again, which then tags the release.
+          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       # Release PRs only bump the version, the manifest and the changelog, so they
       # merge themselves. Auto-merge waits for the required checks; if the repo has
@@ -26,7 +31,7 @@ jobs:
       - name: Merge the release pull request
         if: steps.release.outputs.prs_created == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           PRS: ${{ steps.release.outputs.prs }}
         run: |
           NUMBER=$(jq -r '.[0].number' <<< "$PRS")
