@@ -1,0 +1,16 @@
+name: Bug
+description: Ceva nu funcționează
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Ce se întâmplă
+      description: Pași de reproducere, comportament așteptat vs. real.
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Browser / dispozitiv
+      placeholder: Chrome 140 pe Android 15

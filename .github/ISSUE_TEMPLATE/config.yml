@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Securitate
+    url: https://github.com/opencity-ro/openbrasov/blob/main/SECURITY.md
+    about: Vulnerabilitățile se raportează privat.

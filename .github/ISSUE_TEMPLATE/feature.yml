@@ -1,0 +1,14 @@
+name: Propunere
+description: O funcționalitate nouă sau o îmbunătățire
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema pe care o rezolvă
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Propunerea
