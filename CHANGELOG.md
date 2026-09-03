@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/opencity-ro/openbrasov/compare/v0.1.0...v0.1.1) (2026-09-03)
+
+
+### Corecturi
+
+* keep the site URL valid when the env variable is blank ([#12](https://github.com/opencity-ro/openbrasov/issues/12)) ([81206ec](https://github.com/opencity-ro/openbrasov/commit/81206ec797f67e665c5a46a91a0196f2d635ff60))
+
 ## 0.1.0 (2026-09-03)
 
 
