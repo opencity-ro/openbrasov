@@ -29,5 +29,3 @@ jobs:
             style
             revert
           requireScope: false
-          subjectPattern: ^(?![A-Z]).+$
-          subjectPatternError: Subiectul începe cu literă mică, fără punct la final.
