@@ -15,6 +15,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      # Release PRs only bump the version, the manifest and the changelog, so they
+      # merge themselves. Auto-merge waits for the required checks; if the repo has
+      # none configured yet, GitHub rejects --auto and we merge straight away.
+      - name: Merge the release pull request
+        if: steps.release.outputs.prs_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRS: ${{ steps.release.outputs.prs }}
+        run: |
+          NUMBER=$(jq -r '.[0].number' <<< "$PRS")
+          echo "Release PR: #$NUMBER"
+          gh pr merge "$NUMBER" --squash --auto --repo "$GITHUB_REPOSITORY" \
+            || gh pr merge "$NUMBER" --squash --repo "$GITHUB_REPOSITORY"
