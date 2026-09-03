@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
 
+import { SITE_URL } from "@/lib/site";
+
 import "./globals.css";
 
 const inter = Inter({
@@ -16,6 +18,8 @@ const bricolage = Bricolage_Grotesque({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  openGraph: { type: "website", locale: "ro_RO", siteName: "Open Brașov" },
   title: {
     default: "Open Brașov",
     template: "%s · Open Brașov",
