@@ -134,7 +134,73 @@ type LayerRule = {
    */
   type: LayerType;
   paint: (palette: MapPalette) => PaintPatch;
+  /** Mărimea și fontul stau în `layout`, nu în `paint`. */
+  layout?: () => Record<string, unknown>;
 };
+
+/**
+ * Culoarea etichetei spune categoria dintr-o privire, înainte să apuci să
+ * citești numele. Aceleași tonuri în ambele teme: sunt destul de saturate cât să
+ * țină contrastul și pe hârtie, și pe ardezie.
+ */
+const POI_COLORS: Array<[string[], string]> = [
+  [["restaurant", "fast_food", "cafe", "bar", "pub", "ice_cream", "bakery"], "#e8842a"],
+  [
+    ["shop", "supermarket", "grocery", "clothing_store", "mall", "alcohol_shop", "car", "bicycle"],
+    "#dda32c",
+  ],
+  [["lodging"], "#a267d4"],
+  [["hospital", "pharmacy", "doctors", "dentist", "veterinary"], "#e0526a"],
+  [["school", "college", "library", "kindergarten"], "#4a90d9"],
+  [["bus", "rail", "airport", "ferry_terminal", "subway"], "#3f83f8"],
+  [
+    ["park", "garden", "playground", "pitch", "stadium", "golf", "swimming", "dog_park", "zoo"],
+    "#2f9e68",
+  ],
+  [["attraction", "museum", "art_gallery", "cinema", "theatre", "monument", "castle"], "#c9569f"],
+  [["town_hall", "police", "fire_station", "post", "bank", "embassy"], "#7d8aa0"],
+];
+
+function poiTextColor(fallback: string): unknown {
+  return [
+    "match",
+    ["get", "class"],
+    ...POI_COLORS.flatMap(([classes, color]) => [classes, color]),
+    fallback,
+  ];
+}
+
+/** Fără italice: îngreunează citirea la mărimile mici de pe hartă. */
+const LABEL_REGULAR = { "text-font": ["Noto Sans Regular"] };
+const LABEL_BOLD = { "text-font": ["Noto Sans Bold"] };
+
+/**
+ * Numele localității crește cu importanța ei, nu doar cu zoom-ul: `rank` vine din
+ * datele OpenMapTiles, unde 1 e cel mai important. Așa Brașovul se vede de departe,
+ * iar satele apar discret abia când ajungi lângă ele.
+ */
+function placeTextSize(base: [number, number][], byRank = true): unknown {
+  // Zoom-ul trebuie să rămână expresia cea mai de sus — MapLibre nu îl acceptă
+  // imbricat — deci factorul de importanță intră în fiecare rezultat, nu în afară.
+  const scaled = (size: number): unknown =>
+    byRank
+      ? [
+          "case",
+          ["<=", ["coalesce", ["get", "rank"], 10], 3],
+          size * 1.18,
+          ["<=", ["coalesce", ["get", "rank"], 10], 6],
+          size,
+          size * 0.87,
+        ]
+      : size;
+
+  return [
+    "interpolate",
+    ["exponential", 1.2],
+    ["zoom"],
+    ...base.flatMap(([zoom, size]) => [zoom, scaled(size)]),
+  ];
+}
 
 const line = (paint: LayerRule["paint"], test: RegExp): LayerRule => ({
   test,
@@ -224,25 +290,87 @@ const LAYER_RULES: LayerRule[] = [
     (p) => ({ "text-color": p.waterLabel, "text-halo-color": p.labelHalo }),
     /^(water_name_|waterway_line_label$)/,
   ),
-  label(
-    (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
-    /^(poi_|airport$|highway-name-)/,
-  ),
+  {
+    test: /^(poi_|airport$)/,
+    type: "symbol",
+    paint: (p) => ({
+      "text-color": poiTextColor(p.labelMuted),
+      "text-halo-color": p.labelHalo,
+      "text-halo-width": 1.1,
+    }),
+    layout: () => ({ ...LABEL_REGULAR, "text-size": 11.5 }),
+  },
+  {
+    test: /^highway-name-/,
+    type: "symbol",
+    paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
+    layout: () => LABEL_REGULAR,
+  },
+  {
+    test: /^label_city/,
+    type: "symbol",
+    paint: (p) => ({ "text-color": p.label, "text-halo-color": p.labelHalo }),
+    layout: () => ({
+      ...LABEL_BOLD,
+      "text-size": placeTextSize([
+        [4, 11],
+        [7, 14],
+        [11, 19],
+      ]),
+      "text-letter-spacing": 0.01,
+    }),
+  },
+  {
+    test: /^label_town$/,
+    type: "symbol",
+    paint: (p) => ({ "text-color": p.label, "text-halo-color": p.labelHalo }),
+    layout: () => ({
+      ...LABEL_BOLD,
+      "text-size": placeTextSize([
+        [7, 11],
+        [11, 14],
+      ]),
+    }),
+  },
+  {
+    test: /^label_village$/,
+    type: "symbol",
+    paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
+    layout: () => ({
+      ...LABEL_REGULAR,
+      "text-size": placeTextSize([
+        [9, 10],
+        [13, 12.5],
+      ]),
+    }),
+  },
+  {
+    test: /^label_other$/,
+    type: "symbol",
+    paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
+    layout: () => ({
+      ...LABEL_REGULAR,
+      "text-size": placeTextSize(
+        [
+          [8, 9.5],
+          [13, 11.5],
+        ],
+        false,
+      ),
+      "text-transform": "uppercase",
+      "text-letter-spacing": 0.06,
+    }),
+  },
   label((p) => ({ "text-color": p.label, "text-halo-color": p.labelHalo }), /^label_/),
 ];
 
 /** Straturile ridicate în 3D, ascunse cât timp harta e plată. */
 export const BUILDING_3D_LAYER = "building-3d";
 
-function paintPatchFor(
-  layerId: string,
-  layerType: LayerType,
-  palette: MapPalette,
-): PaintPatch | undefined {
-  const rule = LAYER_RULES.find(
+function ruleFor(layerId: string, layerType: LayerType): LayerRule | undefined {
+  return LAYER_RULES.find(
     (candidate) => candidate.type === layerType && candidate.test.test(layerId),
   );
-  return rule?.paint(palette);
 }
 
 type ThemeOptions = {
@@ -262,23 +390,22 @@ export function applyMapTheme(
   return {
     ...style,
     layers: style.layers.map((layer) => {
-      const patch = paintPatchFor(layer.id, layer.type, palette);
-      if (!patch) return layer;
+      const rule = ruleFor(layer.id, layer.type);
+      if (!rule) return layer;
 
-      const layout =
-        layer.id === BUILDING_3D_LAYER
-          ? {
-              ...("layout" in layer ? layer.layout : undefined),
-              visibility: (buildings3d ? "visible" : "none") as "visible" | "none",
-            }
-          : "layout" in layer
-            ? layer.layout
-            : undefined;
+      const currentLayout = "layout" in layer ? layer.layout : undefined;
+      const layout = {
+        ...currentLayout,
+        ...rule.layout?.(),
+        ...(layer.id === BUILDING_3D_LAYER
+          ? { visibility: (buildings3d ? "visible" : "none") as "visible" | "none" }
+          : {}),
+      };
 
       return {
         ...layer,
-        ...(layout ? { layout } : {}),
-        paint: { ...("paint" in layer ? layer.paint : undefined), ...patch },
+        ...(Object.keys(layout).length > 0 ? { layout } : {}),
+        paint: { ...("paint" in layer ? layer.paint : undefined), ...rule.paint(palette) },
       } as (typeof style.layers)[number];
     }),
   };

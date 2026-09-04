@@ -47,8 +47,12 @@ function withImagerySource(style: StyleSpecification): StyleSpecification["sourc
     [IMAGERY_SOURCE_ID]: {
       type: "raster",
       tiles: [IMAGERY_TILE_URL],
-      tileSize: 256,
-      maxzoom: 19,
+      // Dalele au 256px, dar le declarăm la 128: MapLibre cere atunci nivelul de
+      // zoom următor pentru aceeași suprafață, adică dublul densității pe ecran.
+      tileSize: 128,
+      // Peste Brașov, sursa are imagini reale până la 18. Mai sus servește o dală
+      // de avertisment, pe care harta ar afișa-o ca atare.
+      maxzoom: 18,
       attribution: IMAGERY_ATTRIBUTION.label,
     },
   };

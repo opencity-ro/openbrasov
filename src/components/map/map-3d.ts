@@ -18,6 +18,40 @@ export const RELIEF_SOURCE_ID = "relief";
 /** Cât așteptăm datele de elevație înainte să continuăm fără ele. */
 const RELIEF_SETTLE_TIMEOUT_MS = 3000;
 
+/**
+ * O comutare 3D lasă în urmă cronometre și ascultători care se termină după ce
+ * s-a apăsat din nou. Fără o sesiune care le anulează, apăsarea a doua prinde
+ * curățenia celei dintâi: terenul dispare în plină ridicare a camerei, cadrul e
+ * fixat pe un instantaneu de la mijlocul animației și harta intră în clădiri.
+ */
+type Session = { timers: number[]; detach: (() => void)[] };
+
+const sessions = new WeakMap<MapLibreMap, Session>();
+
+function startSession(map: MapLibreMap): Session {
+  const previous = sessions.get(map);
+  if (previous) {
+    previous.timers.forEach(window.clearTimeout);
+    previous.detach.forEach((stop) => stop());
+  }
+
+  const session: Session = { timers: [], detach: [] };
+  sessions.set(map, session);
+  return session;
+}
+
+function isCurrent(map: MapLibreMap, session: Session): boolean {
+  return sessions.get(map) === session;
+}
+
+function later(map: MapLibreMap, session: Session, delay: number, run: () => void): void {
+  session.timers.push(
+    window.setTimeout(() => {
+      if (isCurrent(map, session)) run();
+    }, delay),
+  );
+}
+
 type View = { center: [number, number]; zoom: number; bearing: number };
 
 function readView(map: MapLibreMap): View {
@@ -126,7 +160,7 @@ function isReliefLoaded(map: MapLibreMap): boolean {
   return Boolean(map.getSource(RELIEF_SOURCE_ID)) && map.isSourceLoaded(RELIEF_SOURCE_ID);
 }
 
-function settleRelief(map: MapLibreMap, view: View): Promise<boolean> {
+function settleRelief(map: MapLibreMap, session: Session, view: View): Promise<boolean> {
   // A doua oară elevația e deja în memorie și nu mai vine niciun `sourcedata`;
   // fără scurtătura asta am aștepta degeaba până la expirare.
   if (isReliefLoaded(map)) {
@@ -144,9 +178,11 @@ function settleRelief(map: MapLibreMap, view: View): Promise<boolean> {
       map.off("sourcedata", onSourceData);
       map.off("error", onError);
       map.off("movestart", onUserMove);
-      clearTimeout(timer);
+      window.clearTimeout(timer);
       resolve(withRelief);
     };
+
+    session.detach.push(() => finish(false));
 
     const onSourceData = (event: { sourceId?: string }) => {
       if (event.sourceId !== RELIEF_SOURCE_ID) return;
@@ -162,7 +198,7 @@ function settleRelief(map: MapLibreMap, view: View): Promise<boolean> {
       if (event.originalEvent) finish(true);
     };
 
-    const timer = setTimeout(() => finish(false), RELIEF_SETTLE_TIMEOUT_MS);
+    const timer = window.setTimeout(() => finish(false), RELIEF_SETTLE_TIMEOUT_MS);
 
     map.on("sourcedata", onSourceData);
     map.on("error", onError);
@@ -213,6 +249,7 @@ export async function enterThreeD(
   theme: MapThemeName,
   animate: boolean,
 ): Promise<boolean> {
+  const session = startSession(map);
   const view = readView(map);
 
   map.setMaxPitch(MAX_PITCH);
@@ -220,7 +257,9 @@ export async function enterThreeD(
   showBuildings(map);
   addReliefSource(map);
 
-  const withRelief = await settleRelief(map, view);
+  const withRelief = await settleRelief(map, session, view);
+  if (!isCurrent(map, session)) return withRelief;
+
   if (!withRelief) map.setTerrain(null);
 
   map.jumpTo(view);
@@ -235,6 +274,8 @@ export async function enterThreeD(
 
 /** Ieșirea: camera coboară prima, straturile pleacă după ce nu se mai văd. */
 export function exitThreeD(map: MapLibreMap, animate: boolean): void {
+  const session = startSession(map);
+
   if (hasBuildingLayer(map)) {
     map.setPaintProperty(BUILDING_3D_LAYER, "fill-extrusion-opacity-transition", {
       duration: Math.round(PITCH_EXIT_MS * 0.6),
@@ -245,6 +286,8 @@ export function exitThreeD(map: MapLibreMap, animate: boolean): void {
 
   map.easeTo({ pitch: 0, duration: animate ? PITCH_EXIT_MS : 0, easing: easeOutExpo });
 
-  window.setTimeout(() => removeThreeDLayers(map), animate ? PITCH_EXIT_MS : 0);
-  window.setTimeout(() => map.setMaxPitch(0), animate ? PITCH_EXIT_MS + 50 : 0);
+  later(map, session, animate ? PITCH_EXIT_MS : 0, () => {
+    removeThreeDLayers(map);
+    map.setMaxPitch(0);
+  });
 }

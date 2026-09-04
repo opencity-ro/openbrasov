@@ -72,7 +72,7 @@ export function ModeSwitcher({
           <LayersIcon />
         </MapButton>
       </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={8} className="w-auto p-2">
+      <PopoverContent side="left" align="start" sideOffset={10} className="w-auto p-2">
         <div className="flex gap-2" role="radiogroup" aria-label={t.map.layers}>
           {MAP_MODES.map((candidate) => {
             const selected = candidate === mode;
