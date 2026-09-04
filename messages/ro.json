@@ -6,7 +6,11 @@
   "nav": {
     "map": "Harta",
     "report": "Sesizează",
-    "github": "Cod sursă pe GitHub"
+    "github": "Cod sursă pe GitHub",
+    "signIn": "Autentificare",
+    "signOut": "Deconectare",
+    "profile": "Profilul meu",
+    "theme": "Schimbă tema"
   },
   "home": {
     "eyebrow": "Platforma civică din Brașov",
@@ -49,5 +53,26 @@
     "draft": "Document în lucru. Versiunea finală apare înainte de lansarea publică.",
     "termsTitle": "Termeni și condiții",
     "privacyTitle": "Politica de confidențialitate"
+  },
+  "auth": {
+    "title": "Intră în cont",
+    "subtitle": "Fără parolă. Îți trimitem un link pe email, apeși pe el și ești conectat.",
+    "emailLabel": "Adresa de email",
+    "emailPlaceholder": "nume@exemplu.ro",
+    "submit": "Trimite-mi linkul",
+    "submitting": "Se trimite…",
+    "google": "Continuă cu Google",
+    "or": "sau",
+    "sentTitle": "Verifică-ți emailul",
+    "sentBody": "Am trimis un link de conectare la {email}. Este valabil o oră.",
+    "sentHint": "Nu îl găsești? Uită-te și în Spam sau Promoții.",
+    "retry": "Trimite din nou",
+    "errorLink": "Linkul a expirat sau a fost deja folosit. Cere unul nou.",
+    "errorGoogle": "Conectarea cu Google nu a funcționat. Încearcă din nou.",
+    "guestNote": "Poți explora harta și fără cont. Contul îți dă acces la sesizările tale și la statusul lor."
+  },
+  "profile": {
+    "anonymous": "Anonim",
+    "account": "Cont"
   }
 }

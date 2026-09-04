@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
 
+import { ThemeProvider } from "@/components/site/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 import { SITE_URL } from "@/lib/site";
 
 import "./globals.css";
@@ -29,15 +31,32 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1b5e3b",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fafaf7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f1a14" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ro" className={`${inter.variable} ${bricolage.variable} antialiased`}>
-      <body className="bg-background text-foreground flex min-h-dvh flex-col">{children}</body>
+    <html
+      lang="ro"
+      className={`${inter.variable} ${bricolage.variable} antialiased`}
+      suppressHydrationWarning
+    >
+      <body className="bg-background text-foreground flex min-h-dvh flex-col">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
