@@ -153,3 +153,30 @@
     }
   }
 }
+
+@layer components {
+  /*
+   * Controalele implicite MapLibre sunt înlocuite cu ale noastre. Pe cel de
+   * geolocalizare îl păstrăm montat, pentru punctul de poziție și cercul de
+   * precizie, dar îi ascundem butonul: îl pornim din butonul nostru.
+   */
+  .maplibregl-ctrl-group {
+    display: none;
+  }
+
+  /* Popup-urile moștenesc suprafața aplicației, nu albul implicit al bibliotecii. */
+  .maplibregl-popup-content {
+    background: var(--popover);
+    color: var(--popover-foreground);
+    border-radius: var(--radius-lg);
+    box-shadow:
+      0 1px 2px rgb(16 24 20 / 0.08),
+      0 12px 32px -12px rgb(16 24 20 / 0.3);
+  }
+  .maplibregl-popup-anchor-top .maplibregl-popup-tip {
+    border-bottom-color: var(--popover);
+  }
+  .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+    border-top-color: var(--popover);
+  }
+}
