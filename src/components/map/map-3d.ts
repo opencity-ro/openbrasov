@@ -15,19 +15,14 @@ import { BUILDING_3D_LAYER, type MapThemeName } from "./map-theme";
 
 export const RELIEF_SOURCE_ID = "relief";
 
-/**
- * Terenul ridicat schimbă altitudinea punctului din centru, iar MapLibre reașază
- * camera după ea — de aici saltul la pornirea reliefului. Reținem cadrul înainte
- * și îl punem la loc după, ca omul să rămână exact unde se uita.
- */
-function keepingTheView(map: MapLibreMap, change: () => void): void {
-  const center = map.getCenter();
-  const zoom = map.getZoom();
-  const bearing = map.getBearing();
+/** Cât așteptăm datele de elevație înainte să continuăm fără ele. */
+const RELIEF_SETTLE_TIMEOUT_MS = 3000;
 
-  change();
+type View = { center: [number, number]; zoom: number; bearing: number };
 
-  map.jumpTo({ center, zoom, bearing });
+function readView(map: MapLibreMap): View {
+  const { lng, lat } = map.getCenter();
+  return { center: [lng, lat], zoom: map.getZoom(), bearing: map.getBearing() };
 }
 
 /** Ieșire exponențială: pornește repede, se așază lin. Curba camerelor de hartă. */
@@ -89,6 +84,20 @@ function hasBuildingLayer(map: MapLibreMap): boolean {
   return Boolean(map.getLayer(BUILDING_3D_LAYER));
 }
 
+function showBuildings(map: MapLibreMap): void {
+  if (!hasBuildingLayer(map)) return;
+
+  map.setLayoutProperty(BUILDING_3D_LAYER, "visibility", "visible");
+  map.setPaintProperty(BUILDING_3D_LAYER, "fill-extrusion-vertical-gradient", true);
+  map.setPaintProperty(BUILDING_3D_LAYER, "fill-extrusion-height", BUILDING_HEIGHT);
+  map.setPaintProperty(BUILDING_3D_LAYER, "fill-extrusion-base", BUILDING_BASE);
+  map.setPaintProperty(BUILDING_3D_LAYER, "fill-extrusion-opacity-transition", {
+    duration: BUILDING_RISE_MS,
+    delay: BUILDING_RISE_DELAY_MS,
+  });
+  map.setPaintProperty(BUILDING_3D_LAYER, "fill-extrusion-opacity", 0.94);
+}
+
 function addReliefSource(map: MapLibreMap): void {
   if (map.getSource(RELIEF_SOURCE_ID)) return;
 
@@ -104,31 +113,84 @@ function addReliefSource(map: MapLibreMap): void {
 }
 
 /**
- * Aplică starea de relief pe stilul curent. Se cheamă și după schimbarea temei
- * sau a modului, pentru că un stil nou vine cu straturile resetate.
+ * Aici se ascundea instabilitatea. Pământul ridicat urcă spre cameră, iar
+ * MapLibre recalculează centrul și zoom-ul după noua altitudine — dar altitudinea
+ * se află abia când sosesc dalele de elevație, adică după ce am pornit deja
+ * mișcarea. De aici saltul și apropierea nedorită.
  *
- * Exagerarea rămâne 1: peste ea, MapLibre pierde centrul și zoom-ul la rotire.
+ * Cât timp datele curg, ținem cadrul fixat la fiecare pachet sosit. Ne oprim de
+ * îndată ce sursa e completă, la eroare, la expirare — sau imediat ce omul pune
+ * mâna pe hartă, fiindcă atunci comanda e a lui, nu a noastră.
+ */
+function isReliefLoaded(map: MapLibreMap): boolean {
+  return Boolean(map.getSource(RELIEF_SOURCE_ID)) && map.isSourceLoaded(RELIEF_SOURCE_ID);
+}
+
+function settleRelief(map: MapLibreMap, view: View): Promise<boolean> {
+  // A doua oară elevația e deja în memorie și nu mai vine niciun `sourcedata`;
+  // fără scurtătura asta am aștepta degeaba până la expirare.
+  if (isReliefLoaded(map)) {
+    map.setTerrain({ source: RELIEF_SOURCE_ID, exaggeration: 1 });
+    map.jumpTo(view);
+    return Promise.resolve(true);
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+
+    const finish = (withRelief: boolean) => {
+      if (settled) return;
+      settled = true;
+      map.off("sourcedata", onSourceData);
+      map.off("error", onError);
+      map.off("movestart", onUserMove);
+      clearTimeout(timer);
+      resolve(withRelief);
+    };
+
+    const onSourceData = (event: { sourceId?: string }) => {
+      if (event.sourceId !== RELIEF_SOURCE_ID) return;
+      map.jumpTo(view);
+      if (isReliefLoaded(map)) finish(true);
+    };
+
+    const onError = (event: { sourceId?: string }) => {
+      if (event.sourceId === RELIEF_SOURCE_ID) finish(false);
+    };
+
+    const onUserMove = (event: { originalEvent?: unknown }) => {
+      if (event.originalEvent) finish(true);
+    };
+
+    const timer = setTimeout(() => finish(false), RELIEF_SETTLE_TIMEOUT_MS);
+
+    map.on("sourcedata", onSourceData);
+    map.on("error", onError);
+    map.on("movestart", onUserMove);
+
+    map.setTerrain({ source: RELIEF_SOURCE_ID, exaggeration: 1 });
+    map.jumpTo(view);
+  });
+}
+
+/**
+ * Reașază relieful pe un stil proaspăt — după schimbarea temei sau a modului,
+ * când straturile vin resetate. Exagerarea rămâne 1: peste ea, MapLibre pierde
+ * centrul și zoom-ul la rotire.
  */
 export function applyThreeDLayers(map: MapLibreMap, theme: MapThemeName): void {
+  const view = readView(map);
   addReliefSource(map);
   map.setSky(skyFor(theme));
-  keepingTheView(map, () => map.setTerrain({ source: RELIEF_SOURCE_ID, exaggeration: 1 }));
-
-  if (!hasBuildingLayer(map)) return;
-
-  map.setLayoutProperty(BUILDING_3D_LAYER, "visibility", "visible");
-  map.setPaintProperty(BUILDING_3D_LAYER, "fill-extrusion-vertical-gradient", true);
-  map.setPaintProperty(BUILDING_3D_LAYER, "fill-extrusion-height", BUILDING_HEIGHT);
-  map.setPaintProperty(BUILDING_3D_LAYER, "fill-extrusion-base", BUILDING_BASE);
-  map.setPaintProperty(BUILDING_3D_LAYER, "fill-extrusion-opacity-transition", {
-    duration: BUILDING_RISE_MS,
-    delay: BUILDING_RISE_DELAY_MS,
-  });
-  map.setPaintProperty(BUILDING_3D_LAYER, "fill-extrusion-opacity", 0.94);
+  map.setTerrain({ source: RELIEF_SOURCE_ID, exaggeration: 1 });
+  map.jumpTo(view);
+  showBuildings(map);
 }
 
 export function removeThreeDLayers(map: MapLibreMap): void {
-  keepingTheView(map, () => map.setTerrain(null));
+  const view = readView(map);
+  map.setTerrain(null);
+  map.jumpTo(view);
   // MapLibre nu are „scoate cerul"; îi stingem atmosfera, iar pe harta plată
   // orizontul oricum nu se mai desenează.
   map.setSky({ "atmosphere-blend": 0 });
@@ -139,18 +201,36 @@ export function removeThreeDLayers(map: MapLibreMap): void {
 }
 
 /**
- * Intrarea în relief: straturile se așază pe harta încă plată, apoi camera se
- * ridică. Nimic altceva nu se mișcă — nici centrul, nici zoom-ul, nici orientarea.
+ * Intrarea în relief. Ordinea e toată ideea: straturile se așază pe harta încă
+ * plată, elevația se lasă să se așeze cu cadrul fixat, și abia apoi se ridică
+ * înclinarea. Nimic altceva nu se mișcă — nici centrul, nici zoom-ul, nici
+ * orientarea.
+ *
+ * Întoarce `false` dacă elevația nu a venit: clădirile rămân ridicate, munții nu.
  */
-export function enterThreeD(map: MapLibreMap, theme: MapThemeName, animate: boolean): void {
-  map.setMaxPitch(MAX_PITCH);
-  applyThreeDLayers(map, theme);
+export async function enterThreeD(
+  map: MapLibreMap,
+  theme: MapThemeName,
+  animate: boolean,
+): Promise<boolean> {
+  const view = readView(map);
 
+  map.setMaxPitch(MAX_PITCH);
+  map.setSky(skyFor(theme));
+  showBuildings(map);
+  addReliefSource(map);
+
+  const withRelief = await settleRelief(map, view);
+  if (!withRelief) map.setTerrain(null);
+
+  map.jumpTo(view);
   map.easeTo({
     pitch: PITCHED_ANGLE,
     duration: animate ? PITCH_ENTER_MS : 0,
     easing: easeOutExpo,
   });
+
+  return withRelief;
 }
 
 /** Ieșirea: camera coboară prima, straturile pleacă după ce nu se mai văd. */
@@ -165,8 +245,6 @@ export function exitThreeD(map: MapLibreMap, animate: boolean): void {
 
   map.easeTo({ pitch: 0, duration: animate ? PITCH_EXIT_MS : 0, easing: easeOutExpo });
 
-  map.once("moveend", () => {
-    removeThreeDLayers(map);
-    map.setMaxPitch(0);
-  });
+  window.setTimeout(() => removeThreeDLayers(map), animate ? PITCH_EXIT_MS : 0);
+  window.setTimeout(() => map.setMaxPitch(0), animate ? PITCH_EXIT_MS + 50 : 0);
 }

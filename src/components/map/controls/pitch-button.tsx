@@ -20,7 +20,7 @@ export function PitchButton({
   return (
     <MapButton
       label={active ? t.map.exit3d : t.map.enter3d}
-      pressed={active}
+      aria-pressed={active}
       active={active}
       disabled={disabled}
       onClick={onToggle}

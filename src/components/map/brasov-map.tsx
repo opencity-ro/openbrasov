@@ -3,6 +3,7 @@
 import type { Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -119,8 +120,14 @@ export function BrasovMap({ className }: BrasovMapProps) {
     const next = !is3d;
     setIs3d(next);
 
-    if (next) enterThreeD(map, theme, animate);
-    else exitThreeD(map, animate);
+    if (!next) {
+      exitThreeD(map, animate);
+      return;
+    }
+
+    void enterThreeD(map, theme, animate).then((withRelief) => {
+      if (!withRelief) toast.info(t.map.reliefUnavailable);
+    });
   }, [map, theme, is3d]);
 
   return (

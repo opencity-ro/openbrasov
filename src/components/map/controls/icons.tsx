@@ -68,17 +68,17 @@ export function LayersIcon({ className }: IconProps) {
  */
 export function CompassIcon({ className, bearing = 0 }: IconProps & { bearing?: number }) {
   return (
-    <svg viewBox="0 0 24 24" className={cn("size-[19px]", className)} aria-hidden="true">
-      <circle cx="12" cy="12" r="9.4" className="fill-foreground/[0.07]" />
+    <svg viewBox="0 0 24 24" className={cn("size-[22px]", className)} aria-hidden="true">
+      <circle cx="12" cy="12" r="11.2" className="fill-foreground/[0.07]" />
       <g style={{ transform: `rotate(${-bearing}deg)`, transformOrigin: "12px 12px" }}>
-        <path d="M12 2.4 13.9 6.8h-3.8L12 2.4Z" className="fill-destructive" />
-        <path d="M12 21.6 10.1 17.2h3.8L12 21.6Z" className="fill-muted-foreground/45" />
+        <path d="M12 0.9 14.4 6.4h-4.8L12 0.9Z" className="fill-destructive" />
+        <path d="M12 23.1 9.6 17.6h4.8L12 23.1Z" className="fill-muted-foreground/45" />
       </g>
       <text
         x="12"
-        y="14.5"
+        y="15.2"
         textAnchor="middle"
-        className="fill-foreground text-[7.5px] font-semibold"
+        className="fill-foreground text-[10px] font-semibold"
         style={{ fontFamily: "inherit" }}
       >
         N

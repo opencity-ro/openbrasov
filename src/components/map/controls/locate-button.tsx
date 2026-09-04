@@ -35,7 +35,8 @@ export function LocateButton() {
       control = new maplibregl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true, timeout: 10_000 },
         trackUserLocation: true,
-        showAccuracyCircle: true,
+        // Cercul mare de precizie acoperă exact cartierul pe care te uiți.
+        showAccuracyCircle: false,
         showUserLocation: true,
       });
 
@@ -63,7 +64,7 @@ export function LocateButton() {
     <MapButton
       label={t.map.locate}
       active={state === "active"}
-      busy={isBusy}
+      aria-busy={isBusy}
       disabled={!map}
       onClick={() => {
         if (!controlRef.current) return;

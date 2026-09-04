@@ -1,5 +1,7 @@
 "use client";
 
+import type * as React from "react";
+
 import { cn } from "@/lib/utils";
 
 /**
@@ -13,42 +15,26 @@ export const mapSurfaceClass = cn(
   "dark:shadow-[0_1px_2px_rgba(0,0,0,0.45),0_6px_18px_-8px_rgba(0,0,0,0.65)]",
 );
 
+type MapButtonProps = React.ComponentProps<"button"> & {
+  label: string;
+  /** Controlul e pornit — colorează iconița, fără să schimbe forma butonului. */
+  active?: boolean;
+};
+
 /**
  * Butoanele hărții sunt mai mici decât cele din restul aplicației — 38px, cât
  * cere o hartă ca să nu-ți acopere orașul. Zona de atingere rămâne însă 44px,
  * întinsă cu un pseudo-element invizibil.
+ *
+ * Primește și împrăștie orice altă proprietate: fără asta, un declanșator de
+ * popover nu își poate lipi de el nici evenimentele, nici referința.
  */
-export function MapButton({
-  className,
-  label,
-  pressed,
-  active,
-  disabled,
-  busy,
-  tabIndex,
-  onClick,
-  children,
-}: {
-  className?: string;
-  label: string;
-  pressed?: boolean;
-  active?: boolean;
-  disabled?: boolean;
-  busy?: boolean;
-  tabIndex?: number;
-  onClick?: () => void;
-  children: React.ReactNode;
-}) {
+export function MapButton({ className, label, active, ...props }: MapButtonProps) {
   return (
     <button
       type="button"
       aria-label={label}
       title={label}
-      aria-pressed={pressed}
-      aria-busy={busy}
-      disabled={disabled}
-      tabIndex={tabIndex}
-      onClick={onClick}
       className={cn(
         "relative flex size-[38px] shrink-0 items-center justify-center",
         "text-foreground/80 hover:text-foreground transition-colors duration-150",
@@ -60,9 +46,8 @@ export function MapButton({
         active && "text-primary",
         className,
       )}
-    >
-      {children}
-    </button>
+      {...props}
+    />
   );
 }
 
