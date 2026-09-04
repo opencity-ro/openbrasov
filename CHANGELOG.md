@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/opencity-ro/openbrasov/compare/v0.1.1...v0.2.0) (2026-09-04)
+
+
+### Funcționalități
+
+* **auth:** add the report data model and passwordless sign-in ([#17](https://github.com/opencity-ro/openbrasov/issues/17)) ([db0b7be](https://github.com/opencity-ro/openbrasov/commit/db0b7be690e853f753e0cd0588ab887b8e6a18e3))
+
 ## [0.1.1](https://github.com/opencity-ro/openbrasov/compare/v0.1.0...v0.1.1) (2026-09-03)
 
 
