@@ -40,8 +40,8 @@ export type MapPalette = {
 };
 
 /**
- * Ton cald, dens, apropiat de Apple Maps, dar tras spre verdele mărcii:
- * uscat cald, apă potolită, verdeață citibilă, drumuri albe cu contur discret.
+ * Ziua: ton cald și dens, tras spre verdele mărcii — uscat cald, apă potolită,
+ * verdeață citibilă, drumuri albe cu contur discret.
  */
 export const LIGHT_PALETTE: MapPalette = {
   background: "#f4f1eb",
@@ -78,41 +78,42 @@ export const LIGHT_PALETTE: MapPalette = {
 };
 
 /**
- * Noaptea: uscat verde-negru pe linia lui `--background`, drumuri mai deschise
- * decât terenul (altfel orașul dispare), apă cu un rest de albastru ca să rămână apă.
+ * Noaptea: ardezie albastru-cenușie, nu negru. Drumurile stau mai deschise decât
+ * terenul, altfel orașul dispare; verdeața rămâne saturată ca să se citească
+ * dealurile, iar apa păstrează destul albastru cât să rămână apă.
  */
 export const DARK_PALETTE: MapPalette = {
-  background: "#0e1512",
-  water: "#0d2130",
-  waterway: "#12303f",
-  park: "#14211a",
-  wood: "#15241b",
-  grass: "#16241b",
-  wetland: "#14201c",
-  sand: "#1e2119",
-  ice: "#1b2427",
-  residential: "#121a16",
-  institutional: "#141c18",
-  pitch: "#17251c",
-  aeroway: "#161d19",
-  building: "#1a231d",
-  buildingOutline: "#232e27",
-  building3d: "#1e2822",
-  motorway: "#34433a",
-  motorwayCasing: "#435347",
-  major: "#2a362e",
-  majorCasing: "#37453b",
-  minor: "#212b25",
-  minorCasing: "#2b3730",
-  path: "#2a342d",
-  rail: "#253028",
-  boundary: "#3a4841",
-  label: "#cbd8ce",
-  labelHalo: "rgba(10, 16, 13, 0.78)",
-  labelMuted: "#8fa396",
-  waterLabel: "#7fa6be",
-  parkLabel: "#86a98a",
-  reliefOpacity: 0.12,
+  background: "#2b3038",
+  water: "#1e2a36",
+  waterway: "#2a3d4d",
+  park: "#274a3a",
+  wood: "#234433",
+  grass: "#2a4d3c",
+  wetland: "#283f3a",
+  sand: "#3a3a33",
+  ice: "#333e46",
+  residential: "#2f343d",
+  institutional: "#333842",
+  pitch: "#2c4a3b",
+  aeroway: "#31363f",
+  building: "#363c46",
+  buildingOutline: "#414854",
+  building3d: "#3b414c",
+  motorway: "#5a6270",
+  motorwayCasing: "#6a7381",
+  major: "#4c5460",
+  majorCasing: "#5a626e",
+  minor: "#414954",
+  minorCasing: "#4b535f",
+  path: "#454d58",
+  rail: "#3a414b",
+  boundary: "#4a525e",
+  label: "#dbe1e9",
+  labelHalo: "rgba(26, 30, 36, 0.85)",
+  labelMuted: "#9aa4b2",
+  waterLabel: "#7fa8c4",
+  parkLabel: "#7cc4a0",
+  reliefOpacity: 0.15,
 };
 
 export const PALETTES = { light: LIGHT_PALETTE, dark: DARK_PALETTE } as const;

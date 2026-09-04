@@ -1,8 +1,11 @@
 "use client";
 
+import type { MapMode } from "../map-modes";
 import { CompassButton } from "./compass-button";
 import { LocateButton } from "./locate-button";
 import { MapAttribution } from "./map-attribution";
+import { MapControlGroup } from "./map-control-surface";
+import { ModeSwitcher } from "./mode-switcher";
 import { PitchButton } from "./pitch-button";
 import { ScaleBar } from "./scale-bar";
 import { ZoomButtons } from "./zoom-buttons";
@@ -12,19 +15,27 @@ import { ZoomButtons } from "./zoom-buttons";
  * treacă pe sub el; doar grupurile de butoane primesc înapoi evenimentele.
  */
 export function MapControls({
+  ready,
+  mode,
+  onSelectMode,
   is3d,
-  canToggle3d,
   onToggle3d,
 }: {
+  ready: boolean;
+  mode: MapMode;
+  onSelectMode: (mode: MapMode) => void;
   is3d: boolean;
-  canToggle3d: boolean;
   onToggle3d: () => void;
 }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4 sm:pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="flex justify-end">
         <div className="pointer-events-auto flex flex-col items-end gap-2">
-          <PitchButton active={is3d} disabled={!canToggle3d} onToggle={onToggle3d} />
+          <MapControlGroup>
+            <ModeSwitcher mode={mode} onSelect={onSelectMode} disabled={!ready} />
+            <LocateButton />
+            <PitchButton active={is3d} disabled={!ready} onToggle={onToggle3d} />
+          </MapControlGroup>
           <CompassButton />
         </div>
       </div>
@@ -32,14 +43,11 @@ export function MapControls({
       <div className="flex items-end justify-between gap-4">
         <div className="pointer-events-auto flex flex-col gap-1">
           <ScaleBar />
-          <MapAttribution />
+          <MapAttribution mode={mode} />
         </div>
 
-        <div className="pointer-events-auto flex flex-col items-end gap-2">
-          {/* Pe telefon zoom-ul se face cu două degete; butoanele ar fura din hartă. */}
-          <ZoomButtons className="hidden sm:flex" />
-          <LocateButton />
-        </div>
+        {/* Pe telefon zoom-ul se face cu două degete; butoanele ar fura din hartă. */}
+        <ZoomButtons className="pointer-events-auto hidden sm:flex" />
       </div>
     </div>
   );

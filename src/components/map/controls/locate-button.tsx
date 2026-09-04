@@ -1,22 +1,20 @@
 "use client";
 
 import type { GeolocateControl } from "maplibre-gl";
-import { LoaderCircle, LocateFixed } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import { t } from "@/lib/messages";
-import { cn } from "@/lib/utils";
 
 import { useMapInstance } from "../map-context";
-import { mapSurfaceClass } from "./map-control-surface";
+import { LocateArrowIcon } from "./icons";
+import { MapButton } from "./map-control-surface";
 
 type LocateState = "idle" | "locating" | "active";
 
 /**
  * Butonul e al nostru, logica e a MapLibre. `GeolocateControl` știe deja să
- * deseneze punctul albastru și cercul de precizie și să urmărească poziția;
+ * deseneze punctul de poziție și cercul de precizie și să urmărească poziția;
  * îi ascundem butonul implicit (vezi `globals.css`) și îl pornim cu `trigger()`.
  */
 export function LocateButton() {
@@ -66,14 +64,10 @@ export function LocateButton() {
   const isBusy = state === "locating";
 
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon-xl"
-      className={cn(mapSurfaceClass, state === "active" && "text-primary")}
-      aria-label={t.map.locate}
-      title={t.map.locate}
-      aria-busy={isBusy}
+    <MapButton
+      label={t.map.locate}
+      active={state === "active"}
+      busy={isBusy}
       disabled={!map}
       onClick={() => {
         if (!controlRef.current) return;
@@ -81,17 +75,13 @@ export function LocateButton() {
         controlRef.current.trigger();
       }}
     >
-      {isBusy ? (
-        <LoaderCircle
-          className="size-[18px] animate-spin motion-reduce:animate-none"
-          aria-hidden="true"
-        />
-      ) : (
-        <LocateFixed className="size-[18px]" aria-hidden="true" />
-      )}
+      <LocateArrowIcon
+        filled={state === "active"}
+        className={isBusy ? "animate-pulse motion-reduce:animate-none" : undefined}
+      />
       <span className="sr-only" role="status">
         {isBusy ? t.map.locating : ""}
       </span>
-    </Button>
+    </MapButton>
   );
 }

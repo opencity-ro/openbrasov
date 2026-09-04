@@ -1,12 +1,10 @@
 "use client";
 
-import { Minus, Plus } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 import { t } from "@/lib/messages";
 
 import { useMapInstance, useMapView } from "../map-context";
-import { MapControlGroup } from "./map-control-surface";
+import { MinusIcon, PlusIcon } from "./icons";
+import { MapButton, MapControlGroup } from "./map-control-surface";
 
 export function ZoomButtons({ className }: { className?: string }) {
   const map = useMapInstance();
@@ -17,30 +15,12 @@ export function ZoomButtons({ className }: { className?: string }) {
 
   return (
     <MapControlGroup className={className}>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-xl"
-        className="rounded-none"
-        aria-label={t.map.zoomIn}
-        title={t.map.zoomIn}
-        disabled={!map || atMax}
-        onClick={() => map?.zoomIn()}
-      >
-        <Plus className="size-[18px]" aria-hidden="true" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-xl"
-        className="rounded-none"
-        aria-label={t.map.zoomOut}
-        title={t.map.zoomOut}
-        disabled={!map || atMin}
-        onClick={() => map?.zoomOut()}
-      >
-        <Minus className="size-[18px]" aria-hidden="true" />
-      </Button>
+      <MapButton label={t.map.zoomIn} disabled={!map || atMax} onClick={() => map?.zoomIn()}>
+        <PlusIcon />
+      </MapButton>
+      <MapButton label={t.map.zoomOut} disabled={!map || atMin} onClick={() => map?.zoomOut()}>
+        <MinusIcon />
+      </MapButton>
     </MapControlGroup>
   );
 }

@@ -7,28 +7,32 @@ import {
   reliefTileWindow,
 } from "./relief-tiles";
 
-/** Dala care conține Piața Sfatului, la fiecare zoom permis. */
-function brasovTile(zoom: number) {
+/** Dala din mijlocul zonei permise, la fiecare zoom. */
+function insideTile(zoom: number) {
   const { minX, maxX, minY, maxY } = reliefTileWindow(zoom);
   return { x: Math.round((minX + maxX) / 2), y: Math.round((minY + maxY) / 2) };
 }
 
 describe("isReliefTileAllowed", () => {
-  it("acceptă dalele din zona Brașovului", () => {
+  it("acceptă dalele din zona acoperită", () => {
     for (let zoom = RELIEF_MIN_ZOOM; zoom <= RELIEF_MAX_ZOOM; zoom += 1) {
-      const { x, y } = brasovTile(zoom);
+      const { x, y } = insideTile(zoom);
       expect(isReliefTileAllowed(zoom, x, y)).toBe(true);
     }
   });
 
-  it("refuză dalele din afara zonei, ca ruta să nu fie un proxy deschis", () => {
-    const { x, y } = brasovTile(12);
-    expect(isReliefTileAllowed(12, x + 50, y)).toBe(false);
-    expect(isReliefTileAllowed(12, x, y - 50)).toBe(false);
+  it("refuză dalele de pe alte continente, ca ruta să nu fie un proxy deschis", () => {
+    const { minX, maxX, minY, maxY } = reliefTileWindow(12);
+
+    // Alpii, la vest de fereastră, și nordul Scandinaviei, deasupra ei.
+    expect(isReliefTileAllowed(12, minX - 1, minY)).toBe(false);
+    expect(isReliefTileAllowed(12, maxX + 1, minY)).toBe(false);
+    expect(isReliefTileAllowed(12, minX, minY - 1)).toBe(false);
+    expect(isReliefTileAllowed(12, minX, maxY + 1)).toBe(false);
   });
 
   it("refuză zoom-urile din afara intervalului", () => {
-    const { x, y } = brasovTile(12);
+    const { x, y } = insideTile(12);
     expect(isReliefTileAllowed(RELIEF_MIN_ZOOM - 1, x, y)).toBe(false);
     expect(isReliefTileAllowed(RELIEF_MAX_ZOOM + 1, x, y)).toBe(false);
   });

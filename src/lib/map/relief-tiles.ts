@@ -1,5 +1,3 @@
-import { BRASOV_BOUNDS } from "@/components/map/map-config";
-
 /**
  * Dalele de relief (Terrain Tiles, AWS Open Data) sunt gratuite, dar se servesc
  * fără antet CORS, deci WebGL nu le poate citi direct. Le trecem printr-o rută
@@ -11,6 +9,15 @@ export const RELIEF_TILE_ORIGIN = "https://s3.amazonaws.com/elevation-tiles-prod
 export const RELIEF_MIN_ZOOM = 8;
 export const RELIEF_MAX_ZOOM = 13;
 
+/**
+ * Harta se poate plimba oriunde, dar relieful îl servim doar peste România.
+ * Fără o limită, ruta ar fi un proxy deschis de elevație pe cheltuiala noastră.
+ */
+export const RELIEF_BOUNDS: [[number, number], [number, number]] = [
+  [20.2, 43.5],
+  [29.8, 48.3],
+];
+
 function lngToTileX(lng: number, zoom: number): number {
   return ((lng + 180) / 360) * 2 ** zoom;
 }
@@ -21,12 +28,9 @@ function latToTileY(lat: number, zoom: number): number {
   return ((1 - mercator / Math.PI) / 2) * 2 ** zoom;
 }
 
-/**
- * Fereastra de dale care acoperă zona metropolitană, cu o dală marjă de fiecare
- * parte. Fără ea, ruta ar fi un proxy deschis către întreaga planetă.
- */
+/** Fereastra de dale care acoperă zona permisă, cu o dală marjă de fiecare parte. */
 export function reliefTileWindow(zoom: number) {
-  const [[west, south], [east, north]] = BRASOV_BOUNDS;
+  const [[west, south], [east, north]] = RELIEF_BOUNDS;
 
   return {
     minX: Math.floor(lngToTileX(west, zoom)) - 1,

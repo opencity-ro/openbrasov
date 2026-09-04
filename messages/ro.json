@@ -52,7 +52,10 @@
     "enter3d": "Vezi orașul în relief",
     "exit3d": "Revino la harta plată",
     "reliefUnavailable": "Relieful nu s-a încărcat, dar clădirile rămân în relief.",
-    "attribution": "Date"
+    "layers": "Schimbă aspectul hărții",
+    "modeStandard": "Standard",
+    "modeHybrid": "Hibrid",
+    "modeSatellite": "Satelit"
   },
   "footer": {
     "independent": "Proiect independent, neafiliat Primăriei Brașov sau altei instituții publice.",
