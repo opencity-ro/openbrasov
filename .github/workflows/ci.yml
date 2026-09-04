@@ -15,31 +15,77 @@ env:
   NEXT_TELEMETRY_DISABLED: 1
 
 jobs:
+  # The only check pull requests wait on. Everything here is fast enough that a
+  # contributor gets an answer in under a minute.
   check:
     name: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      # Release pull requests only carry a version bump, a changelog entry and the
+      # manifest, all written by a bot. Linting them proves nothing, so the job
+      # reports success immediately and the release publishes without the wait.
+      - id: gate
+        run: |
+          if [[ "${{ github.head_ref }}" == release-please--* ]]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Release pull request: skipping the source checks."
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # corepack reads packageManager from package.json, which removes a separate
+      # pnpm install step and lets setup-node cache the store in the same pass.
+      - if: steps.gate.outputs.run == 'true'
+        run: corepack enable
+
+      - if: steps.gate.outputs.run == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - if: steps.gate.outputs.run == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache the Next build
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/cache@v5
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**', 'messages/**') }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            next-${{ runner.os }}-
+
+      - if: steps.gate.outputs.run == 'true'
+        run: pnpm lint
+
+      - if: steps.gate.outputs.run == 'true'
+        run: pnpm format:check
+
+      - if: steps.gate.outputs.run == 'true'
+        run: pnpm typecheck
+
+      - if: steps.gate.outputs.run == 'true'
+        run: pnpm test
+
+      - if: steps.gate.outputs.run == 'true'
+        run: pnpm build
+
+  # A real browser with WebGL is the only place the map can be proven to render,
+  # so this stays — just off the critical path. It runs after a merge, ahead of
+  # anything reaching production.
+  e2e:
+    name: e2e
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm format:check
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
-
-  e2e:
-    name: e2e
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
+      - run: corepack enable
       - uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
@@ -50,9 +96,7 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - name: Install Playwright browsers
-        if: hashFiles('playwright.config.ts') != ''
-        run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       - uses: actions/upload-artifact@v5
         if: ${{ !cancelled() && hashFiles('playwright-report/**') != '' }}
