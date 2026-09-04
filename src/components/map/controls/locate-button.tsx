@@ -41,10 +41,6 @@ export function LocateButton() {
 
       control.on("geolocate", () => setState("active"));
       control.on("trackuserlocationend", () => setState("idle"));
-      control.on("outofmaxbounds", () => {
-        setState("idle");
-        toast.info(t.map.locationOutsideBrasov);
-      });
       control.on("error", (event: GeolocationPositionError) => {
         setState("idle");
         toast.error(event.code === 1 ? t.map.locationDenied : t.map.locationUnavailable);
