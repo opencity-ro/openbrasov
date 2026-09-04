@@ -175,9 +175,12 @@ const LABEL_REGULAR = { "text-font": ["Noto Sans Regular"] };
 const LABEL_BOLD = { "text-font": ["Noto Sans Bold"] };
 
 /**
- * Numele localității crește cu importanța ei, nu doar cu zoom-ul: `rank` vine din
- * datele OpenMapTiles, unde 1 e cel mai important. Așa Brașovul se vede de departe,
- * iar satele apar discret abia când ajungi lângă ele.
+ * Numele localității crește cu importanța ei, nu doar cu zoom-ul.
+ *
+ * Pragurile sunt luate din dala reală de peste Brașov, nu ghicite: acolo Brașovul
+ * are `rank` 7, iar Săcele și Codlea — orașe și ele — au 11. Satele stau la 11-14,
+ * cartierele la 15-17. Cu numai patru trepte între orașul mare și cele mici, curba
+ * trebuie să fie abruptă exact în intervalul acela, altfel toate ies la fel.
  */
 function placeTextSize(base: [number, number][], byRank = true): unknown {
   // Zoom-ul trebuie să rămână expresia cea mai de sus — MapLibre nu îl acceptă
@@ -185,12 +188,17 @@ function placeTextSize(base: [number, number][], byRank = true): unknown {
   const scaled = (size: number): unknown =>
     byRank
       ? [
-          "case",
-          ["<=", ["coalesce", ["get", "rank"], 10], 3],
-          size * 1.18,
-          ["<=", ["coalesce", ["get", "rank"], 10], 6],
-          size,
-          size * 0.87,
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "rank"], 12],
+          1,
+          size * 1.6,
+          7,
+          size * 1.35,
+          11,
+          size * 0.82,
+          16,
+          size * 0.68,
         ]
       : size;
 
@@ -309,27 +317,41 @@ const LAYER_RULES: LayerRule[] = [
   {
     test: /^label_city/,
     type: "symbol",
-    paint: (p) => ({ "text-color": p.label, "text-halo-color": p.labelHalo }),
+    paint: (p) => ({
+      "text-color": p.label,
+      "text-halo-color": p.labelHalo,
+      "text-halo-width": 1.6,
+      "text-halo-blur": 0.4,
+    }),
     layout: () => ({
       ...LABEL_BOLD,
       "text-size": placeTextSize([
-        [4, 11],
-        [7, 14],
-        [11, 19],
+        [4, 12],
+        [7, 17],
+        [11, 24],
+        [15, 30],
       ]),
       "text-letter-spacing": 0.01,
+      "text-padding": 6,
     }),
   },
   {
     test: /^label_town$/,
     type: "symbol",
-    paint: (p) => ({ "text-color": p.label, "text-halo-color": p.labelHalo }),
+    paint: (p) => ({
+      "text-color": p.label,
+      "text-halo-color": p.labelHalo,
+      "text-halo-width": 1.5,
+      "text-halo-blur": 0.4,
+    }),
     layout: () => ({
       ...LABEL_BOLD,
       "text-size": placeTextSize([
-        [7, 11],
-        [11, 14],
+        [7, 12],
+        [11, 17],
+        [15, 21],
       ]),
+      "text-padding": 5,
     }),
   },
   {
@@ -339,8 +361,9 @@ const LAYER_RULES: LayerRule[] = [
     layout: () => ({
       ...LABEL_REGULAR,
       "text-size": placeTextSize([
-        [9, 10],
-        [13, 12.5],
+        [9, 11],
+        [13, 14],
+        [16, 16],
       ]),
     }),
   },
@@ -352,8 +375,8 @@ const LAYER_RULES: LayerRule[] = [
       ...LABEL_REGULAR,
       "text-size": placeTextSize(
         [
-          [8, 9.5],
-          [13, 11.5],
+          [8, 10],
+          [13, 12],
         ],
         false,
       ),

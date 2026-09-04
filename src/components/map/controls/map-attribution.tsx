@@ -1,8 +1,6 @@
 import { cn } from "@/lib/utils";
 
-import { IMAGERY_ATTRIBUTION, type MapMode } from "../map-modes";
-
-const BASE_SOURCES = [
+const SOURCES = [
   { label: "OpenFreeMap", href: "https://openfreemap.org/" },
   { label: "OpenMapTiles", href: "https://www.openmaptiles.org/" },
   { label: "OpenStreetMap", href: "https://www.openstreetmap.org/copyright" },
@@ -10,14 +8,12 @@ const BASE_SOURCES = [
 
 /**
  * Atribuirea e obligatorie, deci nu o ascundem după un buton „i". O ținem mică
- * și așezată, dar mereu pe ecran, și adăugăm sursa imaginilor când sunt pornite.
+ * și așezată, dar mereu pe ecran.
  */
-export function MapAttribution({ mode, className }: { mode: MapMode; className?: string }) {
-  const sources = mode === "standard" ? BASE_SOURCES : [...BASE_SOURCES, IMAGERY_ATTRIBUTION];
-
+export function MapAttribution({ className }: { className?: string }) {
   return (
     <p className={cn("text-foreground/55 text-[10px] leading-tight", className)}>
-      {sources.map((source, index) => (
+      {SOURCES.map((source, index) => (
         <span key={source.href}>
           {index > 0 && <span aria-hidden="true"> · </span>}
           <a

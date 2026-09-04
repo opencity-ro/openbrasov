@@ -14,8 +14,7 @@ import { MapControls } from "./controls/map-controls";
 import { applyThreeDLayers, enterThreeD, exitThreeD } from "./map-3d";
 import { BRASOV_CENTER, DEFAULT_ZOOM, MAP_STYLE_URL, MIN_ZOOM } from "./map-config";
 import { MapProvider } from "./map-context";
-import { buildMapStyle, type MapMode } from "./map-modes";
-import { type MapThemeName, PALETTES } from "./map-theme";
+import { applyMapTheme, type MapThemeName, PALETTES } from "./map-theme";
 
 type BrasovMapProps = {
   className?: string;
@@ -31,7 +30,6 @@ function prefersReducedMotion(): boolean {
 export function BrasovMap({ className }: BrasovMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibreMap | null>(null);
-  const [mode, setMode] = useState<MapMode>("standard");
   const [is3d, setIs3d] = useState(false);
 
   const { resolvedTheme } = useTheme();
@@ -39,7 +37,7 @@ export function BrasovMap({ className }: BrasovMapProps) {
 
   /** Stilul brut de la OpenFreeMap, păstrat ca să îl recompunem fără să îl re-descărcăm. */
   const baseStyleRef = useRef<StyleSpecification | null>(null);
-  const appliedRef = useRef<{ theme: MapThemeName; mode: MapMode } | null>(null);
+  const appliedThemeRef = useRef<MapThemeName | null>(null);
 
   /**
    * Harta se creează o singură dată, dar `resolvedTheme` se lămurește abia după
@@ -68,11 +66,11 @@ export function BrasovMap({ className }: BrasovMapProps) {
       if (cancelled) return;
 
       baseStyleRef.current = baseStyle;
-      appliedRef.current = { theme: themeRef.current, mode: "standard" };
+      appliedThemeRef.current = themeRef.current;
 
       instance = new maplibregl.Map({
         container,
-        style: buildMapStyle(baseStyle, { mode: "standard", palette: PALETTES[themeRef.current] }),
+        style: applyMapTheme(baseStyle, PALETTES[themeRef.current]),
         center: BRASOV_CENTER,
         zoom: DEFAULT_ZOOM,
         minZoom: MIN_ZOOM,
@@ -95,23 +93,19 @@ export function BrasovMap({ className }: BrasovMapProps) {
     };
   }, []);
 
-  // Tema și modul recompun stilul din același stil de bază. `diff: true` păstrează
-  // camera și sursele deja încărcate, inclusiv relieful.
+  // Schimbarea temei re-colorează stilul existent. `diff: true` păstrează camera
+  // și sursele deja încărcate, inclusiv relieful.
   useEffect(() => {
     const baseStyle = baseStyleRef.current;
-    const applied = appliedRef.current;
-    if (!map || !baseStyle) return;
-    if (applied && applied.theme === theme && applied.mode === mode) return;
+    if (!map || !baseStyle || appliedThemeRef.current === theme) return;
 
-    appliedRef.current = { theme, mode };
-    map.setStyle(buildMapStyle(baseStyle, { mode, palette: PALETTES[theme], buildings3d: is3d }), {
-      diff: true,
-    });
+    appliedThemeRef.current = theme;
+    map.setStyle(applyMapTheme(baseStyle, PALETTES[theme], { buildings3d: is3d }), { diff: true });
 
     if (is3d) {
       map.once("styledata", () => applyThreeDLayers(map, theme));
     }
-  }, [map, theme, mode, is3d]);
+  }, [map, theme, is3d]);
 
   const toggle3d = useCallback(() => {
     if (!map) return;
@@ -139,13 +133,7 @@ export function BrasovMap({ className }: BrasovMapProps) {
       <div ref={containerRef} data-testid="map-canvas" className="h-full w-full" />
 
       <MapProvider value={map}>
-        <MapControls
-          ready={Boolean(map)}
-          mode={mode}
-          onSelectMode={setMode}
-          is3d={is3d}
-          onToggle3d={toggle3d}
-        />
+        <MapControls ready={Boolean(map)} is3d={is3d} onToggle3d={toggle3d} />
       </MapProvider>
 
       {!map && (

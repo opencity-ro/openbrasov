@@ -50,11 +50,7 @@
     "locationUnavailable": "Nu am putut afla unde ești. Verifică semnalul GPS și încearcă din nou.",
     "enter3d": "Vezi orașul în relief",
     "exit3d": "Revino la harta plată",
-    "reliefUnavailable": "Relieful nu s-a încărcat, dar clădirile rămân în relief.",
-    "layers": "Schimbă aspectul hărții",
-    "modeStandard": "Standard",
-    "modeHybrid": "Hibrid",
-    "modeSatellite": "Satelit"
+    "reliefUnavailable": "Relieful nu s-a încărcat, dar clădirile rămân în relief."
   },
   "footer": {
     "independent": "Proiect independent, neafiliat Primăriei Brașov sau altei instituții publice.",

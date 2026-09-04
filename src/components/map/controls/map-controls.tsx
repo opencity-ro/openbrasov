@@ -1,11 +1,9 @@
 "use client";
 
-import type { MapMode } from "../map-modes";
 import { CompassButton } from "./compass-button";
 import { LocateButton } from "./locate-button";
 import { MapAttribution } from "./map-attribution";
 import { MapControlGroup } from "./map-control-surface";
-import { ModeSwitcher } from "./mode-switcher";
 import { PitchButton } from "./pitch-button";
 import { ScaleBar } from "./scale-bar";
 import { ZoomButtons } from "./zoom-buttons";
@@ -16,14 +14,10 @@ import { ZoomButtons } from "./zoom-buttons";
  */
 export function MapControls({
   ready,
-  mode,
-  onSelectMode,
   is3d,
   onToggle3d,
 }: {
   ready: boolean;
-  mode: MapMode;
-  onSelectMode: (mode: MapMode) => void;
   is3d: boolean;
   onToggle3d: () => void;
 }) {
@@ -32,7 +26,6 @@ export function MapControls({
       <div className="flex justify-end">
         <div className="pointer-events-auto flex flex-col items-end gap-2">
           <MapControlGroup>
-            <ModeSwitcher mode={mode} onSelect={onSelectMode} disabled={!ready} />
             <LocateButton />
             <PitchButton active={is3d} disabled={!ready} onToggle={onToggle3d} />
           </MapControlGroup>
@@ -43,7 +36,7 @@ export function MapControls({
       <div className="flex items-end justify-between gap-4">
         <div className="pointer-events-auto flex flex-col gap-1">
           <ScaleBar />
-          <MapAttribution mode={mode} />
+          <MapAttribution />
         </div>
 
         {/* Pe telefon zoom-ul se face cu două degete; butoanele ar fura din hartă. */}

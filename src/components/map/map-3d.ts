@@ -244,6 +244,35 @@ export function removeThreeDLayers(map: MapLibreMap): void {
  *
  * Întoarce `false` dacă elevația nu a venit: clădirile rămân ridicate, munții nu.
  */
+/**
+ * Înclină camera și, la capăt, pune înapoi exact centrul, zoom-ul și orientarea
+ * de la început.
+ *
+ * Fără reașezarea asta, fiecare comutare lăsa în urmă o mică abatere: cu teren
+ * activ, MapLibre recalculează zoom-ul și centrul din altitudinea terenului la
+ * sfârșitul fiecărei mișcări, ca să țină camera la aceeași înălțime deasupra
+ * pământului. Abaterea se aduna de la o apăsare la alta, iar la a treia camera
+ * ajungea în clădiri. Renunțăm dacă omul apucă harta între timp — atunci cadrul
+ * pe care l-am reține nu mai e cel pe care îl vrea el.
+ */
+function tiltTo(map: MapLibreMap, session: Session, view: View, pitch: number, duration: number) {
+  let touched = false;
+  const onUserMove = (event: { originalEvent?: unknown }) => {
+    if (event.originalEvent) touched = true;
+  };
+
+  map.on("movestart", onUserMove);
+  session.detach.push(() => map.off("movestart", onUserMove));
+
+  map.easeTo({ pitch, duration, easing: easeOutExpo });
+
+  map.once("moveend", () => {
+    map.off("movestart", onUserMove);
+    if (!isCurrent(map, session) || touched) return;
+    map.jumpTo({ center: view.center, zoom: view.zoom, bearing: view.bearing });
+  });
+}
+
 export async function enterThreeD(
   map: MapLibreMap,
   theme: MapThemeName,
@@ -263,11 +292,7 @@ export async function enterThreeD(
   if (!withRelief) map.setTerrain(null);
 
   map.jumpTo(view);
-  map.easeTo({
-    pitch: PITCHED_ANGLE,
-    duration: animate ? PITCH_ENTER_MS : 0,
-    easing: easeOutExpo,
-  });
+  tiltTo(map, session, view, PITCHED_ANGLE, animate ? PITCH_ENTER_MS : 0);
 
   return withRelief;
 }
@@ -275,6 +300,7 @@ export async function enterThreeD(
 /** Ieșirea: camera coboară prima, straturile pleacă după ce nu se mai văd. */
 export function exitThreeD(map: MapLibreMap, animate: boolean): void {
   const session = startSession(map);
+  const view = readView(map);
 
   if (hasBuildingLayer(map)) {
     map.setPaintProperty(BUILDING_3D_LAYER, "fill-extrusion-opacity-transition", {
@@ -284,10 +310,12 @@ export function exitThreeD(map: MapLibreMap, animate: boolean): void {
     map.setPaintProperty(BUILDING_3D_LAYER, "fill-extrusion-opacity", 0);
   }
 
-  map.easeTo({ pitch: 0, duration: animate ? PITCH_EXIT_MS : 0, easing: easeOutExpo });
+  tiltTo(map, session, view, 0, animate ? PITCH_EXIT_MS : 0);
 
   later(map, session, animate ? PITCH_EXIT_MS : 0, () => {
     removeThreeDLayers(map);
     map.setMaxPitch(0);
+    // Scoaterea terenului readuce solul la nivelul mării și mută iar camera.
+    map.jumpTo({ center: view.center, zoom: view.zoom, bearing: view.bearing });
   });
 }

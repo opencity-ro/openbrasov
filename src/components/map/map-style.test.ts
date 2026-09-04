@@ -2,8 +2,7 @@ import { validateStyleMin } from "@maplibre/maplibre-gl-style-spec";
 import type { StyleSpecification } from "maplibre-gl";
 import { describe, expect, it } from "vitest";
 
-import { buildMapStyle, MAP_MODES } from "./map-modes";
-import { BUILDING_3D_LAYER, PALETTES } from "./map-theme";
+import { applyMapTheme, BUILDING_3D_LAYER, PALETTES } from "./map-theme";
 
 /**
  * Un extras din stilul OpenFreeMap Liberty, cu câte un strat din fiecare fel pe
@@ -107,19 +106,14 @@ function styleFixture(): StyleSpecification {
  * dată harta refuza să pornească. Validatorul oficial prinde ambele clase.
  */
 describe("stilul livrat hărții", () => {
-  const cases = MAP_MODES.flatMap((mode) =>
-    (["light", "dark"] as const).flatMap((theme) =>
-      [false, true].map((buildings3d) => ({ mode, theme, buildings3d })),
-    ),
+  const cases = (["light", "dark"] as const).flatMap((theme) =>
+    [false, true].map((buildings3d) => ({ theme, buildings3d })),
   );
 
-  it.each(cases)(
-    "rămâne valid: $mode / $theme / 3D=$buildings3d",
-    ({ mode, theme, buildings3d }) => {
-      const style = buildMapStyle(styleFixture(), { mode, palette: PALETTES[theme], buildings3d });
-      const errors = validateStyleMin(style as never);
+  it.each(cases)("rămâne valid: $theme / 3D=$buildings3d", ({ theme, buildings3d }) => {
+    const style = applyMapTheme(styleFixture(), PALETTES[theme], { buildings3d });
+    const errors = validateStyleMin(style as never);
 
-      expect(errors.map((error) => `${error.message}`)).toEqual([]);
-    },
-  );
+    expect(errors.map((error) => `${error.message}`)).toEqual([]);
+  });
 });
