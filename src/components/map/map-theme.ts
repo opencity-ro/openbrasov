@@ -121,101 +121,126 @@ export type MapThemeName = keyof typeof PALETTES;
 
 type PaintPatch = Record<string, unknown>;
 
+type LayerType = StyleSpecification["layers"][number]["type"];
+
 type LayerRule = {
   /** Prima regulă care se potrivește câștigă, deci ordinea contează. */
   test: RegExp;
+  /**
+   * Tipul de strat pe care se aplică. Numele nu spune tipul: `waterway_line_label`
+   * și `highway-name-minor` sunt etichete, nu linii, iar o proprietate de linie pe
+   * un strat `symbol` face stilul invalid și harta nu mai pornește.
+   */
+  type: LayerType;
   paint: (palette: MapPalette) => PaintPatch;
 };
+
+const line = (paint: LayerRule["paint"], test: RegExp): LayerRule => ({
+  test,
+  type: "line",
+  paint,
+});
+const fill = (paint: LayerRule["paint"], test: RegExp): LayerRule => ({
+  test,
+  type: "fill",
+  paint,
+});
+const label = (paint: LayerRule["paint"], test: RegExp): LayerRule => ({
+  test,
+  type: "symbol",
+  paint,
+});
 
 /**
  * Regulile merg de la particular la general: contururile („casing") înaintea
  * umpluturilor, altfel `road_motorway_casing` ar fi prins de regula de motorway.
  */
 const LAYER_RULES: LayerRule[] = [
-  { test: /^background$/, paint: (p) => ({ "background-color": p.background }) },
-  { test: /^natural_earth$/, paint: (p) => ({ "raster-opacity": p.reliefOpacity }) },
+  {
+    test: /^background$/,
+    type: "background",
+    paint: (p) => ({ "background-color": p.background }),
+  },
+  {
+    test: /^natural_earth$/,
+    type: "raster",
+    paint: (p) => ({ "raster-opacity": p.reliefOpacity }),
+  },
 
   // Apă și cursuri de apă
-  { test: /^water$/, paint: (p) => ({ "fill-color": p.water }) },
-  { test: /^waterway_/, paint: (p) => ({ "line-color": p.waterway }) },
+  fill((p) => ({ "fill-color": p.water }), /^water$/),
+  line((p) => ({ "line-color": p.waterway }), /^waterway_/),
 
   // Verdeață și teren
-  {
-    test: /^park$/,
-    paint: (p) => ({ "fill-color": p.park, "fill-opacity": 1, "fill-outline-color": p.park }),
-  },
-  { test: /^park_outline$/, paint: (p) => ({ "line-color": p.wood }) },
-  { test: /^landcover_wood$/, paint: (p) => ({ "fill-color": p.wood, "fill-opacity": 1 }) },
-  { test: /^landcover_grass$/, paint: (p) => ({ "fill-color": p.grass, "fill-opacity": 1 }) },
-  { test: /^landcover_wetland$/, paint: (p) => ({ "fill-color": p.wetland }) },
-  { test: /^landcover_sand$/, paint: (p) => ({ "fill-color": p.sand }) },
-  { test: /^landcover_ice$/, paint: (p) => ({ "fill-color": p.ice }) },
-  { test: /^landuse_residential$/, paint: (p) => ({ "fill-color": p.residential }) },
-  { test: /^landuse_(pitch|track)$/, paint: (p) => ({ "fill-color": p.pitch }) },
-  {
-    test: /^landuse_(cemetery|hospital|school)$/,
-    paint: (p) => ({ "fill-color": p.institutional }),
-  },
-  { test: /^aeroway_fill$/, paint: (p) => ({ "fill-color": p.aeroway }) },
-  { test: /^aeroway_(runway|taxiway)$/, paint: (p) => ({ "line-color": p.minorCasing }) },
+  fill(
+    (p) => ({ "fill-color": p.park, "fill-opacity": 1, "fill-outline-color": p.park }),
+    /^park$/,
+  ),
+  line((p) => ({ "line-color": p.wood }), /^park_outline$/),
+  fill((p) => ({ "fill-color": p.wood, "fill-opacity": 1 }), /^landcover_wood$/),
+  fill((p) => ({ "fill-color": p.grass, "fill-opacity": 1 }), /^landcover_grass$/),
+  fill((p) => ({ "fill-color": p.wetland }), /^landcover_wetland$/),
+  fill((p) => ({ "fill-color": p.sand }), /^landcover_sand$/),
+  fill((p) => ({ "fill-color": p.ice }), /^landcover_ice$/),
+  fill((p) => ({ "fill-color": p.residential }), /^landuse_residential$/),
+  fill((p) => ({ "fill-color": p.pitch }), /^landuse_(pitch|track)$/),
+  fill((p) => ({ "fill-color": p.institutional }), /^landuse_(cemetery|hospital|school)$/),
+  fill((p) => ({ "fill-color": p.aeroway }), /^aeroway_fill$/),
+  line((p) => ({ "line-color": p.minorCasing }), /^aeroway_(runway|taxiway)$/),
 
   // Clădiri
+  fill(
+    (p) => ({ "fill-color": p.building, "fill-outline-color": p.buildingOutline }),
+    /^building$/,
+  ),
   {
-    test: /^building$/,
-    paint: (p) => ({ "fill-color": p.building, "fill-outline-color": p.buildingOutline }),
+    test: /^building-3d$/,
+    type: "fill-extrusion",
+    paint: (p) => ({ "fill-extrusion-color": p.building3d }),
   },
-  { test: /^building-3d$/, paint: (p) => ({ "fill-extrusion-color": p.building3d }) },
 
   // Șine — înaintea drumurilor, altfel `road_major_rail` cade pe regula de drum
-  { test: /rail(_hatching)?$/, paint: (p) => ({ "line-color": p.rail }) },
+  line((p) => ({ "line-color": p.rail }), /rail(_hatching)?$/),
 
   // Contururile drumurilor
-  { test: /motorway(_link)?_casing$/, paint: (p) => ({ "line-color": p.motorwayCasing }) },
-  {
-    test: /(trunk_primary|secondary_tertiary)_casing$/,
-    paint: (p) => ({ "line-color": p.majorCasing }),
-  },
-  { test: /path_pedestrian_casing$/, paint: (p) => ({ "line-color": p.path }) },
-  { test: /_casing$/, paint: (p) => ({ "line-color": p.minorCasing }) },
+  line((p) => ({ "line-color": p.motorwayCasing }), /motorway(_link)?_casing$/),
+  line((p) => ({ "line-color": p.majorCasing }), /(trunk_primary|secondary_tertiary)_casing$/),
+  line((p) => ({ "line-color": p.path }), /path_pedestrian_casing$/),
+  line((p) => ({ "line-color": p.minorCasing }), /_casing$/),
 
   // Umplutura drumurilor
-  { test: /motorway(_link)?$/, paint: (p) => ({ "line-color": p.motorway }) },
-  { test: /(trunk_primary|secondary_tertiary)$/, paint: (p) => ({ "line-color": p.major }) },
-  { test: /path_pedestrian$/, paint: (p) => ({ "line-color": p.path }) },
-  { test: /(link|minor|street|service_track)$/, paint: (p) => ({ "line-color": p.minor }) },
-  { test: /^road_area_pattern$/, paint: (p) => ({ "fill-color": p.minor }) },
+  line((p) => ({ "line-color": p.motorway }), /motorway(_link)?$/),
+  line((p) => ({ "line-color": p.major }), /(trunk_primary|secondary_tertiary)$/),
+  line((p) => ({ "line-color": p.path }), /path_pedestrian$/),
+  line((p) => ({ "line-color": p.minor }), /(link|minor|street|service_track)$/),
+  fill((p) => ({ "fill-color": p.minor }), /^road_area_pattern$/),
 
   // Granițe
-  { test: /^boundary_/, paint: (p) => ({ "line-color": p.boundary }) },
+  line((p) => ({ "line-color": p.boundary }), /^boundary_/),
 
   // Etichete
-  {
-    test: /^water_name_/,
-    paint: (p) => ({ "text-color": p.waterLabel, "text-halo-color": p.labelHalo }),
-  },
-  {
-    test: /^waterway_line_label$/,
-    paint: (p) => ({ "text-color": p.waterLabel, "text-halo-color": p.labelHalo }),
-  },
-  {
-    test: /^(poi_|airport$)/,
-    paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
-  },
-  {
-    test: /^highway-name-/,
-    paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
-  },
-  {
-    test: /^label_/,
-    paint: (p) => ({ "text-color": p.label, "text-halo-color": p.labelHalo }),
-  },
+  label(
+    (p) => ({ "text-color": p.waterLabel, "text-halo-color": p.labelHalo }),
+    /^(water_name_|waterway_line_label$)/,
+  ),
+  label(
+    (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
+    /^(poi_|airport$|highway-name-)/,
+  ),
+  label((p) => ({ "text-color": p.label, "text-halo-color": p.labelHalo }), /^label_/),
 ];
 
 /** Straturile ridicate în 3D, ascunse cât timp harta e plată. */
 export const BUILDING_3D_LAYER = "building-3d";
 
-function paintPatchFor(layerId: string, palette: MapPalette): PaintPatch | undefined {
-  const rule = LAYER_RULES.find((candidate) => candidate.test.test(layerId));
+function paintPatchFor(
+  layerId: string,
+  layerType: LayerType,
+  palette: MapPalette,
+): PaintPatch | undefined {
+  const rule = LAYER_RULES.find(
+    (candidate) => candidate.type === layerType && candidate.test.test(layerId),
+  );
   return rule?.paint(palette);
 }
 
@@ -236,7 +261,7 @@ export function applyMapTheme(
   return {
     ...style,
     layers: style.layers.map((layer) => {
-      const patch = paintPatchFor(layer.id, palette);
+      const patch = paintPatchFor(layer.id, layer.type, palette);
       if (!patch) return layer;
 
       const layout =

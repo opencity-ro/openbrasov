@@ -24,9 +24,21 @@ function styleFixture(): StyleSpecification {
         paint: { "fill-extrusion-color": "hsl(35,8%,85%)" },
       },
       { id: "road_one_way_arrow", type: "symbol", source: "s", layout: { "icon-size": 1 } },
+      // Etichete al căror nume seamănă cu al unei linii — capcana care a stricat stilul.
+      { id: "waterway_line_label", type: "symbol", source: "s", paint: { "text-color": "#999" } },
+      { id: "highway-name-minor", type: "symbol", source: "s", paint: { "text-color": "#765" } },
     ],
   } as StyleSpecification;
 }
+
+const PAINT_PREFIX_BY_TYPE: Record<string, string> = {
+  background: "background-",
+  fill: "fill-",
+  line: "line-",
+  symbol: "text-",
+  raster: "raster-",
+  "fill-extrusion": "fill-extrusion-",
+};
 
 function layer(style: StyleSpecification, id: string) {
   const found = style.layers.find((candidate) => candidate.id === id);
@@ -79,6 +91,32 @@ describe("applyMapTheme", () => {
     const themed = applyMapTheme(styleFixture(), DARK_PALETTE, { buildings3d: true });
 
     expect(layer(themed, BUILDING_3D_LAYER).layout?.visibility).toBe("visible");
+  });
+
+  it("tratează ca etichete straturile care doar sună a linie", () => {
+    const themed = applyMapTheme(styleFixture(), LIGHT_PALETTE);
+
+    expect(layer(themed, "waterway_line_label").paint?.["text-color"]).toBe(
+      LIGHT_PALETTE.waterLabel,
+    );
+    expect(layer(themed, "waterway_line_label").paint?.["line-color"]).toBeUndefined();
+    expect(layer(themed, "highway-name-minor").paint?.["text-color"]).toBe(
+      LIGHT_PALETTE.labelMuted,
+    );
+    expect(layer(themed, "highway-name-minor").paint?.["line-color"]).toBeUndefined();
+  });
+
+  it("nu scrie niciodată o proprietate străină de tipul stratului", () => {
+    const themed = applyMapTheme(styleFixture(), DARK_PALETTE, { buildings3d: true });
+
+    for (const styleLayer of themed.layers) {
+      const allowed = PAINT_PREFIX_BY_TYPE[styleLayer.type];
+      const paint = ("paint" in styleLayer ? styleLayer.paint : undefined) ?? {};
+
+      for (const property of Object.keys(paint)) {
+        expect(property.startsWith(allowed), `${styleLayer.id} → ${property}`).toBe(true);
+      }
+    }
   });
 
   it("lasă neatinse straturile fără regulă și nu modifică stilul primit", () => {
