@@ -146,28 +146,32 @@ function addReliefSource(map: MapLibreMap): void {
   });
 }
 
-/**
- * Aici se ascundea instabilitatea. Pământul ridicat urcă spre cameră, iar
- * MapLibre recalculează centrul și zoom-ul după noua altitudine — dar altitudinea
- * se află abia când sosesc dalele de elevație, adică după ce am pornit deja
- * mișcarea. De aici saltul și apropierea nedorită.
- *
- * Cât timp datele curg, ținem cadrul fixat la fiecare pachet sosit. Ne oprim de
- * îndată ce sursa e completă, la eroare, la expirare — sau imediat ce omul pune
- * mâna pe hartă, fiindcă atunci comanda e a lui, nu a noastră.
- */
 function isReliefLoaded(map: MapLibreMap): boolean {
   return Boolean(map.getSource(RELIEF_SOURCE_ID)) && map.isSourceLoaded(RELIEF_SOURCE_ID);
 }
 
+/**
+ * Două cadre la rând cu sursa completă. Unul singur nu ajunge: `isSourceLoaded`
+ * devine adevărat de îndată ce dalele au ajuns, dar camera își ia altitudinea
+ * din ele abia la redesenarea următoare. Între cele două momente, solul e deja
+ * ridicat iar camera încă la nivelul mării — exact secunda în care harta intra
+ * în clădiri.
+ */
+function reliefSettledFrames(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+}
+
+/**
+ * Ține cadrul fixat cât curg datele de elevație. Pământul ridicat urcă spre
+ * cameră, iar MapLibre recalculează centrul și zoom-ul după noua altitudine —
+ * care se află abia când sosesc dalele. Ne oprim când sursa e completă, la
+ * eroare, la expirare, sau imediat ce omul pune mâna pe hartă: atunci comanda
+ * e a lui, nu a noastră.
+ */
 function settleRelief(map: MapLibreMap, session: Session, view: View): Promise<boolean> {
-  // A doua oară elevația e deja în memorie și nu mai vine niciun `sourcedata`;
-  // fără scurtătura asta am aștepta degeaba până la expirare.
-  if (isReliefLoaded(map)) {
-    map.setTerrain({ source: RELIEF_SOURCE_ID, exaggeration: 1 });
-    map.jumpTo(view);
-    return Promise.resolve(true);
-  }
+  if (isReliefLoaded(map)) return Promise.resolve(true);
 
   return new Promise((resolve) => {
     let settled = false;
@@ -203,9 +207,6 @@ function settleRelief(map: MapLibreMap, session: Session, view: View): Promise<b
     map.on("sourcedata", onSourceData);
     map.on("error", onError);
     map.on("movestart", onUserMove);
-
-    map.setTerrain({ source: RELIEF_SOURCE_ID, exaggeration: 1 });
-    map.jumpTo(view);
   });
 }
 
@@ -286,10 +287,20 @@ export async function enterThreeD(
   showBuildings(map);
   addReliefSource(map);
 
+  // Terenul se ridică pe harta încă plată, iar cadrul rămâne fixat cât curg datele.
+  map.setTerrain({ source: RELIEF_SOURCE_ID, exaggeration: 1 });
+  map.jumpTo(view);
+
   const withRelief = await settleRelief(map, session, view);
   if (!isCurrent(map, session)) return withRelief;
 
-  if (!withRelief) map.setTerrain(null);
+  if (!withRelief) {
+    map.setTerrain(null);
+  } else {
+    // Lăsăm camera să-și ia altitudinea din teren înainte să pornim înclinarea.
+    await reliefSettledFrames();
+    if (!isCurrent(map, session)) return withRelief;
+  }
 
   map.jumpTo(view);
   tiltTo(map, session, view, PITCHED_ANGLE, animate ? PITCH_ENTER_MS : 0);

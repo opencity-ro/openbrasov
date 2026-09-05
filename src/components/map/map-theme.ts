@@ -136,6 +136,11 @@ type LayerRule = {
   paint: (palette: MapPalette) => PaintPatch;
   /** Mărimea și fontul stau în `layout`, nu în `paint`. */
   layout?: () => Record<string, unknown>;
+  /**
+   * Zoom-ul peste care stratul dispare. Numele orașului nu mai ajută pe nimeni
+   * odată ce ești pe strada lui — acolo contează cartierul, nu localitatea.
+   */
+  maxzoom?: number;
 };
 
 /**
@@ -317,6 +322,7 @@ const LAYER_RULES: LayerRule[] = [
   {
     test: /^label_city/,
     type: "symbol",
+    maxzoom: 14,
     paint: (p) => ({
       "text-color": p.label,
       "text-halo-color": p.labelHalo,
@@ -326,10 +332,10 @@ const LAYER_RULES: LayerRule[] = [
     layout: () => ({
       ...LABEL_BOLD,
       "text-size": placeTextSize([
-        [4, 12],
-        [7, 17],
-        [11, 24],
-        [15, 30],
+        [4, 10],
+        [7, 13],
+        [11, 17],
+        [14, 19],
       ]),
       "text-letter-spacing": 0.01,
       "text-padding": 6,
@@ -338,6 +344,7 @@ const LAYER_RULES: LayerRule[] = [
   {
     test: /^label_town$/,
     type: "symbol",
+    maxzoom: 15,
     paint: (p) => ({
       "text-color": p.label,
       "text-halo-color": p.labelHalo,
@@ -347,9 +354,9 @@ const LAYER_RULES: LayerRule[] = [
     layout: () => ({
       ...LABEL_BOLD,
       "text-size": placeTextSize([
-        [7, 12],
-        [11, 17],
-        [15, 21],
+        [7, 11],
+        [11, 14],
+        [15, 16],
       ]),
       "text-padding": 5,
     }),
@@ -357,14 +364,18 @@ const LAYER_RULES: LayerRule[] = [
   {
     test: /^label_village$/,
     type: "symbol",
+    maxzoom: 16,
     paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
     layout: () => ({
       ...LABEL_REGULAR,
-      "text-size": placeTextSize([
-        [9, 11],
-        [13, 14],
-        [16, 16],
-      ]),
+      "text-size": placeTextSize(
+        [
+          [9, 9.5],
+          [13, 11.5],
+          [16, 12.5],
+        ],
+        false,
+      ),
     }),
   },
   {
@@ -375,8 +386,8 @@ const LAYER_RULES: LayerRule[] = [
       ...LABEL_REGULAR,
       "text-size": placeTextSize(
         [
-          [8, 10],
-          [13, 12],
+          [8, 9],
+          [13, 10.5],
         ],
         false,
       ),
@@ -428,6 +439,7 @@ export function applyMapTheme(
       return {
         ...layer,
         ...(Object.keys(layout).length > 0 ? { layout } : {}),
+        ...(rule.maxzoom !== undefined ? { maxzoom: rule.maxzoom } : {}),
         paint: { ...("paint" in layer ? layer.paint : undefined), ...rule.paint(palette) },
       } as (typeof style.layers)[number];
     }),
