@@ -41,7 +41,16 @@
     "emptyTitle": "Încă nu sunt sesizări",
     "emptyBody": "Harta se va umple pe măsură ce brașovenii raportează probleme. În curând.",
     "locate": "Localizează-mă",
-    "loading": "Se încarcă harta…"
+    "loading": "Se încarcă harta…",
+    "zoomIn": "Apropie harta",
+    "zoomOut": "Depărtează harta",
+    "resetNorth": "Orientează harta spre nord",
+    "locating": "Se caută locația ta…",
+    "locationDenied": "Nu ai dat voie la locație. Activeaz-o din setările browserului și încearcă din nou.",
+    "locationUnavailable": "Nu am putut afla unde ești. Verifică semnalul GPS și încearcă din nou.",
+    "enter3d": "Vezi orașul în relief",
+    "exit3d": "Revino la harta plată",
+    "reliefUnavailable": "Relieful nu s-a încărcat, dar clădirile rămân în relief."
   },
   "footer": {
     "independent": "Proiect independent, neafiliat Primăriei Brașov sau altei instituții publice.",
