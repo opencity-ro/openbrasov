@@ -119,11 +119,13 @@ describe("applyMapTheme", () => {
     }
   });
 
-  it("lasă neatinse straturile fără regulă și nu modifică stilul primit", () => {
+  it("nu inventează culori pentru straturile fără regulă și nu modifică stilul primit", () => {
     const original = styleFixture();
     const themed = applyMapTheme(original, LIGHT_PALETTE);
 
+    // Eticheta asta nu are regulă: primește doar fontul, nu și vopsea.
     expect(layer(themed, "road_one_way_arrow").paint).toBeUndefined();
+    expect(layer(themed, "road_one_way_arrow").layout?.["text-font"]).toEqual(["Inter Regular"]);
     expect(layer(original, "background").paint?.["background-color"]).toBe("#f8f4f0");
   });
 });

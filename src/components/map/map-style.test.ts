@@ -2,7 +2,7 @@ import { validateStyleMin } from "@maplibre/maplibre-gl-style-spec";
 import type { StyleSpecification } from "maplibre-gl";
 import { describe, expect, it } from "vitest";
 
-import { applyMapTheme, BUILDING_3D_LAYER, PALETTES } from "./map-theme";
+import { applyMapTheme, BUILDING_3D_LAYER, GLYPHS_URL, PALETTES } from "./map-theme";
 
 /**
  * Un extras din stilul OpenFreeMap Liberty, cu câte un strat din fiecare fel pe
@@ -115,5 +115,27 @@ describe("stilul livrat hărții", () => {
     const errors = validateStyleMin(style as never);
 
     expect(errors.map((error) => `${error.message}`)).toEqual([]);
+  });
+});
+
+describe("fonturile etichetelor", () => {
+  it("cere glifele de la noi, nu de la furnizorul de dale", () => {
+    const style = applyMapTheme(styleFixture(), PALETTES.light);
+
+    expect(style.glyphs).toBe(GLYPHS_URL);
+  });
+
+  it("nu lasă niciun strat să ceară un font pe care nu îl generăm", () => {
+    const style = applyMapTheme(styleFixture(), PALETTES.light);
+    const generated = ["Inter Regular", "Inter Bold"];
+
+    for (const layer of style.layers) {
+      if (layer.type !== "symbol") continue;
+      const fonts = (layer.layout as Record<string, unknown> | undefined)?.["text-font"];
+      expect(fonts, `${layer.id} nu are font`).toBeDefined();
+      for (const font of fonts as string[]) {
+        expect(generated, `${layer.id} cere ${font}`).toContain(font);
+      }
+    }
   });
 });

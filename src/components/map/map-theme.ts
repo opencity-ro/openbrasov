@@ -175,9 +175,25 @@ function poiTextColor(fallback: string): unknown {
   ];
 }
 
+/**
+ * Glifele sunt generate de noi din Inter și servite de pe domeniul propriu
+ * (`pnpm map:glyphs`). Stilul de bază cere fonturi Noto de la furnizorul de dale;
+ * le înlocuim pe toate, altfel etichetele ar cere fișiere care la noi nu există.
+ */
+export const GLYPHS_URL = "/map-fonts/{fontstack}/{range}.pbf";
+
+const FONT_REGULAR = "Inter Regular";
+const FONT_BOLD = "Inter Bold";
+
 /** Fără italice: îngreunează citirea la mărimile mici de pe hartă. */
-const LABEL_REGULAR = { "text-font": ["Noto Sans Regular"] };
-const LABEL_BOLD = { "text-font": ["Noto Sans Bold"] };
+const LABEL_REGULAR = { "text-font": [FONT_REGULAR] };
+const LABEL_BOLD = { "text-font": [FONT_BOLD] };
+
+/** Păstrăm doar distincția care contează pe hartă: normal sau îngroșat. */
+function mappedFontStack(current: unknown): string[] {
+  const requested = Array.isArray(current) ? current.join(" ") : "";
+  return [/bold|black|heavy/i.test(requested) ? FONT_BOLD : FONT_REGULAR];
+}
 
 /**
  * Numele localității crește cu importanța ei, nu doar cu zoom-ul.
@@ -423,14 +439,18 @@ export function applyMapTheme(
 ): StyleSpecification {
   return {
     ...style,
+    glyphs: GLYPHS_URL,
     layers: style.layers.map((layer) => {
       const rule = ruleFor(layer.id, layer.type);
-      if (!rule) return layer;
+      const isLabel = layer.type === "symbol";
+      if (!rule && !isLabel) return layer;
 
-      const currentLayout = "layout" in layer ? layer.layout : undefined;
+      const currentLayout: Record<string, unknown> | undefined =
+        "layout" in layer ? layer.layout : undefined;
       const layout = {
         ...currentLayout,
-        ...rule.layout?.(),
+        ...(isLabel ? { "text-font": mappedFontStack(currentLayout?.["text-font"]) } : {}),
+        ...rule?.layout?.(),
         ...(layer.id === BUILDING_3D_LAYER
           ? { visibility: (buildings3d ? "visible" : "none") as "visible" | "none" }
           : {}),
@@ -439,8 +459,15 @@ export function applyMapTheme(
       return {
         ...layer,
         ...(Object.keys(layout).length > 0 ? { layout } : {}),
-        ...(rule.maxzoom !== undefined ? { maxzoom: rule.maxzoom } : {}),
-        paint: { ...("paint" in layer ? layer.paint : undefined), ...rule.paint(palette) },
+        ...(rule?.maxzoom !== undefined ? { maxzoom: rule.maxzoom } : {}),
+        ...(rule || "paint" in layer
+          ? {
+              paint: {
+                ...("paint" in layer ? layer.paint : undefined),
+                ...(rule ? rule.paint(palette) : {}),
+              },
+            }
+          : {}),
       } as (typeof style.layers)[number];
     }),
   };
