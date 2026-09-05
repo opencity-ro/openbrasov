@@ -38,6 +38,17 @@ const RADIUS = 8;
 const CUTOFF = 0.25;
 
 /**
+ * Linia de bază, măsurată de sus în jos, în glifele pe care le așteaptă MapLibre.
+ *
+ * `top` nu e înălțimea literei, ci poziția ei față de această linie — aproape
+ * mereu negativă. Valoarea e o convenție a formatului, nu ceva ce ține de font:
+ * am verificat-o pe glifele Noto Sans Regular, Bold și Italic servite de
+ * furnizorul de dale și e 26 la toate trei. Scrisă greșit, fiecare etichetă de
+ * pe hartă urcă cu 26 de pixeli și iese din scutul sau din pastila ei.
+ */
+const BASELINE = 26;
+
+/**
  * Intervalele de care are nevoie o hartă a Europei: latină și latina extinsă,
  * greacă, chirilică, apoi punctuația și semnele care apar în nume. Fontul acoperă
  * și săgeți, simboluri matematice și o zonă privată — nimic care să ajungă
@@ -179,10 +190,9 @@ function drawGlyph(ctx, canvas, character, weight) {
     advance,
     width: inkWidth,
     height: inkHeight,
-    // Poziția cernelii față de originea glifei, așa cum o citește MapLibre:
-    // `left` spre dreapta, `top` în sus de la linia de bază.
+    // Poziția cernelii față de originea glifei, așa cum o citește MapLibre.
     left: Math.round(-metrics.actualBoundingBoxLeft),
-    top: Math.round(metrics.actualBoundingBoxAscent),
+    top: Math.round(metrics.actualBoundingBoxAscent) - BASELINE,
     bitmap: toSignedDistanceField(alpha, width, height),
   };
 }

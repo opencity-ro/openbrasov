@@ -338,7 +338,7 @@ const LAYER_RULES: LayerRule[] = [
   {
     test: /^label_city/,
     type: "symbol",
-    maxzoom: 14,
+    maxzoom: 16,
     paint: (p) => ({
       "text-color": p.label,
       "text-halo-color": p.labelHalo,
@@ -360,7 +360,7 @@ const LAYER_RULES: LayerRule[] = [
   {
     test: /^label_town$/,
     type: "symbol",
-    maxzoom: 15,
+    maxzoom: 16,
     paint: (p) => ({
       "text-color": p.label,
       "text-halo-color": p.labelHalo,
@@ -380,7 +380,7 @@ const LAYER_RULES: LayerRule[] = [
   {
     test: /^label_village$/,
     type: "symbol",
-    maxzoom: 16,
+    maxzoom: 17,
     paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
     layout: () => ({
       ...LABEL_REGULAR,

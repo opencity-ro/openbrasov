@@ -52,6 +52,12 @@ function readStacks(buffer: Buffer): Stack[] {
 
 const GLYPH_BORDER = 3;
 
+/**
+ * Linia de bază a formatului. `top` se măsoară față de ea, deci pentru o
+ * majusculă care stă pe linie iese `înălțime - 26`, adică un număr negativ.
+ */
+const BASELINE = 26;
+
 async function loadRange(stackName: string, range: string) {
   const file = path.join(process.cwd(), "public", "map-fonts", stackName, `${range}.pbf`);
   return readStacks(await readFile(file));
@@ -79,6 +85,10 @@ describe("glifele generate", () => {
     expect(letterA!.width).toBeGreaterThan(8);
     expect(letterA!.height).toBeGreaterThan(12);
     expect(letterA!.advance).toBeGreaterThan(8);
+    // Convenția care a scos textul din scuturile de drum când am greșit-o:
+    // `top` e poziția față de linia de bază, nu înălțimea literei.
+    expect(letterA!.top).toBe(letterA!.height - BASELINE);
+    expect(letterA!.top).toBeLessThan(0);
     // Bitmap-ul poartă marginea de 3px pe fiecare latură, peste litera propriu-zisă.
     expect(letterA!.bitmap!.length).toBe(
       (letterA!.width + 2 * GLYPH_BORDER) * (letterA!.height + 2 * GLYPH_BORDER),
@@ -107,5 +117,16 @@ describe("glifele generate", () => {
     expect(space).toBeDefined();
     expect(space!.advance).toBeGreaterThan(0);
     expect(space!.bitmap).toBeUndefined();
+  });
+
+  it("așază literele cu coadă sub linia de bază", async () => {
+    const [stack] = await loadRange("Inter Regular", "0-255");
+    const letterG = stack.glyphs.find((glyph) => glyph.id === "g".codePointAt(0));
+    const letterO = stack.glyphs.find((glyph) => glyph.id === "o".codePointAt(0));
+
+    // „o" stă pe linie, „g" coboară sub ea: aceeași înălțime deasupra liniei,
+    // deci același `top`, deși „g" e mai înalt în total.
+    expect(letterG!.height).toBeGreaterThan(letterO!.height);
+    expect(letterG!.top).toBe(letterO!.top);
   });
 });
