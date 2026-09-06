@@ -180,7 +180,8 @@ function poiTextColor(fallback: string): unknown {
  * (`pnpm map:glyphs`). Stilul de bază cere fonturi Noto de la furnizorul de dale;
  * le înlocuim pe toate, altfel etichetele ar cere fișiere care la noi nu există.
  */
-export const GLYPHS_URL = "/map-fonts/{fontstack}/{range}.pbf";
+export const GLYPHS_VERSION = "2";
+export const GLYPHS_URL = `/map-fonts/${GLYPHS_VERSION}/{fontstack}/{range}.pbf`;
 
 const FONT_REGULAR = "Inter Regular";
 const FONT_BOLD = "Inter Bold";

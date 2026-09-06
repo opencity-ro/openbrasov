@@ -27,7 +27,14 @@ const STACKS = [
   { name: "Inter Bold", weight: 700 },
 ];
 
-const OUT_DIR = path.join("public", "map-fonts");
+/**
+ * Versiunea intră în cale, nu într-un parametru: fișierele se servesc cu cache
+ * de un an, „immutable", deci o regenerare pe aceeași cale nu ar ajunge niciodată
+ * la un browser care le are deja. Crește numărul de fiecare dată când regenerezi
+ * și schimbă-l și în `map-theme.ts`.
+ */
+const GLYPHS_VERSION = "2";
+const OUT_DIR = path.join("public", "map-fonts", GLYPHS_VERSION);
 
 /** Mărimea la care sunt redate glifele; MapLibre le scalează de aici. */
 const FONT_SIZE = 24;
@@ -48,13 +55,8 @@ const CUTOFF = 0.25;
  */
 const BASELINE = 26;
 
-/**
- * Intervalele de care are nevoie o hartă a Europei: latină și latina extinsă,
- * greacă, chirilică, apoi punctuația și semnele care apar în nume. Fontul acoperă
- * și săgeți, simboluri matematice și o zonă privată — nimic care să ajungă
- * vreodată pe o etichetă, așa că nu le generăm.
- */
-const RANGES = [0, 256, 512, 768, 1024, 1280, 7680, 7936, 8192, 8448];
+/** Ultimul punct de cod la care ne uităm; deasupra nu mai e nimic din font. */
+const LAST_CODE_POINT = 0xffff;
 
 const INF = 1e20;
 
@@ -145,14 +147,23 @@ function isRenderable(code) {
 async function coverageOf(fontPath) {
   const font = opentype.parse((await readFile(fontPath)).buffer);
   const covered = new Set();
-  for (const start of RANGES) {
-    for (let code = start; code < start + 256; code++) {
-      if (isRenderable(code) && font.charToGlyphIndex(String.fromCodePoint(code)) > 0) {
-        covered.add(code);
-      }
+  for (let code = 0; code <= LAST_CODE_POINT; code++) {
+    if (isRenderable(code) && font.charToGlyphIndex(String.fromCodePoint(code)) > 0) {
+      covered.add(code);
     }
   }
   return covered;
+}
+
+/**
+ * Generăm fiecare interval în care fontul are măcar o literă. Un interval lipsă
+ * înseamnă un 404 la prima etichetă cu un asemenea caracter — o stea într-un
+ * nume de magazin a fost de ajuns.
+ */
+function rangesOf(covered) {
+  const starts = new Set();
+  for (const code of covered) starts.add(Math.floor(code / 256) * 256);
+  return [...starts].sort((a, b) => a - b);
 }
 
 function drawGlyph(ctx, canvas, character, weight) {
@@ -255,7 +266,7 @@ async function main() {
     let written = 0;
     let drawn = 0;
 
-    for (const start of RANGES) {
+    for (const start of rangesOf(covered)) {
       const end = start + 255;
       const glyphs = [];
 

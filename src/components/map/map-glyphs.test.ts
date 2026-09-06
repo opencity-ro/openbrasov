@@ -4,6 +4,8 @@ import path from "node:path";
 import { PbfReader } from "pbf";
 import { describe, expect, it } from "vitest";
 
+import { GLYPHS_VERSION } from "./map-theme";
+
 type Glyph = {
   id: number;
   bitmap?: Uint8Array;
@@ -59,7 +61,15 @@ const GLYPH_BORDER = 3;
 const BASELINE = 26;
 
 async function loadRange(stackName: string, range: string) {
-  const file = path.join(process.cwd(), "public", "map-fonts", stackName, `${range}.pbf`);
+  // Versiunea din stil trebuie să existe pe disc, altfel harta cere fișiere care nu sunt.
+  const file = path.join(
+    process.cwd(),
+    "public",
+    "map-fonts",
+    GLYPHS_VERSION,
+    stackName,
+    `${range}.pbf`,
+  );
   return readStacks(await readFile(file));
 }
 

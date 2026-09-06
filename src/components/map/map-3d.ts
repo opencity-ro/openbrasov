@@ -15,9 +15,6 @@ import { BUILDING_3D_LAYER, type MapThemeName } from "./map-theme";
 
 export const RELIEF_SOURCE_ID = "relief";
 
-/** Cât așteptăm datele de elevație înainte să continuăm fără ele. */
-const RELIEF_SETTLE_TIMEOUT_MS = 3000;
-
 /**
  * O comutare 3D lasă în urmă cronometre și ascultători care se termină după ce
  * s-a apăsat din nou. Fără o sesiune care le anulează, apăsarea a doua prinde
@@ -150,8 +147,17 @@ function isReliefLoaded(map: MapLibreMap): boolean {
   return Boolean(map.getSource(RELIEF_SOURCE_ID)) && map.isSourceLoaded(RELIEF_SOURCE_ID);
 }
 
-/** Cadrele peste care renunțăm să mai așteptăm așezarea camerei. */
-const STABILISE_MAX_FRAMES = 40;
+/** Cât ținem cadrul cel mult, în cadre; peste asta lăsăm harta în pace. */
+const HOLD_MAX_FRAMES = 240;
+
+/**
+ * Cadrele din față pe care nu ne bazăm. Chiar după `setTerrain`, sursa de
+ * elevație nu are încă nimic de cerut înregistrat, așa că `isSourceLoaded`
+ * răspunde „da" — nu pentru că dalele au sosit, ci pentru că nu s-a cerut nimic.
+ * Abia după ce MapLibre a redesenat o dată apar cererile. Așa se năștea saltul
+ * „o singură dată pe poziție": a doua oară dalele erau deja în memorie.
+ */
+const HOLD_WARMUP_FRAMES = 3;
 
 function sameView(map: MapLibreMap, view: View): boolean {
   const center = map.getCenter();
@@ -163,83 +169,58 @@ function sameView(map: MapLibreMap, view: View): boolean {
 }
 
 /**
- * Așteaptă până camera nu mai fuge singură.
+ * Ține cadrul pe loc până când camera nu mai fuge singură.
  *
- * Nu e destul ca dalele de elevație să fi sosit: MapLibre își recalculează
- * centrul și zoom-ul din altitudinea terenului, iar recalculul acela se întinde
- * pe mai multe redesenări, pe măsură ce sosesc dale noi. Verificăm la fiecare
- * cadru dacă unde s-a oprit e unde am cerut, și repunem cadrul dacă nu — până
- * când două cadre la rând nu mai au nimic de corectat.
+ * Pământul ridicat urcă spre cameră, iar MapLibre recalculează centrul și
+ * zoom-ul după altitudinea de sub centru — pe mai multe redesenări, pe măsură ce
+ * sosesc dale. Repunem cadrul la fiecare cadru și ne oprim abia când sursa e
+ * completă și două cadre la rând nu au avut nimic de corectat.
+ *
+ * Renunțăm la eroare pe sursă (în afara României nu există relief), la expirare,
+ * și în clipa în care omul pune mâna pe hartă — atunci comanda e a lui.
+ * Întoarce `false` doar când relieful nu a venit deloc.
  */
-function stabiliseView(
+function holdView(
   map: MapLibreMap,
   session: Session,
   view: View,
-  abandoned: () => boolean = () => false,
-): Promise<void> {
+  { needRelief, abandoned = () => false }: { needRelief: boolean; abandoned?: () => boolean },
+): Promise<boolean> {
   return new Promise((resolve) => {
     let steady = 0;
     let frames = 0;
+    let failed = false;
+    let done = false;
+
+    const onError = (event: { sourceId?: string }) => {
+      if (event.sourceId === RELIEF_SOURCE_ID) failed = true;
+    };
+    map.on("error", onError);
+
+    const finish = (withRelief: boolean) => {
+      if (done) return;
+      done = true;
+      map.off("error", onError);
+      resolve(withRelief);
+    };
+    session.detach.push(() => finish(true));
 
     const check = () => {
-      if (!isCurrent(map, session) || abandoned()) return resolve();
-
-      steady = sameView(map, view) ? steady + 1 : 0;
-      if (steady < 2) map.jumpTo(view);
+      if (!isCurrent(map, session) || abandoned()) return finish(true);
+      if (failed) return finish(false);
 
       frames += 1;
-      if (steady >= 2 || frames >= STABILISE_MAX_FRAMES) return resolve();
+      const ready = !needRelief || (frames > HOLD_WARMUP_FRAMES && isReliefLoaded(map));
+
+      steady = ready && sameView(map, view) ? steady + 1 : 0;
+      if (steady < 2) map.jumpTo(view);
+
+      if (steady >= 2) return finish(true);
+      if (frames >= HOLD_MAX_FRAMES) return finish(!needRelief);
       requestAnimationFrame(check);
     };
 
     requestAnimationFrame(check);
-  });
-}
-
-/**
- * Ține cadrul fixat cât curg datele de elevație. Pământul ridicat urcă spre
- * cameră, iar MapLibre recalculează centrul și zoom-ul după noua altitudine —
- * care se află abia când sosesc dalele. Ne oprim când sursa e completă, la
- * eroare, la expirare, sau imediat ce omul pune mâna pe hartă: atunci comanda
- * e a lui, nu a noastră.
- */
-function settleRelief(map: MapLibreMap, session: Session, view: View): Promise<boolean> {
-  if (isReliefLoaded(map)) return Promise.resolve(true);
-
-  return new Promise((resolve) => {
-    let settled = false;
-
-    const finish = (withRelief: boolean) => {
-      if (settled) return;
-      settled = true;
-      map.off("sourcedata", onSourceData);
-      map.off("error", onError);
-      map.off("movestart", onUserMove);
-      window.clearTimeout(timer);
-      resolve(withRelief);
-    };
-
-    session.detach.push(() => finish(false));
-
-    const onSourceData = (event: { sourceId?: string }) => {
-      if (event.sourceId !== RELIEF_SOURCE_ID) return;
-      map.jumpTo(view);
-      if (isReliefLoaded(map)) finish(true);
-    };
-
-    const onError = (event: { sourceId?: string }) => {
-      if (event.sourceId === RELIEF_SOURCE_ID) finish(false);
-    };
-
-    const onUserMove = (event: { originalEvent?: unknown }) => {
-      if (event.originalEvent) finish(true);
-    };
-
-    const timer = window.setTimeout(() => finish(false), RELIEF_SETTLE_TIMEOUT_MS);
-
-    map.on("sourcedata", onSourceData);
-    map.on("error", onError);
-    map.on("movestart", onUserMove);
   });
 }
 
@@ -305,8 +286,8 @@ function tiltTo(map: MapLibreMap, session: Session, view: View, pitch: number, d
       map.off("movestart", onUserMove);
       return;
     }
-    // Terenul poate încă să sosească; ținem cadrul până se liniștește.
-    void stabiliseView(map, session, view, () => touched).then(() =>
+    // Înclinarea cere dale noi; ținem cadrul până se liniștește și după ele.
+    void holdView(map, session, view, { needRelief: false, abandoned: () => touched }).then(() =>
       map.off("movestart", onUserMove),
     );
   });
@@ -325,20 +306,14 @@ export async function enterThreeD(
   showBuildings(map);
   addReliefSource(map);
 
-  // Terenul se ridică pe harta încă plată, iar cadrul rămâne fixat cât curg datele.
+  // Terenul se ridică pe harta încă plată, iar cadrul rămâne fixat cât curg
+  // datele — și cât camera își ia altitudinea din ele, înainte de înclinare.
   map.setTerrain({ source: RELIEF_SOURCE_ID, exaggeration: 1 });
   map.jumpTo(view);
 
-  const withRelief = await settleRelief(map, session, view);
+  const withRelief = await holdView(map, session, view, { needRelief: true });
   if (!isCurrent(map, session)) return withRelief;
-
-  if (!withRelief) {
-    map.setTerrain(null);
-  }
-
-  // Lăsăm camera să-și ia altitudinea din teren înainte să pornim înclinarea.
-  await stabiliseView(map, session, view);
-  if (!isCurrent(map, session)) return withRelief;
+  if (!withRelief) map.setTerrain(null);
 
   map.jumpTo(view);
   tiltTo(map, session, view, PITCHED_ANGLE, animate ? PITCH_ENTER_MS : 0);
@@ -365,6 +340,6 @@ export function exitThreeD(map: MapLibreMap, animate: boolean): void {
     removeThreeDLayers(map);
     map.setMaxPitch(0);
     // Scoaterea terenului readuce solul la nivelul mării și mută iar camera.
-    void stabiliseView(map, session, view);
+    void holdView(map, session, view, { needRelief: false });
   });
 }

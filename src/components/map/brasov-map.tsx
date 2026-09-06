@@ -81,6 +81,14 @@ export function BrasovMap({ className }: BrasovMapProps) {
         fadeDuration: 120,
       });
 
+      // Sprite-ul furnizorului nu are desen pentru fiecare clasă de punct de
+      // interes. Fără o imagine înregistrată, MapLibre scrie o avertizare pentru
+      // fiecare lipsă; cu una goală, eticheta se desenează fără icoană și atât.
+      instance.on("styleimagemissing", (event) => {
+        if (instance?.hasImage(event.id)) return;
+        instance?.addImage(event.id, { width: 1, height: 1, data: new Uint8Array(4) });
+      });
+
       instance.once("load", () => {
         if (!cancelled) setMap(instance ?? null);
       });
