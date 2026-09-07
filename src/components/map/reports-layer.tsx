@@ -76,9 +76,13 @@ function toFeatureCollection(reports: PublicReport[]): FeatureCollection<Point, 
 }
 
 type ReportsLayerProps = {
+  /**
+   * Sesizările care trec de filtre. Restul nici nu ajung la hartă: gruparea se
+   * face în sursă, înainte de orice filtru de strat, deci un grup ar fi numărat
+   * și sesizările ascunse și ar fi arătat un cerc cu șapte peste un cartier în
+   * care filtrul curent nu lasă niciuna.
+   */
   reports: PublicReport[];
-  /** Sesizările care trec de filtre; restul dispar de pe hartă, nu se estompează. */
-  visibleIds: string[];
   onSelect: (id: string) => void;
 };
 
@@ -91,7 +95,7 @@ type ReportsLayerProps = {
  * pentru că lângă ea e o farmacie — și nici nu iau locul nimănui: numele
  * localităților rămân pe hartă chiar și sub un grup de sesizări.
  */
-export function ReportsLayer({ reports, visibleIds, onSelect }: ReportsLayerProps) {
+export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
   const map = useMapInstance();
   const onSelectRef = useRef(onSelect);
   useEffect(() => {
@@ -228,17 +232,6 @@ export function ReportsLayer({ reports, visibleIds, onSelect }: ReportsLayerProp
     source?.setData(toFeatureCollection(reports));
   }, [map, reports]);
 
-  // Filtrarea se face pe hartă, fără să atingem sursa: sursa rămâne întreagă, iar
-  // grupurile se recalculează singure pe ce a mai rămas vizibil.
-  useEffect(() => {
-    if (!map?.getLayer(REPORTS_PIN_LAYER)) return;
-    map.setFilter(REPORTS_PIN_LAYER, [
-      "all",
-      ["!", ["has", "point_count"]],
-      ["in", ["get", "id"], ["literal", visibleIds]],
-    ]);
-  }, [map, visibleIds]);
-
   /**
    * Intrarea pinurilor: transparența pleacă de la zero și urcă o singură dată.
    *
@@ -268,7 +261,7 @@ export function ReportsLayer({ reports, visibleIds, onSelect }: ReportsLayerProp
       cancelAnimationFrame(frame);
       map.off("styledata", light);
     };
-  }, [map, visibleIds]);
+  }, [map, reports]);
 
   useEffect(() => {
     if (!map) return;

@@ -77,7 +77,6 @@ export function ReportsMap({ reports }: { reports: PublicReport[] }) {
     [reports, filters],
   );
 
-  const visibleIds = useMemo(() => visible.map((report) => report.id), [visible]);
   const selected = useMemo(
     () => visible.find((report) => report.id === selectedId) ?? null,
     [visible, selectedId],
@@ -103,7 +102,7 @@ export function ReportsMap({ reports }: { reports: PublicReport[] }) {
 
   return (
     <BrasovMap className="absolute inset-0">
-      <ReportsLayer reports={reports} visibleIds={visibleIds} onSelect={setSelectedId} />
+      <ReportsLayer reports={visible} onSelect={setSelectedId} />
       <ReportFocus selected={selected} />
 
       {/* Deasupra hărții, dar sub controalele ei, care stau pe margini. */}
