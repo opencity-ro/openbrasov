@@ -8,8 +8,17 @@ import { resolveAddress } from "@/lib/geo/reverse-geocode";
  */
 const WINDOW = { south: 45.25, north: 46.03, west: 25.1, east: 26.1 };
 
-/** Un punct nu-și schimbă adresa. Răspunsul poate sta un an în orice cache. */
-const CACHE_CONTROL = "public, max-age=86400, s-maxage=31536000, immutable";
+/**
+ * Memoria adevărată e tabelul din bază: el ține minte pe veci și el garantează o
+ * singură întrebare pusă serviciului pentru fiecare punct. Antetul ăsta scutește
+ * doar drumurile repetate în aceeași vizită.
+ *
+ * De aceea nu scrie `immutable` și nici un an: punctul chiar nu-și schimbă
+ * adresa, dar felul în care o scriem noi se schimbă. Prima variantă a stat un an
+ * și era de nemișcat, așa că browserul a continuat să arate adrese greșite după
+ * ce fuseseră reparate — refresh-ul nici măcar nu întreba.
+ */
+const CACHE_CONTROL = "public, max-age=60, s-maxage=3600, stale-while-revalidate=86400";
 
 function coordinate(raw: string | null, min: number, max: number): number | null {
   if (raw === null) return null;
