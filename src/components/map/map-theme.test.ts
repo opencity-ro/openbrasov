@@ -168,8 +168,47 @@ describe("applyMapTheme", () => {
     } as StyleSpecification;
     const themed = applyMapTheme(withPoi, LIGHT_PALETTE);
 
-    expect(themed.layers.find((candidate) => candidate.id === "poi_r1")?.minzoom).toBe(14);
-    expect(themed.layers.find((candidate) => candidate.id === "poi_r20")?.minzoom).toBe(16);
+    expect(themed.layers.find((candidate) => candidate.id === "poi_r1")?.minzoom).toBe(13);
+    expect(themed.layers.find((candidate) => candidate.id === "poi_r20")?.minzoom).toBe(15);
+  });
+
+  it("dă numelor de localitate trei trepte, în raportul de pe referință", () => {
+    const base = styleFixture();
+    const withPlaces = {
+      ...base,
+      layers: [
+        ...base.layers,
+        { id: "label_town", type: "symbol", source: "s" },
+        { id: "label_village", type: "symbol", source: "s" },
+      ],
+    } as StyleSpecification;
+    const themed = applyMapTheme(withPlaces, LIGHT_PALETTE);
+
+    /**
+     * Mărimea la zoom 12. Perechile încep după `["interpolate", curbă, ["zoom"]]`,
+     * deci cheile stau pe pozițiile impare de acolo încolo — căutarea directă a
+     * valorii 12 ar nimeri mărimea de la zoom 10, care se întâmplă să fie tot 12.
+     */
+    const sizeAtZoom12 = (id: string) => {
+      const stops = layer(themed, id).layout?.["text-size"] as unknown[];
+      for (let index = 3; index < stops.length; index += 2) {
+        if (stops[index] === 12) return stops[index + 1];
+      }
+      throw new Error(`${id} nu are o treaptă la zoom 12`);
+    };
+
+    const city = sizeAtZoom12("label_city") as unknown[];
+    // Orașul mare ia prima ramură, orașele mici pe a doua.
+    const bigCity = city[2] as number;
+    const smallCity = city[3] as number;
+    const town = sizeAtZoom12("label_town") as number;
+    const village = sizeAtZoom12("label_village") as number;
+
+    expect(bigCity).toBe(28);
+    expect(town).toBe(19);
+    expect(village).toBe(16);
+    // Un oraș mic se scrie ca un oraș obișnuit, nu ca reședința de județ.
+    expect(smallCity).toBe(town);
   });
 
   it("adaugă numerele de casă pe sursa vectorială a stilului", () => {
@@ -185,7 +224,7 @@ describe("applyMapTheme", () => {
     };
 
     expect(numbers.source).toBe("openmaptiles");
-    expect(numbers.minzoom).toBe(17);
+    expect(numbers.minzoom).toBe(16);
     expect(numbers.paint["text-color"]).toBe(DARK_PALETTE.labelMuted);
   });
 

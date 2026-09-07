@@ -162,6 +162,12 @@ type LayerRule = {
 export const GLYPHS_VERSION = "3";
 export const GLYPHS_URL = `/map-fonts/${GLYPHS_VERSION}/{fontstack}/{range}.pbf`;
 
+/**
+ * Etichetele se resping între ele cu o margine de 2px; la 1px încap vizibil mai
+ * multe magazine pe aceeași stradă, fără să se atingă.
+ */
+const DENSE_LABEL = { "text-padding": 1 };
+
 const FONT_REGULAR = "Inter Regular";
 const FONT_BOLD = "Inter Bold";
 const FONT_ITALIC = "Inter Italic";
@@ -181,26 +187,51 @@ function mappedFontStack(current: unknown): string[] {
 }
 
 /**
- * Numele localității crește cu importanța ei, nu doar cu zoom-ul.
+ * Numele de localitate au trei mărimi, nu o curbă.
  *
- * Într-o clasă, `rank` din datele OpenMapTiles desparte orașul mare de cele mici:
- * în dala reală de peste Brașov, Brașovul are 7, iar Săcele și Codlea — tot
- * `city` — au 11. Sub pragul acela numele rămâne întreg; deasupra lui scade
- * spre mărimea unui oraș obișnuit. Pentru `town` și `village` clasa spune destul.
+ * Măsurate pe referință la zoom 12: orașul mare 28px, orice altă localitate cu
+ * statut de oraș sau comună 19px, satele 16px. Raportul dintre trepte, 1.47 și
+ * 1.19, se păstrează la orice zoom — de asta treptele sunt scrise ca fracțiuni
+ * din mărimea de bază, nu ca liste separate care ar putea să se depărteze.
  */
-function placeTextSize(base: [number, number][], byRank: boolean): unknown {
-  // Zoom-ul trebuie să rămână expresia cea mai de sus — MapLibre nu îl acceptă
-  // imbricat — deci factorul de importanță intră în fiecare rezultat, nu în afară.
-  const scaled = (size: number): unknown =>
-    byRank
-      ? ["interpolate", ["linear"], ["coalesce", ["get", "rank"], 12], 7, size, 11, size * 0.7]
-      : size;
+const TOWN_RATIO = 19 / 28;
+const VILLAGE_RATIO = 16 / 28;
 
+/**
+ * Curba de zoom a orașului mare. Restul localităților o folosesc pe aceeași,
+ * înmulțită cu raportul lor, deci toate cresc și scad împreună.
+ */
+const PLACE_ZOOM_CURVE: [number, number][] = [
+  [6, 13],
+  [10, 21],
+  [12, 28],
+  [15, 32],
+];
+
+/**
+ * `city` acoperă și orașul mare, și orașele mici din jur: în datele de peste
+ * Brașov, Brașovul are `rank` 7, iar Săcele și Codlea au 11. Peste prag, numele
+ * coboară la mărimea unui oraș obișnuit — în referință, Săcele și Ghimbav se
+ * scriu la fel, deși unul e municipiu și celălalt oraș mic.
+ */
+const BIG_CITY_MAX_RANK = 8;
+
+function placeTextSize(ratio: number, byRank = false): unknown {
+  const at = (size: number): unknown => {
+    const scaled = Math.round(size * ratio * 10) / 10;
+    if (!byRank) return scaled;
+
+    const asTown = Math.round(size * TOWN_RATIO * 10) / 10;
+    return ["case", ["<=", ["coalesce", ["get", "rank"], 12], BIG_CITY_MAX_RANK], scaled, asTown];
+  };
+
+  // Zoom-ul trebuie să rămână expresia cea mai de sus — MapLibre nu îl acceptă
+  // imbricat — deci alegerea după rang intră în fiecare rezultat, nu în afară.
   return [
     "interpolate",
     ["exponential", 1.2],
     ["zoom"],
-    ...base.flatMap(([zoom, size]) => [zoom, scaled(size)]),
+    ...PLACE_ZOOM_CURVE.flatMap(([zoom, size]) => [zoom, at(size)]),
   ];
 }
 
@@ -307,19 +338,29 @@ const LAYER_RULES: LayerRule[] = [
   {
     test: /^poi_r1$/,
     type: "symbol",
-    minzoom: 14,
+    minzoom: 13,
     paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
+    layout: () => DENSE_LABEL,
   },
   {
     test: /^poi_r7$/,
     type: "symbol",
-    minzoom: 15,
+    minzoom: 14,
     paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
+    layout: () => DENSE_LABEL,
   },
   {
     test: /^poi_r20$/,
     type: "symbol",
-    minzoom: 16,
+    minzoom: 15,
+    paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
+    layout: () => DENSE_LABEL,
+  },
+  // Numele străzilor mici apar odată cu strada, nu cu două trepte mai târziu.
+  {
+    test: /^highway-name-minor$/,
+    type: "symbol",
+    minzoom: 14,
     paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
   },
   label(
@@ -341,15 +382,7 @@ const LAYER_RULES: LayerRule[] = [
     }),
     layout: () => ({
       "text-font": [FONT_BOLD],
-      "text-size": placeTextSize(
-        [
-          [6, 13],
-          [10, 22],
-          [12, 30],
-          [15, 34],
-        ],
-        true,
-      ),
+      "text-size": placeTextSize(1, true),
       "text-letter-spacing": 0.01,
       "text-padding": 6,
     }),
@@ -366,15 +399,7 @@ const LAYER_RULES: LayerRule[] = [
     }),
     layout: () => ({
       "text-font": [FONT_BOLD],
-      "text-size": placeTextSize(
-        [
-          [8, 12],
-          [11, 17],
-          [12, 19],
-          [15, 22],
-        ],
-        false,
-      ),
+      "text-size": placeTextSize(TOWN_RATIO),
       "text-padding": 5,
     }),
   },
@@ -390,14 +415,7 @@ const LAYER_RULES: LayerRule[] = [
     }),
     layout: () => ({
       "text-font": [FONT_BOLD],
-      "text-size": placeTextSize(
-        [
-          [10, 13],
-          [12, 17],
-          [15, 19],
-        ],
-        false,
-      ),
+      "text-size": placeTextSize(VILLAGE_RATIO),
       "text-padding": 4,
     }),
   },
@@ -410,7 +428,7 @@ export const BUILDING_3D_LAYER = "building-3d";
 
 /**
  * Numerele de casă, ca pe OSM: stilul de bază nu le desenează, dalele le au.
- * Apar abia când ești pe stradă, mici și stinse, ca să nu concureze cu numele.
+ * Apar când ești pe stradă, mici și stinse, ca să nu concureze cu numele.
  */
 export const HOUSE_NUMBER_LAYER = "housenumber";
 
@@ -420,11 +438,11 @@ function houseNumberLayer(source: string, palette: MapPalette): LayerSpecificati
     type: "symbol",
     source,
     "source-layer": "housenumber",
-    minzoom: 17,
+    minzoom: 16,
     layout: {
       "text-field": ["get", "housenumber"],
       "text-font": [FONT_REGULAR],
-      "text-size": ["interpolate", ["linear"], ["zoom"], 17, 9.5, 19, 11],
+      "text-size": ["interpolate", ["linear"], ["zoom"], 16, 9, 19, 11],
       "text-padding": 2,
       "text-max-width": 6,
     },
