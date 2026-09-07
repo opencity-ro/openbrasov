@@ -18,6 +18,8 @@ import { applyMapTheme, type MapThemeName, PALETTES } from "./map-theme";
 
 type BrasovMapProps = {
   className?: string;
+  /** Conținut așezat peste hartă, cu acces la instanța ei prin context. */
+  children?: React.ReactNode;
 };
 
 /** Serverul de dale, de fonturi și de sprite-uri; deschidem conexiunea din timp. */
@@ -27,7 +29,7 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function BrasovMap({ className }: BrasovMapProps) {
+export function BrasovMap({ className, children }: BrasovMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [is3d, setIs3d] = useState(false);
@@ -141,6 +143,7 @@ export function BrasovMap({ className }: BrasovMapProps) {
       <div ref={containerRef} data-testid="map-canvas" className="h-full w-full" />
 
       <MapProvider value={map}>
+        {children}
         <MapControls ready={Boolean(map)} is3d={is3d} onToggle3d={toggle3d} />
       </MapProvider>
 
