@@ -10,6 +10,8 @@ import {
   type ReversePlace,
 } from "./address";
 import { distanceToGeometry, type Geometry } from "./distance";
+import { pickLandmark } from "./landmarks";
+import { landmarksAround } from "./basemap-pois";
 
 /**
  * Traducerea unei coordonate în adresă.
@@ -49,21 +51,6 @@ const TIMEOUT_MS = 6000;
  */
 const NUMBER_MAX_M = 25;
 const STREET_MAX_M = 60;
-
-/**
- * Cât de departe are voie să fie reperul de care ne agățăm când nu există
- * stradă. Mai mult de-atât și „lângă" devine o minciună politicoasă.
- */
-const LANDMARK_MAX_M = 300;
-
-/**
- * Feluri de locuri care nu se folosesc drept reper, oricât de aproape ar fi.
- *
- * Serviciul întoarce și birouri, firme și dispecerate. „Lângă Dispecerat
- * National Salvamont A.N.S.M.R." e adevărat, dar nu e felul în care spune un om
- * unde se află; un izvor, o cabană sau un loc de popas, da.
- */
-const NOT_A_LANDMARK = new Set(["office", "emergency", "shop", "craft", "healthcare"]);
 
 /**
  * Cinci zecimale, adică circa un metru. Sub atât, două atingeri ale aceleiași
@@ -152,38 +139,6 @@ function trim(found: Found | null, latitude: number, longitude: number): Reverse
   return { name: found.name, address };
 }
 
-type Nearby = { road: string } | { landmark: string } | null;
-
-/**
- * A doua întrebare, pusă doar când prima n-a dat nicio stradă: ce se află prin
- * preajmă.
- *
- * Întoarce două lucruri diferite, în ordinea în care le-ar spune un om. Întâi
- * strada: prin cartiere sunt o mulțime de alei fără nume în hartă, iar sesizarea
- * cade fix pe una dintre ele — dar parcarea sau blocul de la câțiva metri își
- * poartă strada în adresă, și aia e strada pe care ai zice că ești. Abia dacă nu
- * iese nicio stradă căutăm un reper cu nume.
- *
- * Numărul nu se ia niciodată de aici: e numărul vecinului, nu al nostru.
- */
-async function nearby(latitude: number, longitude: number): Promise<Nearby> {
-  const found = await inLine(() => ask(latitude, longitude, "poi,natural,manmade"));
-  if (!found) return null;
-
-  const distance = distanceToGeometry(latitude, longitude, found.geojson);
-  const measured = distance ?? Infinity;
-
-  const road = found.address?.road?.trim();
-  if (road && measured <= STREET_MAX_M) return { road };
-
-  const landmark = found.name?.trim();
-  if (landmark && !NOT_A_LANDMARK.has(found.category ?? "") && measured <= LANDMARK_MAX_M) {
-    return { landmark };
-  }
-
-  return null;
-}
-
 /**
  * Adresa punctului, din memorie dacă a mai fost cerută, altfel de la serviciu.
  *
@@ -214,11 +169,13 @@ export async function resolveAddress(
     found = await inLine(() => ask(latitude, longitude));
     place = trim(found, latitude, longitude);
 
+    // Fără stradă sub picioare, spunem lângă ce ești. Strada vecinului nu se
+    // împrumută niciodată: o alee fără nume rămâne o alee fără nume, iar a scrie
+    // strada de peste gard e aceeași minciună ca un număr de casă de la două sute
+    // de metri, doar mai greu de prins.
     if (!place?.address?.road && !place?.name) {
-      const around = await nearby(latitude, longitude);
-      const area = place?.address ?? {};
-      if (around && "road" in around) place = { address: { ...area, road: around.road } };
-      else if (around) place = { name: around.landmark, address: area };
+      const landmark = pickLandmark(await landmarksAround(latitude, longitude));
+      if (landmark) place = { name: landmark.name, address: place?.address ?? {} };
     }
   } catch (error) {
     console.error("Geocodarea inversă a eșuat:", error);

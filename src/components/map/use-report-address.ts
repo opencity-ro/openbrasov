@@ -19,7 +19,7 @@ const LOADING: AddressState = { status: "loading" };
  * Se ridică odată cu orice schimbare care face ca același punct să fie scris
  * altfel.
  */
-const FORMAT_VERSION = 3;
+const FORMAT_VERSION = 6;
 
 /**
  * Cere adresa punctului abia când cardul lui se deschide.
