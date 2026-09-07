@@ -9,6 +9,19 @@ export type AddressState =
 const LOADING: AddressState = { status: "loading" };
 
 /**
+ * Versiunea felului în care scriem adresa, purtată în adresa cererii.
+ *
+ * Răspunsul nu depinde doar de punct, ci și de regulile noastre de scriere, deci
+ * ele fac parte din cheia sub care e ținut minte. Fără asta, o adresă reparată
+ * pe server rămâne greșită în browserele care o aveau deja: primul antet a cerut
+ * un an de păstrare, marcat de nemișcat, iar un refresh obișnuit nici nu întreabă.
+ *
+ * Se ridică odată cu orice schimbare care face ca același punct să fie scris
+ * altfel.
+ */
+const FORMAT_VERSION = 2;
+
+/**
  * Cere adresa punctului abia când cardul lui se deschide.
  *
  * Nu la încărcarea hărții: acolo ar fi însemnat treizeci de întrebări deodată
@@ -29,7 +42,7 @@ export function useReportAddress(latitude: number, longitude: number): AddressSt
 
   useEffect(() => {
     const abort = new AbortController();
-    const url = `/api/adresa?lat=${encodeURIComponent(latitude)}&lng=${encodeURIComponent(longitude)}`;
+    const url = `/api/adresa?lat=${encodeURIComponent(latitude)}&lng=${encodeURIComponent(longitude)}&v=${FORMAT_VERSION}`;
 
     fetch(url, { signal: abort.signal })
       .then((response) => (response.ok ? response.json() : null))
