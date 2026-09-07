@@ -107,10 +107,16 @@ export const DARK_PALETTE: MapPalette = {
   building: "#363c46",
   buildingOutline: "#454c57",
   building3d: "#3b414c",
-  motorway: "#5a6270",
-  motorwayCasing: "#6a7381",
-  major: "#4c5460",
-  majorCasing: "#5a626e",
+  // Drumurile mari rămân galbene și noaptea, ca ziua: ele sunt scheletul după
+  // care recunoști orașul dintr-o privire, iar în cenușiu se pierdeau printre
+  // străzile mărunte. Chihlimbarul e stins, nu aprins — pe fundalul de ardezie
+  // iese la 5 la 1 autostrada și 3,8 la 1 drumul principal, adică se citesc
+  // limpede fără să lumineze harta. Tot ordinea se păstrează: autostrada peste
+  // drumul principal, amândouă peste strada obișnuită.
+  motorway: "#d19a45",
+  motorwayCasing: "#8f6730",
+  major: "#b8853a",
+  majorCasing: "#7d5b2b",
   minor: "#414954",
   minorCasing: "#4b535f",
   path: "#454d58",
