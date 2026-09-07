@@ -152,18 +152,36 @@ function trim(found: Found | null, latitude: number, longitude: number): Reverse
   return { name: found.name, address };
 }
 
-/**
- * Reperul cel mai apropiat, când nu suntem pe nicio stradă: un izvor, o cabană,
- * un loc de popas. Se cere abia atunci, ca a doua întrebare, fiindcă la o
- * sesizare obișnuită de pe stradă n-are cine s-o folosească.
- */
-async function nearbyLandmark(latitude: number, longitude: number): Promise<string | null> {
-  const found = await inLine(() => ask(latitude, longitude, "poi,natural,manmade"));
-  const name = found?.name?.trim();
-  if (!name || NOT_A_LANDMARK.has(found?.category ?? "")) return null;
+type Nearby = { road: string } | { landmark: string } | null;
 
-  const distance = distanceToGeometry(latitude, longitude, found?.geojson);
-  return distance !== null && distance <= LANDMARK_MAX_M ? name : null;
+/**
+ * A doua întrebare, pusă doar când prima n-a dat nicio stradă: ce se află prin
+ * preajmă.
+ *
+ * Întoarce două lucruri diferite, în ordinea în care le-ar spune un om. Întâi
+ * strada: prin cartiere sunt o mulțime de alei fără nume în hartă, iar sesizarea
+ * cade fix pe una dintre ele — dar parcarea sau blocul de la câțiva metri își
+ * poartă strada în adresă, și aia e strada pe care ai zice că ești. Abia dacă nu
+ * iese nicio stradă căutăm un reper cu nume.
+ *
+ * Numărul nu se ia niciodată de aici: e numărul vecinului, nu al nostru.
+ */
+async function nearby(latitude: number, longitude: number): Promise<Nearby> {
+  const found = await inLine(() => ask(latitude, longitude, "poi,natural,manmade"));
+  if (!found) return null;
+
+  const distance = distanceToGeometry(latitude, longitude, found.geojson);
+  const measured = distance ?? Infinity;
+
+  const road = found.address?.road?.trim();
+  if (road && measured <= STREET_MAX_M) return { road };
+
+  const landmark = found.name?.trim();
+  if (landmark && !NOT_A_LANDMARK.has(found.category ?? "") && measured <= LANDMARK_MAX_M) {
+    return { landmark };
+  }
+
+  return null;
 }
 
 /**
@@ -197,8 +215,10 @@ export async function resolveAddress(
     place = trim(found, latitude, longitude);
 
     if (!place?.address?.road && !place?.name) {
-      const landmark = await nearbyLandmark(latitude, longitude);
-      if (landmark) place = { name: landmark, address: place?.address ?? {} };
+      const around = await nearby(latitude, longitude);
+      const area = place?.address ?? {};
+      if (around && "road" in around) place = { address: { ...area, road: around.road } };
+      else if (around) place = { name: around.landmark, address: area };
     }
   } catch (error) {
     console.error("Geocodarea inversă a eșuat:", error);
