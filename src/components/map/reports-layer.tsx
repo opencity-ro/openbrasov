@@ -366,28 +366,12 @@ export function ReportsLayer({ reports, visibleIds, onSelect }: ReportsLayerProp
 
     // Aceleași referințe la adăugare și la scoatere: `off` compară funcția, iar
     // una creată pe loc ar lăsa ascultătorul în urmă la fiecare remontare.
-    const showHand = () => {
-      map.getCanvas().style.cursor = "pointer";
-    };
-    const hideHand = () => {
-      map.getCanvas().style.cursor = "";
-    };
-    const clickable = [REPORTS_PIN_LAYER, CLUSTER_LAYER];
-
     map.on("click", REPORTS_PIN_LAYER, openReport);
     map.on("click", CLUSTER_LAYER, zoomIntoCluster);
-    for (const layer of clickable) {
-      map.on("mouseenter", layer, showHand);
-      map.on("mouseleave", layer, hideHand);
-    }
 
     return () => {
       map.off("click", REPORTS_PIN_LAYER, openReport);
       map.off("click", CLUSTER_LAYER, zoomIntoCluster);
-      for (const layer of clickable) {
-        map.off("mouseenter", layer, showHand);
-        map.off("mouseleave", layer, hideHand);
-      }
     };
   }, [map]);
 

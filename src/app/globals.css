@@ -156,6 +156,20 @@
 
 @layer components {
   /*
+   * Săgeata obișnuită peste toată harta.
+   *
+   * MapLibre pune din start o mânuță care se strânge când tragi de hartă. Pe o
+   * hartă întreagă cât ecranul, cursorul ăla stă în fața ta tot timpul și face
+   * pagina să pară un instrument de desen, nu un site. Săgeata e ce se așteaptă
+   * omul să vadă.
+   */
+  .maplibregl-canvas-container.maplibregl-interactive,
+  .maplibregl-canvas-container.maplibregl-interactive:active,
+  .maplibregl-canvas-container.maplibregl-interactive .maplibregl-canvas {
+    cursor: default;
+  }
+
+  /*
    * Controalele implicite MapLibre sunt înlocuite cu ale noastre. Pe cel de
    * geolocalizare îl păstrăm montat, pentru punctul de poziție și cercul de
    * precizie, dar îi ascundem butonul: îl pornim din butonul nostru.
