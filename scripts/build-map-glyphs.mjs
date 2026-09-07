@@ -16,15 +16,30 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-/** Inter, licențiat SIL OFL. Suficient de aproape de fonturile de sistem, și liber. */
-const FONT_URL =
-  "https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf";
-const FONT_FAMILY = "InterMap";
-const FONT_CACHE = path.join("node_modules", ".cache", "inter-variable.ttf");
+/**
+ * Inter, licențiat SIL OFL. Suficient de aproape de fonturile de sistem, și liber.
+ * Fișierul drept și cel italic sunt fonturi variabile separate; motorul de desen
+ * le încadrează pe fiecare în două greutăți, exact cele de care avem nevoie.
+ */
+const FONT_BASE = "https://raw.githubusercontent.com/google/fonts/main/ofl/inter/";
+const FONTS = {
+  upright: {
+    url: `${FONT_BASE}Inter%5Bopsz%2Cwght%5D.ttf`,
+    family: "InterMapUpright",
+    cache: path.join("node_modules", ".cache", "inter-upright.ttf"),
+  },
+  italic: {
+    url: `${FONT_BASE}Inter-Italic%5Bopsz%2Cwght%5D.ttf`,
+    family: "InterMapItalic",
+    cache: path.join("node_modules", ".cache", "inter-italic.ttf"),
+  },
+};
 
+/** Cele trei tăieturi pe care le cere stilul de bază: dreaptă, îngroșată, italică. */
 const STACKS = [
-  { name: "Inter Regular", weight: 400 },
-  { name: "Inter Bold", weight: 700 },
+  { name: "Inter Regular", font: FONTS.upright, weight: 400 },
+  { name: "Inter Bold", font: FONTS.upright, weight: 700 },
+  { name: "Inter Italic", font: FONTS.italic, weight: 400 },
 ];
 
 /**
@@ -33,7 +48,7 @@ const STACKS = [
  * la un browser care le are deja. Crește numărul de fiecare dată când regenerezi
  * și schimbă-l și în `map-theme.ts`.
  */
-const GLYPHS_VERSION = "2";
+const GLYPHS_VERSION = "3";
 const OUT_DIR = path.join("public", "map-fonts", GLYPHS_VERSION);
 
 /** Mărimea la care sunt redate glifele; MapLibre le scalează de aici. */
@@ -166,8 +181,8 @@ function rangesOf(covered) {
   return [...starts].sort((a, b) => a - b);
 }
 
-function drawGlyph(ctx, canvas, character, weight) {
-  ctx.font = `${weight} ${FONT_SIZE}px "${FONT_FAMILY}"`;
+function drawGlyph(ctx, canvas, character, family, weight) {
+  ctx.font = `${weight} ${FONT_SIZE}px "${family}"`;
   ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
 
@@ -238,28 +253,32 @@ function encodeRange(stackName, range, glyphs) {
   return Buffer.from(writer.finish());
 }
 
-async function loadFont() {
-  if (!existsSync(FONT_CACHE)) {
-    console.log("Descarc fontul…");
-    const response = await fetch(FONT_URL);
+async function loadFont(font) {
+  if (!existsSync(font.cache)) {
+    console.log(`Descarc ${font.family}…`);
+    const response = await fetch(font.url);
     if (!response.ok) throw new Error(`Fontul nu a putut fi descărcat: ${response.status}`);
-    await mkdir(path.dirname(FONT_CACHE), { recursive: true });
-    await writeFile(FONT_CACHE, Buffer.from(await response.arrayBuffer()));
+    await mkdir(path.dirname(font.cache), { recursive: true });
+    await writeFile(font.cache, Buffer.from(await response.arrayBuffer()));
   }
 
-  const registered = GlobalFonts.register(await readFile(FONT_CACHE), FONT_FAMILY);
-  if (!registered) throw new Error("Fontul nu a putut fi înregistrat");
+  const registered = GlobalFonts.register(await readFile(font.cache), font.family);
+  if (!registered) throw new Error(`${font.family} nu a putut fi înregistrat`);
 }
 
 async function main() {
-  await loadFont();
-  const covered = await coverageOf(FONT_CACHE);
+  const coverage = new Map();
+  for (const font of Object.values(FONTS)) {
+    await loadFont(font);
+    coverage.set(font.family, await coverageOf(font.cache));
+  }
 
   // Pânza trebuie să încapă cea mai lată glifă, cu marginile ei.
   const canvas = createCanvas(FONT_SIZE * 4, FONT_SIZE * 4);
   const ctx = canvas.getContext("2d");
 
   for (const stack of STACKS) {
+    const covered = coverage.get(stack.font.family);
     const stackDir = path.join(OUT_DIR, stack.name);
     await mkdir(stackDir, { recursive: true });
 
@@ -273,7 +292,7 @@ async function main() {
       for (let code = start; code <= end; code++) {
         if (!covered.has(code)) continue;
         const character = String.fromCodePoint(code);
-        const glyph = drawGlyph(ctx, canvas, character, stack.weight);
+        const glyph = drawGlyph(ctx, canvas, character, stack.font.family, stack.weight);
         // Fără cerneală și fără avans înseamnă că fontul nu are litera.
         if (!glyph.bitmap && glyph.advance === 0) continue;
         glyphs.push({ id: code, ...glyph });

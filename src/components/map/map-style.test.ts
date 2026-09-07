@@ -2,7 +2,13 @@ import { validateStyleMin } from "@maplibre/maplibre-gl-style-spec";
 import type { StyleSpecification } from "maplibre-gl";
 import { describe, expect, it } from "vitest";
 
-import { applyMapTheme, BUILDING_3D_LAYER, GLYPHS_URL, PALETTES } from "./map-theme";
+import {
+  applyMapTheme,
+  BUILDING_3D_LAYER,
+  GENERATED_FONTS,
+  GLYPHS_URL,
+  PALETTES,
+} from "./map-theme";
 
 /**
  * Un extras din stilul OpenFreeMap Liberty, cu câte un strat din fiecare fel pe
@@ -127,7 +133,7 @@ describe("fonturile etichetelor", () => {
 
   it("nu lasă niciun strat să ceară un font pe care nu îl generăm", () => {
     const style = applyMapTheme(styleFixture(), PALETTES.light);
-    const generated = ["Inter Regular", "Inter Bold"];
+    const generated = GENERATED_FONTS;
 
     for (const layer of style.layers) {
       if (layer.type !== "symbol") continue;

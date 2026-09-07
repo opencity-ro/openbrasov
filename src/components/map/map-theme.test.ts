@@ -1,7 +1,13 @@
 import type { StyleSpecification } from "maplibre-gl";
 import { describe, expect, it } from "vitest";
 
-import { applyMapTheme, BUILDING_3D_LAYER, DARK_PALETTE, LIGHT_PALETTE } from "./map-theme";
+import {
+  applyMapTheme,
+  BUILDING_3D_LAYER,
+  DARK_PALETTE,
+  HOUSE_NUMBER_LAYER,
+  LIGHT_PALETTE,
+} from "./map-theme";
 
 /** Un extras din stilul Liberty, cu straturile care ne dau cele mai multe bătăi de cap. */
 function styleFixture(): StyleSpecification {
@@ -47,22 +53,32 @@ function layer(style: StyleSpecification, id: string) {
 }
 
 describe("applyMapTheme", () => {
-  it("recolorează fundalul, apa și verdeața din paletă", () => {
+  it("ziua lasă vopseaua stilului de bază neatinsă", () => {
     const themed = applyMapTheme(styleFixture(), LIGHT_PALETTE);
 
-    expect(layer(themed, "background").paint?.["background-color"]).toBe(LIGHT_PALETTE.background);
-    expect(layer(themed, "water").paint?.["fill-color"]).toBe(LIGHT_PALETTE.water);
-    expect(layer(themed, "park").paint?.["fill-color"]).toBe(LIGHT_PALETTE.park);
+    // Drumurile galbene, apa albastră, gri-ul etichetelor: exact harta oficială.
+    expect(layer(themed, "road_motorway").paint?.["line-color"]).toBe("#fc8");
+    expect(layer(themed, "water").paint?.["fill-color"]).toBe("rgb(158,189,255)");
+    expect(layer(themed, "label_city").paint?.["text-color"]).toBe("#000");
+    expect(layer(themed, "waterway_line_label").paint?.["text-color"]).toBe("#999");
+  });
+
+  it("noaptea recolorează fundalul, apa și verdeața din paletă", () => {
+    const themed = applyMapTheme(styleFixture(), DARK_PALETTE);
+
+    expect(layer(themed, "background").paint?.["background-color"]).toBe(DARK_PALETTE.background);
+    expect(layer(themed, "water").paint?.["fill-color"]).toBe(DARK_PALETTE.water);
+    expect(layer(themed, "park").paint?.["fill-color"]).toBe(DARK_PALETTE.park);
   });
 
   it("separă conturul drumului de umplutura lui", () => {
-    const themed = applyMapTheme(styleFixture(), LIGHT_PALETTE);
+    const themed = applyMapTheme(styleFixture(), DARK_PALETTE);
 
     expect(layer(themed, "road_motorway_casing").paint?.["line-color"]).toBe(
-      LIGHT_PALETTE.motorwayCasing,
+      DARK_PALETTE.motorwayCasing,
     );
-    expect(layer(themed, "road_motorway").paint?.["line-color"]).toBe(LIGHT_PALETTE.motorway);
-    expect(layer(themed, "road_minor").paint?.["line-color"]).toBe(LIGHT_PALETTE.minor);
+    expect(layer(themed, "road_motorway").paint?.["line-color"]).toBe(DARK_PALETTE.motorway);
+    expect(layer(themed, "road_minor").paint?.["line-color"]).toBe(DARK_PALETTE.minor);
   });
 
   it("tratează șinele ca șine, nu ca drumuri", () => {
@@ -79,11 +95,11 @@ describe("applyMapTheme", () => {
   });
 
   it("pornește cu clădirile 3D ascunse", () => {
-    const themed = applyMapTheme(styleFixture(), LIGHT_PALETTE);
+    const themed = applyMapTheme(styleFixture(), DARK_PALETTE);
 
     expect(layer(themed, BUILDING_3D_LAYER).layout?.visibility).toBe("none");
     expect(layer(themed, BUILDING_3D_LAYER).paint?.["fill-extrusion-color"]).toBe(
-      LIGHT_PALETTE.building3d,
+      DARK_PALETTE.building3d,
     );
   });
 
@@ -94,16 +110,89 @@ describe("applyMapTheme", () => {
   });
 
   it("tratează ca etichete straturile care doar sună a linie", () => {
-    const themed = applyMapTheme(styleFixture(), LIGHT_PALETTE);
+    const themed = applyMapTheme(styleFixture(), DARK_PALETTE);
 
     expect(layer(themed, "waterway_line_label").paint?.["text-color"]).toBe(
-      LIGHT_PALETTE.waterLabel,
+      DARK_PALETTE.waterLabel,
     );
     expect(layer(themed, "waterway_line_label").paint?.["line-color"]).toBeUndefined();
-    expect(layer(themed, "highway-name-minor").paint?.["text-color"]).toBe(
-      LIGHT_PALETTE.labelMuted,
-    );
+    expect(layer(themed, "highway-name-minor").paint?.["text-color"]).toBe(DARK_PALETTE.labelMuted);
     expect(layer(themed, "highway-name-minor").paint?.["line-color"]).toBeUndefined();
+  });
+
+  it("păstrează tăietura fontului cerută de stil: italicul rămâne italic", () => {
+    const base = styleFixture();
+    const withFonts = {
+      ...base,
+      layers: [
+        ...base.layers,
+        {
+          id: "poi_r1",
+          type: "symbol",
+          source: "s",
+          layout: { "text-font": ["Noto Sans Italic"] },
+        },
+        { id: "shield", type: "symbol", source: "s", layout: { "text-font": ["Noto Sans Bold"] } },
+      ],
+    } as StyleSpecification;
+    const themed = applyMapTheme(withFonts, LIGHT_PALETTE);
+
+    expect(layer(themed, "poi_r1").layout?.["text-font"]).toEqual(["Inter Italic"]);
+    expect(layer(themed, "shield").layout?.["text-font"]).toEqual(["Inter Bold"]);
+    expect(layer(themed, "label_city").layout?.["text-font"]).toEqual(["Inter Bold"]);
+  });
+
+  it("ține conturul clădirilor la orice apropiere, ca pe OSM", () => {
+    const base = styleFixture();
+    const withBuilding = {
+      ...base,
+      layers: [
+        ...base.layers,
+        { id: "building", type: "fill", source: "s", minzoom: 13, maxzoom: 14, paint: {} },
+      ],
+    } as StyleSpecification;
+    const themed = applyMapTheme(withBuilding, LIGHT_PALETTE);
+
+    expect(themed.layers.find((candidate) => candidate.id === "building")?.maxzoom).toBe(24);
+  });
+
+  it("arată punctele de interes cu o treaptă mai devreme", () => {
+    const base = styleFixture();
+    const withPoi = {
+      ...base,
+      layers: [
+        ...base.layers,
+        { id: "poi_r1", type: "symbol", source: "s", minzoom: 15 },
+        { id: "poi_r20", type: "symbol", source: "s", minzoom: 17 },
+      ],
+    } as StyleSpecification;
+    const themed = applyMapTheme(withPoi, LIGHT_PALETTE);
+
+    expect(themed.layers.find((candidate) => candidate.id === "poi_r1")?.minzoom).toBe(14);
+    expect(themed.layers.find((candidate) => candidate.id === "poi_r20")?.minzoom).toBe(16);
+  });
+
+  it("adaugă numerele de casă pe sursa vectorială a stilului", () => {
+    const withSource = {
+      ...styleFixture(),
+      sources: { openmaptiles: { type: "vector", url: "https://example.test/planet" } },
+    } as StyleSpecification;
+    const themed = applyMapTheme(withSource, DARK_PALETTE);
+    const numbers = layer(themed, HOUSE_NUMBER_LAYER) as unknown as {
+      source: string;
+      minzoom: number;
+      paint: Record<string, unknown>;
+    };
+
+    expect(numbers.source).toBe("openmaptiles");
+    expect(numbers.minzoom).toBe(17);
+    expect(numbers.paint["text-color"]).toBe(DARK_PALETTE.labelMuted);
+  });
+
+  it("nu adaugă numere de casă unui stil fără sursă vectorială", () => {
+    const themed = applyMapTheme(styleFixture(), LIGHT_PALETTE);
+
+    expect(themed.layers.some((candidate) => candidate.id === HOUSE_NUMBER_LAYER)).toBe(false);
   });
 
   it("nu scrie niciodată o proprietate străină de tipul stratului", () => {

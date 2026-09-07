@@ -1,10 +1,16 @@
-import type { StyleSpecification } from "maplibre-gl";
+import type { LayerSpecification, StyleSpecification } from "maplibre-gl";
 
 /**
  * Paleta hărții, pe roluri, nu pe straturi. Stilul Liberty are 111 de straturi;
  * le grupăm după ce reprezintă, ca schimbarea unei culori să nu ceară 20 de edituri.
  */
 export type MapPalette = {
+  /**
+   * Lasă vopseaua stilului de bază neatinsă. Ziua vrem exact harta oficială —
+   * drumurile galbene, etichetele gri, tot — și adăugăm doar ce lipsește din ea.
+   * Culorile de mai jos rămân pentru straturile pe care le creăm noi.
+   */
+  keepUpstreamPaint: boolean;
   background: string;
   water: string;
   waterway: string;
@@ -34,22 +40,23 @@ export type MapPalette = {
   labelHalo: string;
   labelMuted: string;
   waterLabel: string;
-  parkLabel: string;
+  transitLabel: string;
   /** Opacitatea reliefului Natural Earth, vizibil doar sub zoom 7. */
   reliefOpacity: number;
 };
 
 /**
- * Ziua: ton cald și dens, tras spre verdele mărcii — uscat cald, apă potolită,
- * verdeață citibilă, drumuri albe cu contur discret.
+ * Ziua e harta oficială, așa cum o servește furnizorul de dale. Valorile de aici
+ * ajung doar în straturile adăugate de noi — numerele de casă, cerul.
  */
 export const LIGHT_PALETTE: MapPalette = {
-  background: "#f4f1eb",
-  water: "#a7cbe0",
-  waterway: "#93bcd6",
-  park: "#dce8ce",
-  wood: "#d3e1c2",
-  grass: "#dfeacf",
+  keepUpstreamPaint: true,
+  background: "#f8f4f0",
+  water: "#9ebdff",
+  waterway: "#9ebdff",
+  park: "#d8e8c8",
+  wood: "#c7dfb2",
+  grass: "#d8e8c8",
   wetland: "#cfddcb",
   sand: "#efe6ce",
   ice: "#e8eef2",
@@ -57,32 +64,33 @@ export const LIGHT_PALETTE: MapPalette = {
   institutional: "#e9e5dc",
   pitch: "#d8e4c8",
   aeroway: "#e7e3da",
-  building: "#e6e1d7",
-  buildingOutline: "#d9d3c6",
-  building3d: "#e9e4da",
-  motorway: "#fbe3be",
-  motorwayCasing: "#e9c88e",
-  major: "#ffffff",
-  majorCasing: "#e0d9cb",
-  minor: "#fbfaf7",
-  minorCasing: "#e5dfd3",
+  building: "#dcd8d1",
+  buildingOutline: "#cbc6bd",
+  building3d: "#dcd8d1",
+  motorway: "#ffcc88",
+  motorwayCasing: "#e9ac77",
+  major: "#ffeeaa",
+  majorCasing: "#e9ac77",
+  minor: "#ffffff",
+  minorCasing: "#cfcdca",
   path: "#d9d2c4",
-  rail: "#d2cbbe",
-  boundary: "#c4bcad",
-  label: "#3d4a43",
-  labelHalo: "rgba(255, 255, 255, 0.92)",
-  labelMuted: "#6b7a70",
+  rail: "#bbbbbb",
+  boundary: "#9e9cab",
+  label: "#333333",
+  labelHalo: "rgba(255, 255, 255, 0.9)",
+  labelMuted: "#8a8480",
   waterLabel: "#5c87a5",
-  parkLabel: "#4f6b49",
+  transitLabel: "#2e5a80",
   reliefOpacity: 0.35,
 };
 
 /**
  * Noaptea: ardezie albastru-cenușie, nu negru. Drumurile stau mai deschise decât
- * terenul, altfel orașul dispare; verdeața rămâne saturată ca să se citească
+ * terenul, altfel orașul dispare; verdeața rămâne saturată cât să se citească
  * dealurile, iar apa păstrează destul albastru cât să rămână apă.
  */
 export const DARK_PALETTE: MapPalette = {
+  keepUpstreamPaint: false,
   background: "#2b3038",
   water: "#1e2a36",
   waterway: "#2a3d4d",
@@ -97,7 +105,7 @@ export const DARK_PALETTE: MapPalette = {
   pitch: "#2c4a3b",
   aeroway: "#31363f",
   building: "#363c46",
-  buildingOutline: "#414854",
+  buildingOutline: "#454c57",
   building3d: "#3b414c",
   motorway: "#5a6270",
   motorwayCasing: "#6a7381",
@@ -112,7 +120,7 @@ export const DARK_PALETTE: MapPalette = {
   labelHalo: "rgba(26, 30, 36, 0.85)",
   labelMuted: "#9aa4b2",
   waterLabel: "#7fa8c4",
-  parkLabel: "#7cc4a0",
+  transitLabel: "#8db4d6",
   reliefOpacity: 0.15,
 };
 
@@ -133,9 +141,12 @@ type LayerRule = {
    * un strat `symbol` face stilul invalid și harta nu mai pornește.
    */
   type: LayerType;
-  paint: (palette: MapPalette) => PaintPatch;
-  /** Mărimea și fontul stau în `layout`, nu în `paint`. */
+  /** Culorile. Nu se aplică atunci când paleta păstrează vopseaua de bază. */
+  paint?: (palette: MapPalette) => PaintPatch;
+  /** Mărimea și fontul stau în `layout`, nu în `paint`. Se aplică în orice temă. */
   layout?: () => Record<string, unknown>;
+  /** Zoom-ul de la care apare stratul. */
+  minzoom?: number;
   /**
    * Zoom-ul peste care stratul dispare. Numele orașului nu mai ajută pe nimeni
    * odată ce ești pe strada lui — acolo contează cartierul, nu localitatea.
@@ -144,84 +155,45 @@ type LayerRule = {
 };
 
 /**
- * Culoarea etichetei spune categoria dintr-o privire, înainte să apuci să
- * citești numele. Aceleași tonuri în ambele teme: sunt destul de saturate cât să
- * țină contrastul și pe hârtie, și pe ardezie.
- */
-const POI_COLORS: Array<[string[], string]> = [
-  [["restaurant", "fast_food", "cafe", "bar", "pub", "ice_cream", "bakery"], "#e8842a"],
-  [
-    ["shop", "supermarket", "grocery", "clothing_store", "mall", "alcohol_shop", "car", "bicycle"],
-    "#dda32c",
-  ],
-  [["lodging"], "#a267d4"],
-  [["hospital", "pharmacy", "doctors", "dentist", "veterinary"], "#e0526a"],
-  [["school", "college", "library", "kindergarten"], "#4a90d9"],
-  [["bus", "rail", "airport", "ferry_terminal", "subway"], "#3f83f8"],
-  [
-    ["park", "garden", "playground", "pitch", "stadium", "golf", "swimming", "dog_park", "zoo"],
-    "#2f9e68",
-  ],
-  [["attraction", "museum", "art_gallery", "cinema", "theatre", "monument", "castle"], "#c9569f"],
-  [["town_hall", "police", "fire_station", "post", "bank", "embassy"], "#7d8aa0"],
-];
-
-function poiTextColor(fallback: string): unknown {
-  return [
-    "match",
-    ["get", "class"],
-    ...POI_COLORS.flatMap(([classes, color]) => [classes, color]),
-    fallback,
-  ];
-}
-
-/**
  * Glifele sunt generate de noi din Inter și servite de pe domeniul propriu
  * (`pnpm map:glyphs`). Stilul de bază cere fonturi Noto de la furnizorul de dale;
  * le înlocuim pe toate, altfel etichetele ar cere fișiere care la noi nu există.
  */
-export const GLYPHS_VERSION = "2";
+export const GLYPHS_VERSION = "3";
 export const GLYPHS_URL = `/map-fonts/${GLYPHS_VERSION}/{fontstack}/{range}.pbf`;
 
 const FONT_REGULAR = "Inter Regular";
 const FONT_BOLD = "Inter Bold";
+const FONT_ITALIC = "Inter Italic";
 
-/** Fără italice: îngreunează citirea la mărimile mici de pe hartă. */
-const LABEL_REGULAR = { "text-font": [FONT_REGULAR] };
-const LABEL_BOLD = { "text-font": [FONT_BOLD] };
+export const GENERATED_FONTS = [FONT_REGULAR, FONT_BOLD, FONT_ITALIC];
 
-/** Păstrăm doar distincția care contează pe hartă: normal sau îngroșat. */
+/**
+ * Traducem tăietura cerută de stilul de bază în cea generată de noi: italicul
+ * rămâne italic, îngroșatul rămâne îngroșat. Așa etichetele cad exact unde le
+ * așază stilul oficial, doar cu literele noastre.
+ */
 function mappedFontStack(current: unknown): string[] {
   const requested = Array.isArray(current) ? current.join(" ") : "";
-  return [/bold|black|heavy/i.test(requested) ? FONT_BOLD : FONT_REGULAR];
+  if (/italic|oblique/i.test(requested)) return [FONT_ITALIC];
+  if (/bold|black|heavy/i.test(requested)) return [FONT_BOLD];
+  return [FONT_REGULAR];
 }
 
 /**
  * Numele localității crește cu importanța ei, nu doar cu zoom-ul.
  *
- * Pragurile sunt luate din dala reală de peste Brașov, nu ghicite: acolo Brașovul
- * are `rank` 7, iar Săcele și Codlea — orașe și ele — au 11. Satele stau la 11-14,
- * cartierele la 15-17. Cu numai patru trepte între orașul mare și cele mici, curba
- * trebuie să fie abruptă exact în intervalul acela, altfel toate ies la fel.
+ * Într-o clasă, `rank` din datele OpenMapTiles desparte orașul mare de cele mici:
+ * în dala reală de peste Brașov, Brașovul are 7, iar Săcele și Codlea — tot
+ * `city` — au 11. Sub pragul acela numele rămâne întreg; deasupra lui scade
+ * spre mărimea unui oraș obișnuit. Pentru `town` și `village` clasa spune destul.
  */
-function placeTextSize(base: [number, number][], byRank = true): unknown {
+function placeTextSize(base: [number, number][], byRank: boolean): unknown {
   // Zoom-ul trebuie să rămână expresia cea mai de sus — MapLibre nu îl acceptă
   // imbricat — deci factorul de importanță intră în fiecare rezultat, nu în afară.
   const scaled = (size: number): unknown =>
     byRank
-      ? [
-          "interpolate",
-          ["linear"],
-          ["coalesce", ["get", "rank"], 12],
-          1,
-          size * 1.6,
-          7,
-          size * 1.35,
-          11,
-          size * 0.82,
-          16,
-          size * 0.68,
-        ]
+      ? ["interpolate", ["linear"], ["coalesce", ["get", "rank"], 12], 7, size, 11, size * 0.7]
       : size;
 
   return [
@@ -285,11 +257,15 @@ const LAYER_RULES: LayerRule[] = [
   fill((p) => ({ "fill-color": p.aeroway }), /^aeroway_fill$/),
   line((p) => ({ "line-color": p.minorCasing }), /^aeroway_(runway|taxiway)$/),
 
-  // Clădiri
-  fill(
-    (p) => ({ "fill-color": p.building, "fill-outline-color": p.buildingOutline }),
-    /^building$/,
-  ),
+  // Clădiri. Stilul de bază le desenează plat doar între zoom 13 și 14, apoi le
+  // lasă pe seama stratului ridicat — care la noi stă ascuns cât harta e plată.
+  // Conturul fiecărei case rămâne deci vizibil la orice apropiere, ca pe OSM.
+  {
+    test: /^building$/,
+    type: "fill",
+    maxzoom: 24,
+    paint: (p) => ({ "fill-color": p.building, "fill-outline-color": p.buildingOutline }),
+  },
   {
     test: /^building-3d$/,
     type: "fill-extrusion",
@@ -315,27 +291,44 @@ const LAYER_RULES: LayerRule[] = [
   // Granițe
   line((p) => ({ "line-color": p.boundary }), /^boundary_/),
 
-  // Etichete
+  // Etichete de apă
   label(
     (p) => ({ "text-color": p.waterLabel, "text-halo-color": p.labelHalo }),
     /^(water_name_|waterway_line_label$)/,
   ),
+
+  // Puncte de interes. Apar cu o treaptă de zoom mai devreme decât în stilul de
+  // bază: o sesizare se citește după magazinul de lângă ea, deci vrem magazinele.
   {
-    test: /^(poi_|airport$)/,
+    test: /^poi_transit$/,
     type: "symbol",
-    paint: (p) => ({
-      "text-color": poiTextColor(p.labelMuted),
-      "text-halo-color": p.labelHalo,
-      "text-halo-width": 1.1,
-    }),
-    layout: () => ({ ...LABEL_REGULAR, "text-size": 11.5 }),
+    paint: (p) => ({ "text-color": p.transitLabel, "text-halo-color": p.labelHalo }),
   },
   {
-    test: /^highway-name-/,
+    test: /^poi_r1$/,
     type: "symbol",
+    minzoom: 14,
     paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
-    layout: () => LABEL_REGULAR,
   },
+  {
+    test: /^poi_r7$/,
+    type: "symbol",
+    minzoom: 15,
+    paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
+  },
+  {
+    test: /^poi_r20$/,
+    type: "symbol",
+    minzoom: 16,
+    paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
+  },
+  label(
+    (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
+    /^(airport$|highway-name-)/,
+  ),
+
+  // Localități. Mărimile sunt măsurate pe referință la zoom 12: orașul mare la
+  // 30px, un oraș obișnuit sau un sat mare la 17-19px, toate îngroșate.
   {
     test: /^label_city/,
     type: "symbol",
@@ -347,13 +340,16 @@ const LAYER_RULES: LayerRule[] = [
       "text-halo-blur": 0.4,
     }),
     layout: () => ({
-      ...LABEL_BOLD,
-      "text-size": placeTextSize([
-        [4, 10],
-        [7, 13],
-        [11, 17],
-        [14, 19],
-      ]),
+      "text-font": [FONT_BOLD],
+      "text-size": placeTextSize(
+        [
+          [6, 13],
+          [10, 22],
+          [12, 30],
+          [15, 34],
+        ],
+        true,
+      ),
       "text-letter-spacing": 0.01,
       "text-padding": 6,
     }),
@@ -369,12 +365,16 @@ const LAYER_RULES: LayerRule[] = [
       "text-halo-blur": 0.4,
     }),
     layout: () => ({
-      ...LABEL_BOLD,
-      "text-size": placeTextSize([
-        [7, 11],
-        [11, 14],
-        [15, 16],
-      ]),
+      "text-font": [FONT_BOLD],
+      "text-size": placeTextSize(
+        [
+          [8, 12],
+          [11, 17],
+          [12, 19],
+          [15, 22],
+        ],
+        false,
+      ),
       "text-padding": 5,
     }),
   },
@@ -382,46 +382,68 @@ const LAYER_RULES: LayerRule[] = [
     test: /^label_village$/,
     type: "symbol",
     maxzoom: 17,
-    paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
+    paint: (p) => ({
+      "text-color": p.label,
+      "text-halo-color": p.labelHalo,
+      "text-halo-width": 1.4,
+      "text-halo-blur": 0.4,
+    }),
     layout: () => ({
-      ...LABEL_REGULAR,
+      "text-font": [FONT_BOLD],
       "text-size": placeTextSize(
         [
-          [9, 9.5],
-          [13, 11.5],
-          [16, 12.5],
+          [10, 13],
+          [12, 17],
+          [15, 19],
         ],
         false,
       ),
+      "text-padding": 4,
     }),
   },
-  {
-    test: /^label_other$/,
-    type: "symbol",
-    paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
-    layout: () => ({
-      ...LABEL_REGULAR,
-      "text-size": placeTextSize(
-        [
-          [8, 9],
-          [13, 10.5],
-        ],
-        false,
-      ),
-      "text-transform": "uppercase",
-      "text-letter-spacing": 0.06,
-    }),
-  },
+  label((p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }), /^label_other$/),
   label((p) => ({ "text-color": p.label, "text-halo-color": p.labelHalo }), /^label_/),
 ];
 
 /** Straturile ridicate în 3D, ascunse cât timp harta e plată. */
 export const BUILDING_3D_LAYER = "building-3d";
 
+/**
+ * Numerele de casă, ca pe OSM: stilul de bază nu le desenează, dalele le au.
+ * Apar abia când ești pe stradă, mici și stinse, ca să nu concureze cu numele.
+ */
+export const HOUSE_NUMBER_LAYER = "housenumber";
+
+function houseNumberLayer(source: string, palette: MapPalette): LayerSpecification {
+  return {
+    id: HOUSE_NUMBER_LAYER,
+    type: "symbol",
+    source,
+    "source-layer": "housenumber",
+    minzoom: 17,
+    layout: {
+      "text-field": ["get", "housenumber"],
+      "text-font": [FONT_REGULAR],
+      "text-size": ["interpolate", ["linear"], ["zoom"], 17, 9.5, 19, 11],
+      "text-padding": 2,
+      "text-max-width": 6,
+    },
+    paint: {
+      "text-color": palette.labelMuted,
+      "text-halo-color": palette.labelHalo,
+      "text-halo-width": 0.8,
+    },
+  };
+}
+
 function ruleFor(layerId: string, layerType: LayerType): LayerRule | undefined {
   return LAYER_RULES.find(
     (candidate) => candidate.type === layerType && candidate.test.test(layerId),
   );
+}
+
+function vectorSourceOf(style: StyleSpecification): string | undefined {
+  return Object.entries(style.sources).find(([, source]) => source.type === "vector")?.[0];
 }
 
 type ThemeOptions = {
@@ -430,46 +452,47 @@ type ThemeOptions = {
 };
 
 /**
- * Întoarce o copie a stilului cu paleta noastră aplicată. Nu mutăm stilul primit:
- * îl ținem în cache și îl re-colorăm la fiecare schimbare de temă.
+ * Întoarce o copie a stilului cu tema noastră aplicată. Nu mutăm stilul primit:
+ * îl ținem în cache și îl recompunem la fiecare schimbare de temă.
  */
 export function applyMapTheme(
   style: StyleSpecification,
   palette: MapPalette,
   { buildings3d = false }: ThemeOptions = {},
 ): StyleSpecification {
-  return {
-    ...style,
-    glyphs: GLYPHS_URL,
-    layers: style.layers.map((layer) => {
-      const rule = ruleFor(layer.id, layer.type);
-      const isLabel = layer.type === "symbol";
-      if (!rule && !isLabel) return layer;
+  const vectorSource = vectorSourceOf(style);
 
-      const currentLayout: Record<string, unknown> | undefined =
-        "layout" in layer ? layer.layout : undefined;
-      const layout = {
-        ...currentLayout,
-        ...(isLabel ? { "text-font": mappedFontStack(currentLayout?.["text-font"]) } : {}),
-        ...rule?.layout?.(),
-        ...(layer.id === BUILDING_3D_LAYER
-          ? { visibility: (buildings3d ? "visible" : "none") as "visible" | "none" }
-          : {}),
-      };
+  const layers = style.layers.map((layer) => {
+    const rule = ruleFor(layer.id, layer.type);
+    const isLabel = layer.type === "symbol";
+    if (!rule && !isLabel) return layer;
 
-      return {
-        ...layer,
-        ...(Object.keys(layout).length > 0 ? { layout } : {}),
-        ...(rule?.maxzoom !== undefined ? { maxzoom: rule.maxzoom } : {}),
-        ...(rule || "paint" in layer
-          ? {
-              paint: {
-                ...("paint" in layer ? layer.paint : undefined),
-                ...(rule ? rule.paint(palette) : {}),
-              },
-            }
-          : {}),
-      } as (typeof style.layers)[number];
-    }),
-  };
+    const currentLayout: Record<string, unknown> | undefined =
+      "layout" in layer ? layer.layout : undefined;
+    const layout = {
+      ...currentLayout,
+      ...(isLabel ? { "text-font": mappedFontStack(currentLayout?.["text-font"]) } : {}),
+      ...rule?.layout?.(),
+      ...(layer.id === BUILDING_3D_LAYER
+        ? { visibility: (buildings3d ? "visible" : "none") as "visible" | "none" }
+        : {}),
+    };
+
+    const paintPatch = rule?.paint && !palette.keepUpstreamPaint ? rule.paint(palette) : {};
+    const hasPaint = "paint" in layer || Object.keys(paintPatch).length > 0;
+
+    return {
+      ...layer,
+      ...(Object.keys(layout).length > 0 ? { layout } : {}),
+      ...(rule?.minzoom !== undefined ? { minzoom: rule.minzoom } : {}),
+      ...(rule?.maxzoom !== undefined ? { maxzoom: rule.maxzoom } : {}),
+      ...(hasPaint
+        ? { paint: { ...("paint" in layer ? layer.paint : undefined), ...paintPatch } }
+        : {}),
+    } as (typeof style.layers)[number];
+  });
+
+  if (vectorSource) layers.push(houseNumberLayer(vectorSource, palette));
+
+  return { ...style, glyphs: GLYPHS_URL, layers };
 }

@@ -79,13 +79,16 @@ async function loadRange(stackName: string, range: string) {
  * greu de pus pe seama unui generator care a rulat săptămâna trecută.
  */
 describe("glifele generate", () => {
-  it.each(["Inter Regular", "Inter Bold"])("%s livrează latina de bază", async (stackName) => {
-    const [stack] = await loadRange(stackName, "0-255");
+  it.each(["Inter Regular", "Inter Bold", "Inter Italic"])(
+    "%s livrează latina de bază",
+    async (stackName) => {
+      const [stack] = await loadRange(stackName, "0-255");
 
-    expect(stack.name).toBe(stackName);
-    expect(stack.range).toBe("0-255");
-    expect(stack.glyphs.length).toBeGreaterThan(180);
-  });
+      expect(stack.name).toBe(stackName);
+      expect(stack.range).toBe("0-255");
+      expect(stack.glyphs.length).toBeGreaterThan(180);
+    },
+  );
 
   it("dă litere cu dimensiuni și margini corecte", async () => {
     const [stack] = await loadRange("Inter Regular", "0-255");
