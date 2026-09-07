@@ -54,6 +54,10 @@ const FIRST_RANK = new Set([
   "zoo",
   "swimming_pool",
   "ice_rink",
+  "protected_area",
+  "nature_reserve",
+  "river",
+  "lake",
 ]);
 
 /** Locuri de cartier: le știe lumea din jur, nu tot orașul. */
@@ -80,10 +84,21 @@ const SECOND_RANK = new Set([
   "doctors",
   "hunting_stand",
   "wilderness_hut",
+  "bus_stop",
+  "stream",
 ]);
 
-/** Cât de departe are voie să fie reperul. Peste atât, „lângă" nu mai e adevărat. */
-export const LANDMARK_MAX_M = 250;
+/**
+ * Cât de departe are voie să fie reperul.
+ *
+ * În oraș e mereu ceva la câțiva pași, deci raza scurtă ajunge și ține „lângă"
+ * să însemne chiar lângă. La marginea orașului, pe deal sau în pădure, nu e
+ * nimic la o sută de metri — dar poteca, vârful sau stația de la trei sute tot
+ * spun mai mult decât un cod. Raza lungă se folosește doar dacă în cea scurtă
+ * n-a fost nimic, deci nu strică nimic din ce merge deja.
+ */
+export const LANDMARK_NEAR_M = 250;
+export const LANDMARK_FAR_M = 400;
 
 function rank(kind: string): number {
   if (FIRST_RANK.has(kind)) return 1;
@@ -100,14 +115,18 @@ function rank(kind: string): number {
  * nu ajută pe nimeni să găsească o groapă.
  */
 export function pickLandmark(candidates: readonly Candidate[]): Candidate | null {
-  const reachable = candidates.filter(
-    (candidate) => candidate.name.trim().length > 0 && candidate.distance <= LANDMARK_MAX_M,
-  );
-  if (reachable.length === 0) return null;
+  const named = candidates.filter((candidate) => candidate.name.trim().length > 0);
 
-  return reachable.reduce((best, candidate) => {
-    const byRank = rank(candidate.kind) - rank(best.kind);
-    if (byRank !== 0) return byRank < 0 ? candidate : best;
-    return candidate.distance < best.distance ? candidate : best;
-  });
+  const best = (reach: number): Candidate | null => {
+    const reachable = named.filter((candidate) => candidate.distance <= reach);
+    if (reachable.length === 0) return null;
+
+    return reachable.reduce((chosen, candidate) => {
+      const byRank = rank(candidate.kind) - rank(chosen.kind);
+      if (byRank !== 0) return byRank < 0 ? candidate : chosen;
+      return candidate.distance < chosen.distance ? candidate : chosen;
+    });
+  };
+
+  return best(LANDMARK_NEAR_M) ?? best(LANDMARK_FAR_M);
 }

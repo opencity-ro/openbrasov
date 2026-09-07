@@ -62,3 +62,32 @@ describe("alegerea reperului", () => {
     expect(pickLandmark(candidates)?.name).toBe("Parcul Henri Berthelot");
   });
 });
+
+describe("la marginea orașului, unde nu e nimic aproape", () => {
+  /**
+   * Pe deal sau în pădure nu există nimic la o sută de metri. Poteca sau stația
+   * de la trei sute spun totuși mai mult decât un cod, iar raza lungă intră în
+   * joc numai când cea scurtă n-a găsit nimic.
+   */
+  it("se întinde mai departe abia când aproape nu e nimeni", () => {
+    expect(
+      pickLandmark([
+        { name: "Dealul Spirii", kind: "bus_stop", distance: 288 },
+        { name: "Aleea Dealul Spirii", kind: "minor", distance: 311 },
+      ])?.name,
+    ).toBe("Dealul Spirii");
+  });
+
+  it("nu se întinde dacă are ceva aproape", () => {
+    expect(
+      pickLandmark([
+        { name: "La Doi Pași", kind: "convenience", distance: 98 },
+        { name: "Parcul Soarelui", kind: "park", distance: 380 },
+      ])?.name,
+    ).toBe("La Doi Pași");
+  });
+
+  it("nu se agață de nimic nici la raza lungă", () => {
+    expect(pickLandmark([{ name: "Tâmpa", kind: "peak", distance: 900 }])).toBeNull();
+  });
+});
