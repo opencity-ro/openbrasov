@@ -127,8 +127,8 @@ type ReportsLayerProps = {
  * Un strat de simboluri, nu câte un element de pagină pe fiecare sesizare: harta
  * poate ajunge la mii de pini, iar desenul lor stă pe placa video. Pinurile au
  * voie să se suprapună peste orice altceva — o groapă raportată nu dispare
- * pentru că lângă ea e o farmacie — dar rămân în calcul pentru etichetele hărții,
- * ca acelea să se dea la o parte din fața lor.
+ * pentru că lângă ea e o farmacie — și nici nu iau locul nimănui: numele
+ * localităților rămân pe hartă chiar și sub un grup de sesizări.
  */
 export function ReportsLayer({ reports, visibleIds, onSelect }: ReportsLayerProps) {
   const map = useMapInstance();
@@ -218,6 +218,7 @@ export function ReportsLayer({ reports, visibleIds, onSelect }: ReportsLayerProp
             // Cifra crește odată cu discul, ca să umple grupul la fel la orice mărime.
             "text-size": ["interpolate", ["linear"], ["get", "point_count"], 2, 14, 50, 17],
             "text-allow-overlap": true,
+            "text-ignore-placement": true,
           },
           paint: { "text-color": CLUSTER_TEXT },
         });
@@ -234,10 +235,17 @@ export function ReportsLayer({ reports, visibleIds, onSelect }: ReportsLayerProp
             "icon-size": 1,
             // Vârful picăturii stă pe coordonata sesizării, nu centrul ei.
             "icon-anchor": "bottom",
-            // Un raport nu dispare niciodată din cauza aglomerației…
+            // O sesizare nu dispare niciodată din cauza aglomerației…
             "icon-allow-overlap": true,
-            // …dar rămâne un obstacol, ca etichetele hărții să-i facă loc.
-            "icon-ignore-placement": false,
+            // …și nici nu scoate pe nimeni de pe hartă.
+            //
+            // Harta așază etichetele începând cu stratul de deasupra, iar
+            // sesizările stau chiar acolo. Cât timp erau obstacol, ele prindeau
+            // locul primele și numele orașului — scris fix în mijloc, unde se
+            // adună și sesizările — nu mai avea unde să încapă. Un oraș fără
+            // nume pe hartă e un preț prea mare pentru câțiva pixeli de
+            // suprapunere.
+            "icon-ignore-placement": true,
             "icon-padding": 2,
           },
         });
