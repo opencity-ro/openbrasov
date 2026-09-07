@@ -210,3 +210,19 @@ describe("răspunsuri adevărate de la serviciu", () => {
     ).toBe("Piața Industriei, Râșnov");
   });
 });
+
+describe("codul locului, cu cartierul lângă el", () => {
+  /**
+   * Un cod singur nu spune nimic omului care se uită la el. Cartierul rămâne
+   * adevărat oricât de departe ar fi cea mai apropiată stradă, deci îl ținem.
+   */
+  it("adaugă cartierul când îl cunoaștem", () => {
+    const result = formatAddress({ address: { suburb: "Valea Cetății" } }, 45.6289, 25.6152);
+    expect(result.kind).toBe("code");
+    expect(result.label).toBe(`${plusCode(45.6289, 25.6152)}, Valea Cetății`);
+  });
+
+  it("rămâne doar codul când nu știm nici atât", () => {
+    expect(formatAddress({ address: {} }, 45.6289, 25.6152).label).toBe(plusCode(45.6289, 25.6152));
+  });
+});

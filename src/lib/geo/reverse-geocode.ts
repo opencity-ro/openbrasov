@@ -2,7 +2,14 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 
-import { formatAddress, type FormattedAddress, type ReversePlace } from "./address";
+import {
+  AREA_ONLY_KEYS,
+  formatAddress,
+  type AddressParts,
+  type FormattedAddress,
+  type ReversePlace,
+} from "./address";
+import { distanceToGeometry, type Geometry } from "./distance";
 
 /**
  * Traducerea unei coordonate în adresă.
@@ -27,6 +34,36 @@ const MIN_GAP_MS = 1100;
 
 /** Serviciul e departe; peste atât renunțăm și dăm codul locului. */
 const TIMEOUT_MS = 6000;
+
+/**
+ * Cât de aproape trebuie să fie lucrul găsit ca să-i luăm adresa.
+ *
+ * Serviciul întoarce cel mai apropiat obiect cu adresă, oricât de departe ar fi.
+ * Pentru sesizările din pădurea de pe Tâmpa a scris numere de case aflate la o
+ * sută, două sute, chiar trei sute de metri — o adresă falsă, dar scrisă cu
+ * aceeași siguranță ca una adevărată.
+ *
+ * Numărul cade primul, fiindcă el spune „exact aici": la douăzeci și cinci de
+ * metri de o clădire ești deja la casa de alături. Strada ține mai mult, fiindcă
+ * de pe trotuar, din curte sau din spatele blocului ești tot pe strada aceea.
+ */
+const NUMBER_MAX_M = 25;
+const STREET_MAX_M = 60;
+
+/**
+ * Cât de departe are voie să fie reperul de care ne agățăm când nu există
+ * stradă. Mai mult de-atât și „lângă" devine o minciună politicoasă.
+ */
+const LANDMARK_MAX_M = 300;
+
+/**
+ * Feluri de locuri care nu se folosesc drept reper, oricât de aproape ar fi.
+ *
+ * Serviciul întoarce și birouri, firme și dispecerate. „Lângă Dispecerat
+ * National Salvamont A.N.S.M.R." e adevărat, dar nu e felul în care spune un om
+ * unde se află; un izvor, o cabană sau un loc de popas, da.
+ */
+const NOT_A_LANDMARK = new Set(["office", "emergency", "shop", "craft", "healthcare"]);
 
 /**
  * Cinci zecimale, adică circa un metru. Sub atât, două atingeri ale aceleiași
@@ -59,15 +96,21 @@ function inLine<T>(task: () => Promise<T>): Promise<T> {
   return run;
 }
 
-async function ask(latitude: number, longitude: number): Promise<ReversePlace | null> {
+type Found = ReversePlace & { geojson?: Geometry | null; category?: string | null };
+
+async function ask(latitude: number, longitude: number, layer?: string): Promise<Found | null> {
   const url = new URL(ENDPOINT);
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("addressdetails", "1");
-  // 18 înseamnă „cea mai mică bucată cu adresă": clădirea, nu cartierul.
-  url.searchParams.set("zoom", "18");
+  // Forma întreagă a obiectului găsit. Fără ea am avea doar centrul lui, iar
+  // centrul unei străzi de un kilometru nu spune nimic despre unde stăm noi.
+  url.searchParams.set("polygon_geojson", "1");
   url.searchParams.set("accept-language", "ro");
   url.searchParams.set("lat", String(latitude));
   url.searchParams.set("lon", String(longitude));
+  // 18 înseamnă „cea mai mică bucată cu adresă": clădirea, nu cartierul.
+  if (layer) url.searchParams.set("layer", layer);
+  else url.searchParams.set("zoom", "18");
 
   const response = await fetch(url, {
     headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
@@ -78,7 +121,49 @@ async function ask(latitude: number, longitude: number): Promise<ReversePlace | 
 
   const body: unknown = await response.json();
   if (!body || typeof body !== "object" || "error" in body) return null;
-  return body as ReversePlace;
+  return body as Found;
+}
+
+/**
+ * Ce a mai rămas adevărat din răspuns, după ce l-am măsurat.
+ *
+ * Părțile care spun unde ești — numărul, apoi strada — cad pe rând, pe măsură ce
+ * obiectul găsit se dovedește prea departe. Ce rămâne mereu e localitatea și
+ * cartierul: ele acoperă un teritoriu întreg, deci nu pot fi „prea departe".
+ */
+function trim(found: Found | null, latitude: number, longitude: number): ReversePlace | null {
+  if (!found?.address) return null;
+
+  const distance = distanceToGeometry(latitude, longitude, found.geojson);
+  const measured = distance ?? Infinity;
+  const address = { ...found.address };
+
+  if (measured > NUMBER_MAX_M) delete address.house_number;
+
+  if (measured > STREET_MAX_M) {
+    // Numele, strada și felul obiectului cad toate deodată: sunt ale lucrului
+    // aflat prea departe. Dacă am fi păstrat numai strada, un „Dispecerat
+    // Salvamont" de la două sute de metri ar fi trecut drept reper de-al locului.
+    const area: AddressParts = {};
+    for (const key of AREA_ONLY_KEYS) if (address[key]) area[key] = address[key];
+    return { address: area };
+  }
+
+  return { name: found.name, address };
+}
+
+/**
+ * Reperul cel mai apropiat, când nu suntem pe nicio stradă: un izvor, o cabană,
+ * un loc de popas. Se cere abia atunci, ca a doua întrebare, fiindcă la o
+ * sesizare obișnuită de pe stradă n-are cine s-o folosească.
+ */
+async function nearbyLandmark(latitude: number, longitude: number): Promise<string | null> {
+  const found = await inLine(() => ask(latitude, longitude, "poi,natural,manmade"));
+  const name = found?.name?.trim();
+  if (!name || NOT_A_LANDMARK.has(found?.category ?? "")) return null;
+
+  const distance = distanceToGeometry(latitude, longitude, found?.geojson);
+  return distance !== null && distance <= LANDMARK_MAX_M ? name : null;
 }
 
 /**
@@ -105,18 +190,33 @@ export async function resolveAddress(
     return { label: remembered.label as string, kind: remembered.kind as FormattedAddress["kind"] };
   }
 
+  let found: Found | null = null;
   let place: ReversePlace | null = null;
   try {
-    place = await inLine(() => ask(latitude, longitude));
+    found = await inLine(() => ask(latitude, longitude));
+    place = trim(found, latitude, longitude);
+
+    if (!place?.address?.road && !place?.name) {
+      const landmark = await nearbyLandmark(latitude, longitude);
+      if (landmark) place = { name: landmark, address: place?.address ?? {} };
+    }
   } catch (error) {
     console.error("Geocodarea inversă a eșuat:", error);
   }
 
   const address = formatAddress(place, latitude, longitude);
 
-  const { error } = await supabase
-    .from("geocoded_addresses")
-    .upsert({ cell, label: address.label, kind: address.kind, raw: place }, { onConflict: "cell" });
+  const { error } = await supabase.from("geocoded_addresses").upsert(
+    {
+      cell,
+      label: address.label,
+      kind: address.kind,
+      // Forma geometrică rămâne afară: conturul unei păduri are zeci de mii de
+      // puncte, iar noi n-avem ce face cu ele după ce am măsurat o dată.
+      raw: found ? { name: found.name, address: found.address } : null,
+    },
+    { onConflict: "cell" },
+  );
 
   // Dacă memorarea eșuează, omul tot își vede adresa; doar că data viitoare se
   // întreabă din nou. Merită un semn în jurnal, nu o pagină ruptă.

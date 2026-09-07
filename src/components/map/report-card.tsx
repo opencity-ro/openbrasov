@@ -92,11 +92,12 @@ export function ReportCard({ report, onClose }: { report: PublicReport; onClose:
       )}
     >
       <div className="flex items-start gap-3 p-4 pb-3">
-        <span
-          aria-hidden="true"
-          className="grid size-10 shrink-0 place-items-center rounded-full text-[20px]"
-          style={{ backgroundColor: `${statusColor[report.status]}1f` }}
-        >
+        {/*
+         * Semnul stă singur, fără disc în spate. Cercul colorat repeta culoarea
+         * pe care o spune deja bulina de sub titlu, iar semnul, strâns înăuntru,
+         * se citea mai greu decât pe hartă.
+         */}
+        <span aria-hidden="true" className="shrink-0 text-[28px] leading-none">
           {pinEmoji(report.category, report.status)}
         </span>
 

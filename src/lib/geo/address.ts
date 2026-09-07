@@ -72,6 +72,13 @@ const LANDMARK_KEYS = [
 const LOCALITY_KEYS = ["village", "hamlet", "town", "city"] as const;
 const AREA_KEYS = ["neighbourhood", "suburb", "quarter", "city_district"] as const;
 
+/**
+ * Cheile care descriu un teritoriu întreg, nu un obiect anume. Ele rămân
+ * adevărate oricât de departe ar fi lucrul găsit de serviciu — un cartier tot
+ * cartier e — spre deosebire de stradă, număr sau nume de clădire.
+ */
+export const AREA_ONLY_KEYS = [...LOCALITY_KEYS, ...AREA_KEYS] as const;
+
 const plusCodes = new OpenLocationCode();
 
 const clean = (value: string | undefined | null): string | undefined => {
@@ -132,5 +139,8 @@ export function formatAddress(
     return { label: area ? `Lângă ${landmark}, ${area}` : `Lângă ${landmark}`, kind: "landmark" };
   }
 
-  return { label: plusCode(latitude, longitude), kind: "code" };
+  // Codul locului nu spune nimic omului care se uită la el, dar cartierul da.
+  // Împreună, măcar știi în ce parte a orașului cauți.
+  const code = plusCode(latitude, longitude);
+  return { label: area ? `${code}, ${area}` : code, kind: "code" };
 }
