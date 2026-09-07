@@ -31,29 +31,46 @@ const HEAD_X = PIN_WIDTH / 2;
 const HEAD_Y = 24;
 
 /** Raza marginii albe. Discul colorat e cu grosimea inelului mai mic. */
-const HEAD_RADIUS = 20;
+const HEAD_RADIUS = 19.5;
 
 /** Inelul alb desparte pinul de hartă la orice culoare de fundal. */
 const RING = 2;
 
+/**
+ * Linia care închide toată marginea, cap și picior deopotrivă. Pe o hartă
+ * deschisă piciorul alb se topea în fundal, iar pinul părea că plutește.
+ */
+const OUTLINE = "rgba(15, 23, 42, 0.3)";
+const OUTLINE_WIDTH = 1;
+
 /** Vârful, adică punctul care arată locul sesizării. */
-const TIP_Y = 50.5;
+const TIP_Y = 50;
 
 /**
  * Unghiul, față de verticala de jos, la care conturul părăsește cercul și pleacă
  * spre vârf. Mai mic, iar piciorul iese îngust dintr-un cap care pare lipit
  * deasupra lui; mai mare, iar cele două se topesc într-o picătură fără gât.
  */
-const STEM_EXIT = (36 * Math.PI) / 180;
+const STEM_EXIT = (40.2 * Math.PI) / 180;
 
-/** Cât de tare e trasă înăuntru curba piciorului. 0,5 ar da laturi drepte. */
-const STEM_PINCH = 0.47;
+/**
+ * Cele două puncte care îndoaie latura piciorului, date ca fracțiuni: `x` din
+ * distanța de la ax până la ieșirea din cerc, `y` din coborârea de la ieșire
+ * până la vârf.
+ *
+ * Primul ține lățimea imediat sub cap, ca îmbinarea să curgă în loc să facă gât;
+ * al doilea trage tare spre ax, ca latura să se subțieze repede și vârful să
+ * rămână ascuțit. Cu o singură îndoitură nu se pot avea amândouă: ori umerii ies
+ * strangulați, ori piciorul rămâne bont.
+ */
+const STEM_SHOULDER = { x: 0.804, y: 0.42 };
+const STEM_WAIST = { x: 0.363, y: 0.332 };
 
 /**
  * Vârful e teșit, nu ascuțit ca un ac. Un colț de un singur punct s-ar pierde în
  * netezirea marginilor și ar lăsa piciorul să pară că se termină în ceață.
  */
-const TIP_RADIUS = 1.4;
+const TIP_RADIUS = 1.63;
 
 /** Cât din discul colorat ocupă semnul dinăuntru. */
 const EMOJI_RATIO = 0.56;
@@ -72,17 +89,24 @@ function silhouette(context: CanvasRenderingContext2D) {
   const exitX = HEAD_X + HEAD_RADIUS * Math.sin(STEM_EXIT);
   const exitY = HEAD_Y + HEAD_RADIUS * Math.cos(STEM_EXIT);
   const endY = TIP_Y - TIP_RADIUS;
-  // Punctul de control stă pe drumul dintre ieșirea din cerc și vârf, tras spre
-  // ax: de aici gâtul strâns de sub cap și laturile aproape drepte spre vârf.
-  const controlX = HEAD_X + (exitX - HEAD_X) * STEM_PINCH;
-  const controlY = exitY + (endY - exitY) * STEM_PINCH;
+  const reach = exitX - HEAD_X;
+  const drop = endY - exitY;
+
+  const shoulderX = HEAD_X + reach * STEM_SHOULDER.x;
+  const shoulderY = exitY + drop * STEM_SHOULDER.y;
+  const waistX = HEAD_X + reach * STEM_WAIST.x;
+  const waistY = exitY + drop * STEM_WAIST.y;
+
+  // Oglindirea se face în jurul axului: latura stângă e cea dreaptă cu `x`
+  // răsturnat, deci nu poate ieși o formă asimetrică dintr-o greșeală de tastare.
+  const mirror = (x: number) => 2 * HEAD_X - x;
 
   context.beginPath();
   // Cercul, de la ieșirea din stânga, pe deasupra, până la ieșirea din dreapta.
   context.arc(HEAD_X, HEAD_Y, HEAD_RADIUS, Math.PI / 2 + STEM_EXIT, Math.PI / 2 - STEM_EXIT);
-  context.quadraticCurveTo(controlX, controlY, HEAD_X + TIP_RADIUS, endY);
+  context.bezierCurveTo(shoulderX, shoulderY, waistX, waistY, HEAD_X + TIP_RADIUS, endY);
   context.arc(HEAD_X, endY, TIP_RADIUS, 0, Math.PI);
-  context.quadraticCurveTo(2 * HEAD_X - controlX, controlY, 2 * HEAD_X - exitX, exitY);
+  context.bezierCurveTo(mirror(waistX), waistY, mirror(shoulderX), shoulderY, mirror(exitX), exitY);
   context.closePath();
 }
 
@@ -92,10 +116,10 @@ function silhouette(context: CanvasRenderingContext2D) {
  */
 function groundShadow(context: CanvasRenderingContext2D) {
   context.save();
-  context.filter = "blur(1.5px)";
-  context.fillStyle = "rgba(15, 23, 42, 0.38)";
+  context.filter = "blur(1.3px)";
+  context.fillStyle = "rgba(15, 23, 42, 0.4)";
   context.beginPath();
-  context.ellipse(HEAD_X, TIP_Y + 1.1, 3.6, 1.4, 0, 0, Math.PI * 2);
+  context.ellipse(HEAD_X, TIP_Y + 0.9, 3.4, 1.2, 0, 0, Math.PI * 2);
   context.fill();
   context.restore();
 }
@@ -112,12 +136,24 @@ function drawPin(context: CanvasRenderingContext2D, color: string, emoji: string
 
   groundShadow(context);
 
-  // Conturul alb, cu umbra lui difuză. Umbra se desenează odată cu el, deci
-  // trebuie stinsă înainte de culoare, altfel ar mai apărea o dată sub disc.
+  // Linia de margine, trasă de două ori mai groasă și acoperită apoi pe
+  // dinăuntru de corpul alb: așa rămâne numai jumătatea din afară, iar corpul
+  // păstrează exact lățimea formei. O linie centrată pe contur ar fi mușcat un
+  // punct din alb pe toată marginea și ar fi subțiat piciorul.
+  //
+  // Umbra pleacă tot de aici, odată cu linia, și se stinge înainte de alb, ca să
+  // nu apară a doua oară pe dinăuntru.
   context.save();
-  context.shadowColor = "rgba(15, 23, 42, 0.35)";
-  context.shadowBlur = 2.6;
-  context.shadowOffsetY = 1;
+  context.shadowColor = "rgba(15, 23, 42, 0.45)";
+  context.shadowBlur = 1.4;
+  context.shadowOffsetY = 0.6;
+  context.strokeStyle = OUTLINE;
+  context.lineWidth = OUTLINE_WIDTH * 2;
+  silhouette(context);
+  context.stroke();
+  context.restore();
+
+  context.save();
   context.fillStyle = "#ffffff";
   silhouette(context);
   context.fill();
