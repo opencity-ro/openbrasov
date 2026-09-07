@@ -9,6 +9,8 @@ import { categoryLabel, pinEmoji, statusColor, statusLabel } from "@/lib/reports
 import type { PublicReport } from "@/lib/reports/queries";
 import { cn } from "@/lib/utils";
 
+import { useReportAddress } from "./use-report-address";
+
 const dateFormat = new Intl.DateTimeFormat("ro-RO", {
   day: "numeric",
   month: "long",
@@ -17,6 +19,31 @@ const dateFormat = new Intl.DateTimeFormat("ro-RO", {
 
 function formatDate(value: string): string {
   return dateFormat.format(new Date(value));
+}
+
+/**
+ * Adresa, luată din locul sesizării pe hartă.
+ *
+ * Cât timp se caută, rândul își ține locul cu o bară în locul textului. Fără ea
+ * cardul ar sări în sus la fiecare deschidere, iar ochiul ar pierde rândul pe
+ * care tocmai îl citea.
+ */
+function Address({ latitude, longitude }: { latitude: number; longitude: number }) {
+  const address = useReportAddress(latitude, longitude);
+
+  if (address.status === "loading") {
+    return (
+      <p className="flex h-5 items-center" aria-label={t.map.addressLoading} aria-busy="true">
+        <span className="bg-muted h-3 w-3/5 animate-pulse rounded motion-reduce:animate-none" />
+      </p>
+    );
+  }
+
+  return (
+    <p className="text-muted-foreground text-sm">
+      {address.status === "ready" ? address.label : t.map.addressUnavailable}
+    </p>
+  );
 }
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -98,7 +125,7 @@ export function ReportCard({ report, onClose }: { report: PublicReport; onClose:
 
       <div className="space-y-3 px-4">
         <p className="text-sm leading-relaxed">{report.description}</p>
-        <p className="text-muted-foreground text-sm">{report.address}</p>
+        <Address latitude={report.latitude} longitude={report.longitude} />
 
         <div className="border-border space-y-1.5 border-t pt-3">
           <Row label={t.map.reportedOn} value={formatDate(report.createdAt)} />

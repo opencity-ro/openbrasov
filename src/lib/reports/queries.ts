@@ -8,7 +8,6 @@ export type PublicReport = {
   category: ReportCategory;
   status: ReportStatus;
   description: string;
-  address: string;
   latitude: number;
   longitude: number;
   institution: string | null;
@@ -22,7 +21,6 @@ type PublicReportRow = {
   category: ReportCategory;
   status: ReportStatus;
   description: string;
-  address: string;
   latitude: number;
   longitude: number;
   institution: string | null;
@@ -34,13 +32,18 @@ type PublicReportRow = {
 /**
  * Every report shown on the map. The city fits comfortably in one request, so
  * the map filters in the browser instead of round-tripping per filter change.
+ *
+ * The address is not part of it. What a reporter types is a description of where
+ * they stood, not a postal address, and it was drifting from the pin they had
+ * just dropped. The map is the source of truth for the place: the card asks for
+ * the address of the pin's own coordinates when it opens.
  */
 export async function listPublicReports(): Promise<PublicReport[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("public_reports")
     .select(
-      "id, category, status, description, address, latitude, longitude, institution, created_at, resolved_at, author_label",
+      "id, category, status, description, latitude, longitude, institution, created_at, resolved_at, author_label",
     )
     .order("created_at", { ascending: false })
     .returns<PublicReportRow[]>();
@@ -57,7 +60,6 @@ export async function listPublicReports(): Promise<PublicReport[]> {
     category: row.category,
     status: row.status,
     description: row.description,
-    address: row.address,
     latitude: row.latitude,
     longitude: row.longitude,
     institution: row.institution,

@@ -67,7 +67,9 @@
     "allCategories": "Toate categoriile",
     "status": "Stare",
     "reportedOn": "Trimisă pe",
-    "zoomToCluster": "Vezi sesizările din grup"
+    "zoomToCluster": "Vezi sesizările din grup",
+    "addressLoading": "Se caută adresa…",
+    "addressUnavailable": "Adresa nu este disponibilă acum."
   },
   "footer": {
     "independent": "Proiect independent, neafiliat Primăriei Brașov sau altei instituții publice.",
