@@ -16,6 +16,7 @@ import type { PublicReport } from "@/lib/reports/queries";
 
 import { BrasovMap } from "./brasov-map";
 import { ReportCard } from "./report-card";
+import { ReportFocus } from "./report-focus";
 import { ReportFiltersBar, type ReportFilters } from "./report-filters";
 import { ReportsLayer } from "./reports-layer";
 
@@ -103,6 +104,7 @@ export function ReportsMap({ reports }: { reports: PublicReport[] }) {
   return (
     <BrasovMap className="absolute inset-0">
       <ReportsLayer reports={reports} visibleIds={visibleIds} onSelect={setSelectedId} />
+      <ReportFocus selected={selected} />
 
       {/* Deasupra hărții, dar sub controalele ei, care stau pe margini. */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col items-center gap-2 p-3 sm:p-4">
