@@ -110,19 +110,21 @@ export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
     // Adăugarea unei surse, a unui strat sau a unei imagini schimbă stilul, iar
     // schimbarea stilului anunță `styledata` — evenimentul care ne-a chemat aici.
     // Fără garda asta, prima instalare se cheamă pe sine până se umple stiva.
-    let installing = false;
+    // Instalările se pun la rând, nu se aruncă. Aducerea icoanelor cere o
+    // așteptare, iar o simplă santinelă „sunt ocupat" ar fi înghițit tocmai
+    // evenimentul care anunța un stil nou, lăsând harta fără sesizări.
+    let queue: Promise<void> = Promise.resolve();
+    let dropped = false;
 
     const install = () => {
-      if (installing) return;
-      installing = true;
-      try {
-        addEverything();
-      } finally {
-        installing = false;
-      }
+      queue = queue
+        .then(() => (dropped ? undefined : addEverything()))
+        .catch((error: unknown) => {
+          console.error("Nu am putut așeza stratul de sesizări:", error);
+        });
     };
 
-    const addEverything = () => {
+    const addEverything = async () => {
       if (!map.getSource(REPORTS_SOURCE)) {
         map.addSource(REPORTS_SOURCE, {
           type: "geojson",
@@ -133,11 +135,16 @@ export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
         });
       }
 
-      const images = renderPinImages(reports, Math.ceil(window.devicePixelRatio || 1), (id) =>
+      // Icoanele intră înaintea straturilor care le cer. Invers, harta s-ar fi
+      // plâns în consolă pentru fiecare imagine lipsă, la fiecare încărcare.
+      const images = await renderPinImages(reports, Math.ceil(window.devicePixelRatio || 1), (id) =>
         map.hasImage(id),
       );
+      if (dropped) return;
       for (const image of images) {
-        map.addImage(image.id, image.data, { pixelRatio: image.pixelRatio });
+        if (!map.hasImage(image.id)) {
+          map.addImage(image.id, image.data, { pixelRatio: image.pixelRatio });
+        }
       }
 
       // Aureola: același chihlimbar, aproape transparent, care dă grupului volum
@@ -222,6 +229,7 @@ export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
     install();
     map.on("styledata", install);
     return () => {
+      dropped = true;
       map.off("styledata", install);
     };
   }, [map, reports]);

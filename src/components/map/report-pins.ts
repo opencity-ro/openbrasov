@@ -1,9 +1,6 @@
-import {
-  pinEmoji,
-  statusColor,
-  type ReportCategory,
-  type ReportStatus,
-} from "@/lib/reports/categories";
+import { statusColor, type ReportCategory, type ReportStatus } from "@/lib/reports/categories";
+
+import { loadReportIcon, reportIconName } from "./report-icons";
 
 /**
  * Pinurile sesizărilor, desenate în browser și predate hărții ca imagini.
@@ -72,11 +69,21 @@ const STEM_WAIST = { x: 0.363, y: 0.332 };
  */
 const TIP_RADIUS = 1.63;
 
-/** Cât din discul colorat ocupă semnul dinăuntru. */
-const EMOJI_RATIO = 0.56;
+/**
+ * Moneda albă de sub semn și cât din ea ocupă semnul.
+ *
+ * Fără ea, o icoană galbenă pe un disc chihlimbariu dispare, iar una verde pe
+ * discul unei sesizări rezolvate la fel. Varianta ușoară ar fi fost o aură albă
+ * în jurul desenului, dar aia face fiecare icoană să pară un abțibild lipit.
+ * Moneda rezolvă contrastul prin structură: semnul stă mereu pe alb, iar
+ * culoarea stării rămâne un inel gros în jur, destul cât starea să se citească
+ * de la depărtare, de unde harta se scanează după culori.
+ */
+const COIN_RADIUS = 13;
+const ICON_RATIO = 0.84;
 
 export function pinImageId(category: ReportCategory, status: ReportStatus): string {
-  return `report-${status}-${pinEmoji(category, status)}`;
+  return `report-${status}-${reportIconName(category, status)}`;
 }
 
 /**
@@ -131,7 +138,7 @@ function groundShadow(context: CanvasRenderingContext2D) {
  * citește dintr-o privire dacă stă strânsă într-un disc, în timp ce un picior
  * colorat o întinde și o face să pară o pată, nu un semn.
  */
-function drawPin(context: CanvasRenderingContext2D, color: string, emoji: string) {
+function drawPin(context: CanvasRenderingContext2D, color: string, icon: HTMLImageElement | null) {
   context.clearRect(0, 0, PIN_WIDTH, PIN_HEIGHT);
 
   groundShadow(context);
@@ -167,12 +174,16 @@ function drawPin(context: CanvasRenderingContext2D, color: string, emoji: string
   context.restore();
 
   context.save();
-  const emojiSize = Math.round((HEAD_RADIUS - RING) * 2 * EMOJI_RATIO);
-  context.font = `${emojiSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillText(emoji, HEAD_X, HEAD_Y);
+  context.fillStyle = "#ffffff";
+  context.beginPath();
+  context.arc(HEAD_X, HEAD_Y, COIN_RADIUS, 0, Math.PI * 2);
+  context.fill();
   context.restore();
+
+  if (!icon) return;
+
+  const size = COIN_RADIUS * 2 * ICON_RATIO;
+  context.drawImage(icon, HEAD_X - size / 2, HEAD_Y - size / 2, size, size);
 }
 
 export type PinImage = { id: string; data: ImageData; pixelRatio: number };
@@ -186,21 +197,31 @@ export type PinImage = { id: string; data: ImageData; pixelRatio: number };
  * O sesizare rezolvată arată la fel indiferent de categorie, deci combinațiile
  * chiar folosite sunt puține.
  */
-export function renderPinImages(
+export async function renderPinImages(
   reports: Array<{ category: ReportCategory; status: ReportStatus }>,
   pixelRatio: number,
   alreadyRegistered: (id: string) => boolean,
-): PinImage[] {
-  const wanted = new Map<string, { color: string; emoji: string }>();
+): Promise<PinImage[]> {
+  const wanted = new Map<string, { color: string; icon: string }>();
   for (const report of reports) {
     const id = pinImageId(report.category, report.status);
     if (wanted.has(id) || alreadyRegistered(id)) continue;
     wanted.set(id, {
       color: statusColor[report.status],
-      emoji: pinEmoji(report.category, report.status),
+      icon: reportIconName(report.category, report.status),
     });
   }
   if (wanted.size === 0) return [];
+
+  // Icoanele se aduc toate deodată, nu una după alta: sunt fișiere mici de pe
+  // aceeași origine, iar așteptarea lor pe rând ar fi ținut harta goală degeaba.
+  const icons = new Map(
+    await Promise.all(
+      [...new Set([...wanted.values()].map((want) => want.icon))].map(
+        async (name) => [name, await loadReportIcon(name)] as const,
+      ),
+    ),
+  );
 
   const width = Math.round(PIN_WIDTH * pixelRatio);
   const height = Math.round(PIN_HEIGHT * pixelRatio);
@@ -216,8 +237,8 @@ export function renderPinImages(
   context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
   const images: PinImage[] = [];
-  for (const [id, { color, emoji }] of wanted) {
-    drawPin(context, color, emoji);
+  for (const [id, { color, icon }] of wanted) {
+    drawPin(context, color, icons.get(icon) ?? null);
     images.push({ id, data: context.getImageData(0, 0, width, height), pixelRatio });
   }
   return images;

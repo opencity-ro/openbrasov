@@ -26,17 +26,17 @@ describe("identitatea pinului", () => {
  * stiva: fiecare trecere redesena tot, deci fiecare trecere pornea alta.
  */
 describe("desenarea pinurilor", () => {
-  it("nu redesenează nimic dacă totul e deja înregistrat", () => {
+  it("nu redesenează nimic dacă totul e deja înregistrat", async () => {
     const registered = vi.fn(() => true);
 
-    expect(renderPinImages([...reports], 2, registered)).toEqual([]);
+    await expect(renderPinImages([...reports], 2, registered)).resolves.toEqual([]);
     // Fără o pânză atinsă nu există nici eveniment de stil, deci nici buclă.
     expect(registered).toHaveBeenCalled();
   });
 
-  it("cere desenul o singură dată pentru fiecare identitate distinctă", () => {
+  it("cere desenul o singură dată pentru fiecare identitate distinctă", async () => {
     const asked: string[] = [];
-    renderPinImages([...reports], 1, (id) => {
+    await renderPinImages([...reports], 1, (id) => {
       asked.push(id);
       return true;
     });

@@ -5,10 +5,11 @@ import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/messages";
-import { categoryLabel, pinEmoji, statusColor, statusLabel } from "@/lib/reports/categories";
+import { categoryLabel, statusColor, statusLabel } from "@/lib/reports/categories";
 import type { PublicReport } from "@/lib/reports/queries";
 import { cn } from "@/lib/utils";
 
+import { reportIconName, reportIconUrl } from "./report-icons";
 import { useReportAddress } from "./use-report-address";
 
 const dateFormat = new Intl.DateTimeFormat("ro-RO", {
@@ -97,9 +98,15 @@ export function ReportCard({ report, onClose }: { report: PublicReport; onClose:
          * pe care o spune deja bulina de sub titlu, iar semnul, strâns înăuntru,
          * se citea mai greu decât pe hartă.
          */}
-        <span aria-hidden="true" className="shrink-0 text-[28px] leading-none">
-          {pinEmoji(report.category, report.status)}
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={reportIconUrl(reportIconName(report.category, report.status))}
+          alt=""
+          aria-hidden="true"
+          width={32}
+          height={32}
+          className="size-8 shrink-0"
+        />
 
         <div className="min-w-0 flex-1">
           <p className="leading-tight font-semibold">{categoryLabel(report.category)}</p>

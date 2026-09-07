@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { t } from "@/lib/messages";
 import {
-  categoryEmojiFor,
   categoryLabel,
   REPORT_CATEGORIES,
   REPORT_STATUSES,
@@ -20,6 +19,8 @@ import {
   type ReportStatus,
 } from "@/lib/reports/categories";
 import { cn } from "@/lib/utils";
+
+import { reportIconUrl } from "./report-icons";
 
 export type ReportFilters = {
   statuses: ReportStatus[];
@@ -135,9 +136,15 @@ export function ReportFiltersBar({
                 onChange({ ...filters, categories: toggle(filters.categories, category) })
               }
             >
-              <span aria-hidden="true" className="mr-1.5">
-                {categoryEmojiFor(category)}
-              </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={reportIconUrl(category)}
+                alt=""
+                aria-hidden="true"
+                width={18}
+                height={18}
+                className="mr-1.5 size-[18px] shrink-0"
+              />
               {categoryLabel(category)}
             </DropdownMenuCheckboxItem>
           ))}
