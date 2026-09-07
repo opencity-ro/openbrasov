@@ -34,3 +34,6 @@ map-check.png
 
 # planning docs stay local until they document the app itself
 docs/
+
+# TypeScript incremental build cache
+*.tsbuildinfo

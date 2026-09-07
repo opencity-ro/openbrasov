@@ -153,3 +153,62 @@
     }
   }
 }
+
+@layer components {
+  /*
+   * Controalele implicite MapLibre sunt înlocuite cu ale noastre. Pe cel de
+   * geolocalizare îl păstrăm montat, pentru punctul de poziție și cercul de
+   * precizie, dar îi ascundem butonul: îl pornim din butonul nostru.
+   */
+  .maplibregl-ctrl-group {
+    display: none;
+  }
+
+  /*
+   * Punctul de poziție: un disc plin, inel alb gros și o umbră care îl ridică de
+   * pe hartă. Pulsul implicit e oprit — mișcarea permanentă trage ochiul de la
+   * ce te uitai.
+   */
+  .maplibregl-user-location-dot,
+  .maplibregl-user-location-dot::before {
+    background-color: #2b7cff;
+    height: 16px;
+    width: 16px;
+  }
+  .maplibregl-user-location-dot::before {
+    animation: none;
+    opacity: 0;
+  }
+  .maplibregl-user-location-dot::after {
+    border: 3px solid #fff;
+    height: 22px;
+    width: 22px;
+    top: -3px;
+    left: -3px;
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 0.1),
+      0 2px 8px rgb(0 0 0 / 0.35);
+  }
+  .maplibregl-user-location-dot-stale {
+    background-color: color-mix(in oklch, #2b7cff, transparent 55%);
+  }
+  .maplibregl-user-location-accuracy-circle {
+    background-color: rgb(43 124 255 / 0.16);
+  }
+
+  /* Popup-urile moștenesc suprafața aplicației, nu albul implicit al bibliotecii. */
+  .maplibregl-popup-content {
+    background: var(--popover);
+    color: var(--popover-foreground);
+    border-radius: var(--radius-lg);
+    box-shadow:
+      0 1px 2px rgb(16 24 20 / 0.08),
+      0 12px 32px -12px rgb(16 24 20 / 0.3);
+  }
+  .maplibregl-popup-anchor-top .maplibregl-popup-tip {
+    border-bottom-color: var(--popover);
+  }
+  .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+    border-top-color: var(--popover);
+  }
+}
