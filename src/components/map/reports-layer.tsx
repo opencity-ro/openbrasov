@@ -35,17 +35,71 @@ function clusterRadius(): ExpressionSpecification {
 const CLUSTER_MAX_ZOOM = 15;
 const CLUSTER_RADIUS = 46;
 
+/**
+ * Săltul de intrare: pinul crește din nimic, trece puțin peste mărimea lui și
+ * revine. Fără depășire ar părea că se umflă și se oprește brusc; cu ea, pare
+ * pus pe hartă de o mână.
+ */
+const POP_MS = 380;
+const POP_PEAK_MS = 266;
+const POP_OVERSHOOT = 1.15;
+const POP_FADE_MS = 133;
+
+/** Decalajul dintre două pinuri vecine, ca să nu apară toate deodată. */
+const POP_STAGGER_MS = 25;
+
+/** Toată intrarea se încheie într-atât, oricâte sesizări ar fi de arătat. */
+const POP_STAGGER_CAP_MS = 500;
+
+/**
+ * Peste atâtea sesizări pe ecran, intrarea se sare cu totul. Mărimea unei icoane
+ * e proprietate de așezare, deci fiecare cadru al animației cere hărții să
+ * recalculeze locul tuturor simbolurilor — plăcut la treizeci, sacadat la mii.
+ */
+const POP_MAX_PINS = 400;
+
 type Properties = {
   id: string;
   category: PublicReport["category"];
   status: PublicReport["status"];
   icon: string;
+  /** Momentul, față de începutul animației, la care intră pinul ăsta. */
+  appearAt: number;
 };
+
+/** Cât a trecut de la intrarea fiecărui pin, ca număr pe care harta îl poate citi. */
+const sinceAppeared = (elapsed: number): ExpressionSpecification => [
+  "-",
+  elapsed,
+  ["case", ["has", "appearAt"], ["to-number", ["get", "appearAt"]], 0],
+];
+
+const popSize = (elapsed: number): ExpressionSpecification => [
+  "interpolate",
+  ["linear"],
+  sinceAppeared(elapsed),
+  0,
+  0,
+  POP_PEAK_MS,
+  POP_OVERSHOOT,
+  POP_MS,
+  1,
+];
+
+const popOpacity = (elapsed: number): ExpressionSpecification => [
+  "interpolate",
+  ["linear"],
+  sinceAppeared(elapsed),
+  0,
+  0,
+  POP_FADE_MS,
+  1,
+];
 
 function toFeatureCollection(reports: PublicReport[]): FeatureCollection<Point, Properties> {
   return {
     type: "FeatureCollection",
-    features: reports.map((report) => ({
+    features: reports.map((report, index) => ({
       type: "Feature",
       id: report.id,
       geometry: { type: "Point", coordinates: [report.longitude, report.latitude] },
@@ -54,6 +108,7 @@ function toFeatureCollection(reports: PublicReport[]): FeatureCollection<Point, 
         category: report.category,
         status: report.status,
         icon: pinImageId(report.category, report.status),
+        appearAt: Math.min(index * POP_STAGGER_MS, POP_STAGGER_CAP_MS),
       },
     })) satisfies Feature<Point, Properties>[],
   };
@@ -211,6 +266,72 @@ export function ReportsLayer({ reports, visibleIds, onSelect }: ReportsLayerProp
       ["!", ["has", "point_count"]],
       ["in", ["get", "id"], ["literal", visibleIds]],
     ]);
+  }, [map, visibleIds]);
+
+  /**
+   * Intrarea pinurilor pe hartă.
+   *
+   * Ceasul stă la noi, nu în hartă: expresia primește la fiecare cadru câte
+   * milisecunde au trecut, iar fiecare pin își scade din ele propria întârziere.
+   * Așa avem un singur lucru de schimbat pe cadru, indiferent câte sesizări sunt,
+   * iar decalajul dintre pini iese din date, nu din câte un cronometru pe fiecare.
+   */
+  useEffect(() => {
+    if (!map) return;
+
+    let frame = 0;
+    let played = false;
+
+    const settle = () => {
+      if (!map.getLayer(REPORTS_PIN_LAYER)) return;
+      map.setLayoutProperty(REPORTS_PIN_LAYER, "icon-size", 1);
+      map.setPaintProperty(REPORTS_PIN_LAYER, "icon-opacity", 1);
+    };
+
+    const skip =
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      visibleIds.length === 0 ||
+      visibleIds.length > POP_MAX_PINS;
+
+    const play = () => {
+      if (played || !map.getLayer(REPORTS_PIN_LAYER)) return;
+      played = true;
+
+      if (skip) {
+        settle();
+        return;
+      }
+
+      const started = performance.now();
+      const step = () => {
+        if (!map.getLayer(REPORTS_PIN_LAYER)) return;
+        const elapsed = performance.now() - started;
+        if (elapsed >= POP_MS + POP_STAGGER_CAP_MS) {
+          settle();
+          return;
+        }
+        map.setLayoutProperty(REPORTS_PIN_LAYER, "icon-size", popSize(elapsed));
+        map.setPaintProperty(REPORTS_PIN_LAYER, "icon-opacity", popOpacity(elapsed));
+        frame = requestAnimationFrame(step);
+      };
+
+      // Primul cadru se pune pe loc: altfel pinurile ar apărea o clipă întregi,
+      // înainte ca animația să apuce să le facă mici.
+      map.setLayoutProperty(REPORTS_PIN_LAYER, "icon-size", popSize(0));
+      map.setPaintProperty(REPORTS_PIN_LAYER, "icon-opacity", popOpacity(0));
+      frame = requestAnimationFrame(step);
+    };
+
+    // Stratul poate să nu fie încă așezat când ajungem aici, iar schimbarea temei
+    // reconstruiește stilul din zero.
+    play();
+    map.on("styledata", play);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      map.off("styledata", play);
+      settle();
+    };
   }, [map, visibleIds]);
 
   useEffect(() => {
