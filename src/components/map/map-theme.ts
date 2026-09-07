@@ -163,10 +163,221 @@ export const GLYPHS_VERSION = "3";
 export const GLYPHS_URL = `/map-fonts/${GLYPHS_VERSION}/{fontstack}/{range}.pbf`;
 
 /**
- * Etichetele se resping între ele cu o margine de 2px; la 1px încap vizibil mai
- * multe magazine pe aceeași stradă, fără să se atingă.
+ * Prioritatea punctelor de interes, luată din stilul oficial OSM.
+ *
+ * Acolo fiecare tip apare de la un anumit zoom: spitalul de la 15, farmacia și
+ * restaurantul de la 17, bancomatul de la 18, banca de gunoi de la 19. Numărul
+ * acela e o măsură a importanței, așa că îl folosim ca ordine de așezare: când
+ * două etichete se calcă, rămâne cea pe care ei o arată mai devreme. Extras din
+ * `style/amenity-points.mss`, nu scris din memorie.
  */
-const DENSE_LABEL = { "text-padding": 1 };
+const POI_PRIORITY_BY_ZOOM: Array<[number, string[]]> = [
+  [4, ["island"]],
+  [9, ["scree", "shingle"]],
+  [11, ["islet", "peak", "volcano"]],
+  [13, ["alpine_hut", "wilderness_hut"]],
+  [14, ["cape", "level_crossing", "made_communications_tower", "spring"]],
+  [
+    15,
+    [
+      "cave_entrance",
+      "crossing",
+      "ferry_terminal",
+      "golf_course",
+      "hospital",
+      "made_lighthouse",
+      "pass",
+      "saddle",
+    ],
+  ],
+  [
+    16,
+    [
+      "archaeological_site",
+      "beach_resort",
+      "bus_station",
+      "camp_site",
+      "caravan_site",
+      "castle",
+      "cinema",
+      "courthouse",
+      "fire_station",
+      "ford",
+      "fort",
+      "helipad",
+      "hunting_stand",
+      "library",
+      "locality",
+      "made_cross",
+      "made_windmill",
+      "manor",
+      "marketplace",
+      "monument",
+      "museum",
+      "peninsula",
+      "picnic_site",
+      "place_of_worship",
+      "police",
+      "shelter",
+      "theatre",
+      "toll_booth",
+      "townhall",
+      "viewpoint",
+      "water_park",
+      "wayside_cross",
+    ],
+  ],
+  [
+    17,
+    [
+      "amusement_arcade",
+      "arts_centre",
+      "artwork",
+      "attraction",
+      "bank",
+      "bar",
+      "bbq",
+      "bicycle_rental",
+      "biergarten",
+      "bird_hide",
+      "boat_rental",
+      "bowling_alley",
+      "bunker",
+      "bureau_de_change",
+      "cafe",
+      "car_rental",
+      "car_wash",
+      "casino",
+      "cattle_grid",
+      "chalet",
+      "charging_station",
+      "city_gate",
+      "clinic",
+      "community_centre",
+      "consulate",
+      "cycle_barrier",
+      "dance",
+      "dentist",
+      "doctors",
+      "dog_park",
+      "drinking_water",
+      "driving_school",
+      "embassy",
+      "fast_food",
+      "firepit",
+      "fishing",
+      "fitness_centre",
+      "fitness_station",
+      "food_court",
+      "fountain",
+      "fuel",
+      "gallery",
+      "gate",
+      "guest_house",
+      "hostel",
+      "hotel",
+      "ice_cream",
+      "internet_cafe",
+      "kissing_gate",
+      "lift_gate",
+      "made_ceremonial_gate",
+      "made_chimney",
+      "made_crane",
+      "made_obelisk",
+      "made_telescope",
+      "made_tower",
+      "made_waste_water_plant",
+      "made_water_tower",
+      "miniature_golf",
+      "motel",
+      "motorcycle_barrier",
+      "nightclub",
+      "parcel_locker",
+      "pharmacy",
+      "picnic_table",
+      "playground",
+      "post_office",
+      "prison",
+      "pub",
+      "public_bath",
+      "restaurant",
+      "sauna",
+      "slipway",
+      "social_facility",
+      "square",
+      "stile",
+      "swimming_area",
+      "swing_gate",
+      "taxi",
+      "telephone",
+      "traffic_signals",
+      "tree",
+      "vehicle_inspection",
+      "veterinary",
+      "wayside_shrine",
+    ],
+  ],
+  [
+    18,
+    [
+      "apartment",
+      "atm",
+      "elevator",
+      "made_mast",
+      "made_silo",
+      "made_storage_tank",
+      "phone",
+      "post_box",
+      "shower",
+    ],
+  ],
+  [
+    19,
+    [
+      "bench",
+      "bicycle_repair_station",
+      "column",
+      "information",
+      "outdoor_seating",
+      "public_bookcase",
+      "recycling",
+      "vending_machine",
+      "waste_basket",
+      "waste_disposal",
+    ],
+  ],
+];
+
+/** Tipurile fără regulă proprie la ei cad pe pragul cel mai des folosit. */
+const POI_DEFAULT_PRIORITY = 17;
+
+function poiSortKey(): unknown {
+  return [
+    "match",
+    ["get", "subclass"],
+    ...POI_PRIORITY_BY_ZOOM.flatMap(([zoom, subclasses]) => [subclasses, zoom]),
+    POI_DEFAULT_PRIORITY,
+  ];
+}
+
+/**
+ * Cum încap mai multe etichete pe aceeași stradă.
+ *
+ * MapLibre așază o etichetă într-un singur loc și, dacă acolo e ocupat, renunță
+ * la ea. `text-variable-anchor` îi dă patru poziții de încercat înainte să se
+ * dea bătut, iar `text-optional` lasă iconița pe hartă chiar dacă numele nu mai
+ * încape nicăieri. `text-anchor` trebuie scos: specificația nu-l acceptă
+ * alături de ancora variabilă, iar stilul de bază îl pune pe toate straturile.
+ */
+const DENSE_LABEL = {
+  "text-variable-anchor": ["top", "bottom", "left", "right"],
+  "text-anchor": null,
+  "text-justify": "auto",
+  "text-optional": true,
+  "text-padding": 1,
+  "icon-padding": 1,
+  "symbol-sort-key": poiSortKey(),
+};
 
 const FONT_REGULAR = "Inter Regular";
 const FONT_BOLD = "Inter Bold";
@@ -487,7 +698,7 @@ export function applyMapTheme(
 
     const currentLayout: Record<string, unknown> | undefined =
       "layout" in layer ? layer.layout : undefined;
-    const layout = {
+    const merged: Record<string, unknown> = {
       ...currentLayout,
       ...(isLabel ? { "text-font": mappedFontStack(currentLayout?.["text-font"]) } : {}),
       ...rule?.layout?.(),
@@ -495,6 +706,9 @@ export function applyMapTheme(
         ? { visibility: (buildings3d ? "visible" : "none") as "visible" | "none" }
         : {}),
     };
+    // `null` înseamnă „scoate cheia": unele proprietăți se exclud reciproc, iar
+    // stilul de bază le pune pe cele pe care noi le înlocuim.
+    const layout = Object.fromEntries(Object.entries(merged).filter(([, value]) => value !== null));
 
     const paintPatch = rule?.paint && !palette.keepUpstreamPaint ? rule.paint(palette) : {};
     const hasPaint = "paint" in layer || Object.keys(paintPatch).length > 0;

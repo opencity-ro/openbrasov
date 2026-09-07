@@ -211,6 +211,57 @@ describe("applyMapTheme", () => {
     expect(smallCity).toBe(town);
   });
 
+  it("dă punctelor de interes patru poziții de încercat, nu una", () => {
+    const base = styleFixture();
+    const withPoi = {
+      ...base,
+      layers: [
+        ...base.layers,
+        {
+          id: "poi_r1",
+          type: "symbol",
+          source: "s",
+          layout: { "text-anchor": "top", "text-offset": [0, 0.6] },
+        },
+      ],
+    } as StyleSpecification;
+    const themed = applyMapTheme(withPoi, LIGHT_PALETTE);
+    const layout = layer(themed, "poi_r1").layout!;
+
+    expect(layout["text-variable-anchor"]).toEqual(["top", "bottom", "left", "right"]);
+    expect(layout["text-optional"]).toBe(true);
+    // Specificația refuză ancora fixă alături de cea variabilă, iar stilul de
+    // bază o pune pe toate straturile: trebuie scoasă, nu doar suprascrisă.
+    expect("text-anchor" in layout).toBe(false);
+    // Decalajul rămâne — ancora variabilă îl folosește ca distanță.
+    expect(layout["text-offset"]).toEqual([0, 0.6]);
+  });
+
+  it("așază întâi ce arată stilul oficial mai devreme", () => {
+    const base = styleFixture();
+    const withPoi = {
+      ...base,
+      layers: [...base.layers, { id: "poi_r1", type: "symbol", source: "s" }],
+    } as StyleSpecification;
+    const themed = applyMapTheme(withPoi, LIGHT_PALETTE);
+    const sortKey = layer(themed, "poi_r1").layout!["symbol-sort-key"] as unknown[];
+
+    expect(sortKey[0]).toBe("match");
+    expect(sortKey[1]).toEqual(["get", "subclass"]);
+    // Spitalul bate farmacia, farmacia bate banca de gunoi.
+    const priorityOf = (subclass: string) => {
+      for (let index = 2; index < sortKey.length - 1; index += 2) {
+        if ((sortKey[index] as string[]).includes(subclass)) return sortKey[index + 1] as number;
+      }
+      return sortKey.at(-1) as number;
+    };
+
+    expect(priorityOf("hospital")).toBeLessThan(priorityOf("bank"));
+    expect(priorityOf("bank")).toBeLessThan(priorityOf("waste_basket"));
+    // Un tip fără regulă la ei cade pe pragul implicit.
+    expect(priorityOf("supermarket")).toBe(17);
+  });
+
   it("adaugă numerele de casă pe sursa vectorială a stilului", () => {
     const withSource = {
       ...styleFixture(),
