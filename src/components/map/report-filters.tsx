@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, SlidersHorizontal } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -25,12 +25,6 @@ export type ReportFilters = {
   statuses: ReportStatus[];
   categories: ReportCategory[];
 };
-
-export const NO_FILTERS: ReportFilters = { statuses: [], categories: [] };
-
-export function filtersAreEmpty(filters: ReportFilters): boolean {
-  return filters.statuses.length === 0 && filters.categories.length === 0;
-}
 
 function toggle<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
@@ -73,7 +67,6 @@ export function ReportFiltersBar({
   onChange: (filters: ReportFilters) => void;
   visibleCount: number;
 }) {
-  const empty = filtersAreEmpty(filters);
   const chosenCategories = filters.categories.length;
 
   return (
@@ -150,17 +143,6 @@ export function ReportFiltersBar({
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {!empty && (
-        <button
-          type="button"
-          onClick={() => onChange(NO_FILTERS)}
-          className={cn(CHIP_SHAPE, CHIP_SURFACE, "text-muted-foreground hover:text-foreground")}
-        >
-          <X aria-hidden="true" className="size-4" />
-          {t.map.clearFilters}
-        </button>
-      )}
 
       <span
         role="status"
