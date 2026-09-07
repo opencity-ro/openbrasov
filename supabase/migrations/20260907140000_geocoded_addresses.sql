@@ -32,3 +32,8 @@ comment on table public.geocoded_addresses is
 -- O politică de scriere deschisă ar fi însemnat că oricine poate pune ce adresă
 -- vrea pe orice punct de pe hartă, iar minciuna s-ar fi arătat tuturor.
 alter table public.geocoded_addresses enable row level security;
+
+-- Regulile de rând sunt de ajuns cât timp nu există nicio politică, dar dreptul
+-- pe tabel rămâne acordat din start rolurilor publice. Îl retragem, ca o
+-- politică adăugată din greșeală mâine să nu deschidă tabelul dintr-o dată.
+revoke all on table public.geocoded_addresses from anon, authenticated;
