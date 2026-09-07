@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/opencity-ro/openbrasov/compare/v0.3.0...v0.4.0) (2026-09-07)
+
+
+### Funcționalități
+
+* **map:** show reports on the map ([#22](https://github.com/opencity-ro/openbrasov/issues/22)) ([ce3b1e8](https://github.com/opencity-ro/openbrasov/commit/ce3b1e87a24b98a4b0d11b1223385540c9efd2e1))
+
 ## [0.3.0](https://github.com/opencity-ro/openbrasov/compare/v0.2.0...v0.3.0) (2026-09-07)
 
 
