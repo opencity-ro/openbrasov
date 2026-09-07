@@ -77,23 +77,29 @@ function drawPin(context: CanvasRenderingContext2D, size: number, color: string,
 export type PinImage = { id: string; data: ImageData; pixelRatio: number };
 
 /**
- * Desenează pinurile de care are nevoie setul curent de sesizări. O sesizare
- * rezolvată arată la fel indiferent de categorie, deci combinațiile chiar
- * folosite sunt puține, iar fiecare se desenează o singură dată.
+ * Desenează pinurile de care are nevoie setul curent de sesizări, sărind peste
+ * cele deja înregistrate. Identitatea unui pin îi determină complet desenul, deci
+ * unul existent nu are de ce să fie redesenat — iar redesenarea lui ar fi costat
+ * de două ori: o dată pânza, o dată evenimentul de stil pe care îl declanșează.
+ *
+ * O sesizare rezolvată arată la fel indiferent de categorie, deci combinațiile
+ * chiar folosite sunt puține.
  */
 export function renderPinImages(
   reports: Array<{ category: ReportCategory; status: ReportStatus }>,
   pixelRatio: number,
+  alreadyRegistered: (id: string) => boolean,
 ): PinImage[] {
   const wanted = new Map<string, { color: string; emoji: string }>();
   for (const report of reports) {
     const id = pinImageId(report.category, report.status);
-    if (wanted.has(id)) continue;
+    if (wanted.has(id) || alreadyRegistered(id)) continue;
     wanted.set(id, {
       color: statusColor[report.status],
       emoji: pinEmoji(report.category, report.status),
     });
   }
+  if (wanted.size === 0) return [];
 
   const size = Math.round(PIN_SIZE * pixelRatio);
   const canvas = document.createElement("canvas");

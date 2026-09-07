@@ -70,7 +70,22 @@ export function ReportsLayer({ reports, visibleIds, onSelect }: ReportsLayerProp
   useEffect(() => {
     if (!map) return;
 
+    // Adăugarea unei surse, a unui strat sau a unei imagini schimbă stilul, iar
+    // schimbarea stilului anunță `styledata` — evenimentul care ne-a chemat aici.
+    // Fără garda asta, prima instalare se cheamă pe sine până se umple stiva.
+    let installing = false;
+
     const install = () => {
+      if (installing) return;
+      installing = true;
+      try {
+        addEverything();
+      } finally {
+        installing = false;
+      }
+    };
+
+    const addEverything = () => {
       if (!map.getSource(REPORTS_SOURCE)) {
         map.addSource(REPORTS_SOURCE, {
           type: "geojson",
@@ -81,8 +96,10 @@ export function ReportsLayer({ reports, visibleIds, onSelect }: ReportsLayerProp
         });
       }
 
-      for (const image of renderPinImages(reports, Math.ceil(window.devicePixelRatio || 1))) {
-        if (map.hasImage(image.id)) map.removeImage(image.id);
+      const images = renderPinImages(reports, Math.ceil(window.devicePixelRatio || 1), (id) =>
+        map.hasImage(id),
+      );
+      for (const image of images) {
         map.addImage(image.id, image.data, { pixelRatio: image.pixelRatio });
       }
 
