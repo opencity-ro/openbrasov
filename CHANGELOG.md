@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/opencity-ro/openbrasov/compare/v0.2.0...v0.3.0) (2026-09-07)
+
+
+### Funcționalități
+
+* **map:** theme-aware basemap, custom controls and a relief mode ([#20](https://github.com/opencity-ro/openbrasov/issues/20)) ([71c7a71](https://github.com/opencity-ro/openbrasov/commit/71c7a71f463d5cc452771a3927043443dc4edb93))
+
 ## [0.2.0](https://github.com/opencity-ro/openbrasov/compare/v0.1.1...v0.2.0) (2026-09-04)
 
 
