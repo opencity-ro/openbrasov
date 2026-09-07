@@ -7,6 +7,8 @@ import {
   DARK_PALETTE,
   HOUSE_NUMBER_LAYER,
   LIGHT_PALETTE,
+  lowestPoiSortKey,
+  REPORT_SORT_KEY,
 } from "./map-theme";
 
 /** Un extras din stilul Liberty, cu straturile care ne dau cele mai multe bătăi de cap. */
@@ -156,7 +158,7 @@ describe("applyMapTheme", () => {
     expect(themed.layers.find((candidate) => candidate.id === "building")?.maxzoom).toBe(24);
   });
 
-  it("arată punctele de interes cu o treaptă mai devreme", () => {
+  it("lasă punctele de interes la zoom-urile stilului oficial", () => {
     const base = styleFixture();
     const withPoi = {
       ...base,
@@ -168,8 +170,15 @@ describe("applyMapTheme", () => {
     } as StyleSpecification;
     const themed = applyMapTheme(withPoi, LIGHT_PALETTE);
 
-    expect(themed.layers.find((candidate) => candidate.id === "poi_r1")?.minzoom).toBe(13);
-    expect(themed.layers.find((candidate) => candidate.id === "poi_r20")?.minzoom).toBe(15);
+    // Coborâte, magazinele mici umpleau harta la depărtare.
+    expect(themed.layers.find((candidate) => candidate.id === "poi_r1")?.minzoom).toBe(15);
+    expect(themed.layers.find((candidate) => candidate.id === "poi_r20")?.minzoom).toBe(17);
+  });
+
+  it("ține sesizările deasupra oricărui punct de interes", () => {
+    // Harta există pentru sesizări: o groapă raportată nu poate pierde locul
+    // în fața unei farmacii, oricât de important ar fi tipul acesteia.
+    expect(REPORT_SORT_KEY).toBeLessThan(lowestPoiSortKey());
   });
 
   it("dă numelor de localitate trei trepte, în raportul de pe referință", () => {

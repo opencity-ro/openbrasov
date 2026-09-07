@@ -351,6 +351,19 @@ const POI_PRIORITY_BY_ZOOM: Array<[number, string[]]> = [
 /** Tipurile fără regulă proprie la ei cad pe pragul cel mai des folosit. */
 const POI_DEFAULT_PRIORITY = 17;
 
+/**
+ * Ordinea de așezare a sesizărilor. Harta există pentru ele, deci nu au voie să
+ * piardă vreodată locul în fața unei farmacii sau a unei stații: valoarea stă
+ * sub cea mai mică prioritate a punctelor de interes, iar un test o verifică.
+ * Stratul de sesizări o folosește ca `symbol-sort-key`.
+ */
+export const REPORT_SORT_KEY = 0;
+
+/** Cea mai mică valoare folosită de punctele de interes; sesizările stau sub ea. */
+export function lowestPoiSortKey(): number {
+  return Math.min(POI_DEFAULT_PRIORITY, ...POI_PRIORITY_BY_ZOOM.map(([zoom]) => zoom));
+}
+
 function poiSortKey(): unknown {
   return [
     "match",
@@ -553,24 +566,11 @@ const LAYER_RULES: LayerRule[] = [
     type: "symbol",
     paint: (p) => ({ "text-color": p.transitLabel, "text-halo-color": p.labelHalo }),
   },
+  // Zoom-urile rămân cele ale stilului oficial — 15, 16, 17. Coborâte cu două
+  // trepte, magazinele mici umpleau harta la depărtare, unde nu ajută pe nimeni.
   {
-    test: /^poi_r1$/,
+    test: /^poi_(r1|r7|r20)$/,
     type: "symbol",
-    minzoom: 13,
-    paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
-    layout: () => DENSE_LABEL,
-  },
-  {
-    test: /^poi_r7$/,
-    type: "symbol",
-    minzoom: 14,
-    paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
-    layout: () => DENSE_LABEL,
-  },
-  {
-    test: /^poi_r20$/,
-    type: "symbol",
-    minzoom: 15,
     paint: (p) => ({ "text-color": p.labelMuted, "text-halo-color": p.labelHalo }),
     layout: () => DENSE_LABEL,
   },
