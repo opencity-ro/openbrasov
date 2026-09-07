@@ -371,7 +371,14 @@ function poiSortKey(): unknown {
  */
 const DENSE_LABEL = {
   "text-variable-anchor": ["top", "bottom", "left", "right"],
+  // Ancora fixă și decalajul pe axe sunt amândouă incompatibile cu ancora
+  // variabilă. Decalajul mai ales: stilul de bază îl dă pe o singură axă —
+  // `[0, 0.6]` la magazine, `[0.9, 0]` la stații — iar pe direcțiile rămase
+  // distanța ar fi zero, adică numele exact peste iconiță.
   "text-anchor": null,
+  "text-offset": null,
+  // O singură distanță, măsurată în direcția ancorei, deci egală în toate patru.
+  "text-radial-offset": 0.9,
   "text-justify": "auto",
   "text-optional": true,
   "text-padding": 1,

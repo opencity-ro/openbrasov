@@ -233,8 +233,10 @@ describe("applyMapTheme", () => {
     // Specificația refuză ancora fixă alături de cea variabilă, iar stilul de
     // bază o pune pe toate straturile: trebuie scoasă, nu doar suprascrisă.
     expect("text-anchor" in layout).toBe(false);
-    // Decalajul rămâne — ancora variabilă îl folosește ca distanță.
-    expect(layout["text-offset"]).toEqual([0, 0.6]);
+    // Decalajul pe axe pleacă și el: pe o singură axă, celelalte direcții ar
+    // primi distanța zero, adică numele peste iconiță.
+    expect("text-offset" in layout).toBe(false);
+    expect(layout["text-radial-offset"]).toBe(0.9);
   });
 
   it("așază întâi ce arată stilul oficial mai devreme", () => {
