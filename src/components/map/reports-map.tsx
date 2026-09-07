@@ -2,7 +2,8 @@
 
 import { MapPinOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { t } from "@/lib/messages";
 import {
@@ -20,6 +21,9 @@ import { ReportsLayer } from "./reports-layer";
 
 const STATUS_PARAM = "stare";
 const CATEGORY_PARAM = "categorie";
+
+/** Cât stă anunțul de hartă goală înainte să plece singur. */
+const EMPTY_NOTICE_MS = 6000;
 
 function readList<T extends string>(raw: string | null, allowed: readonly T[]): T[] {
   if (!raw) return [];
@@ -78,6 +82,24 @@ export function ReportsMap({ reports }: { reports: PublicReport[] }) {
     [visible, selectedId],
   );
 
+  /**
+   * Harta goală se anunță o dată, ca un mesaj care coboară de sus și pleacă
+   * singur. Un card fix ar sta peste oraș la nesfârșit, deși nu are ce adăuga
+   * după ce l-ai citit o dată.
+   */
+  const announced = useRef(false);
+  useEffect(() => {
+    if (announced.current || reports.length > 0) return;
+    announced.current = true;
+
+    toast(t.map.emptyTitle, {
+      description: t.map.emptyBody,
+      icon: <MapPinOff aria-hidden="true" className="text-accent size-5" />,
+      duration: EMPTY_NOTICE_MS,
+      position: "top-center",
+    });
+  }, [reports.length]);
+
   return (
     <BrasovMap className="absolute inset-0">
       <ReportsLayer reports={reports} visibleIds={visibleIds} onSelect={setSelectedId} />
@@ -86,20 +108,7 @@ export function ReportsMap({ reports }: { reports: PublicReport[] }) {
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col items-center gap-2 p-3 sm:p-4">
         <ReportFiltersBar filters={filters} onChange={applyFilters} visibleCount={visible.length} />
 
-        {reports.length === 0 && (
-          <div
-            role="note"
-            className="bg-card border-border pointer-events-auto flex max-w-sm items-start gap-3 rounded-2xl border p-4 shadow-md"
-          >
-            <MapPinOff aria-hidden="true" className="text-accent mt-0.5 size-5 shrink-0" />
-            <div>
-              <p className="font-semibold">{t.map.emptyTitle}</p>
-              <p className="text-muted-foreground text-sm">{t.map.emptyBody}</p>
-            </div>
-          </div>
-        )}
-
-        {reports.length > 0 && visible.length === 0 && (
+        {visible.length === 0 && reports.length > 0 && (
           <p
             role="status"
             className="bg-card border-border pointer-events-auto rounded-full border px-4 py-2 text-sm shadow-md"
