@@ -15,43 +15,45 @@ import {
  * sesizare nu poate fi împinsă de pe ecran de eticheta unei farmacii.
  */
 
-/** Lățimea pinului în puncte CSS. Vârful stă exact pe coordonata sesizării. */
-export const PIN_SIZE = 36;
+/** Lățimea desenului în puncte CSS. Discul ocupă lățimea, acul coboară sub el. */
+export const PIN_SIZE = 46;
 
-/** Cât din pin ocupă semnul dinăuntru. */
-const EMOJI_RATIO = 0.42;
+/** Cât din disc ocupă semnul dinăuntru. */
+const EMOJI_RATIO = 0.56;
 
 /** Inelul alb desparte pinul de hartă la orice culoare de fundal. */
-const RING = 2;
+const RING = 2.5;
 
 export function pinImageId(category: ReportCategory, status: ReportStatus): string {
   return `report-${status}-${pinEmoji(category, status)}`;
 }
 
 /**
- * Forma e o picătură: un pătrat cu trei colțuri rotunde și unul ascuțit, întors
- * cu 45° ca vârful să cadă în jos. Emoji-ul se desenează drept, nu întors cu
- * pătratul, altfel ar sta strâmb.
+ * Un disc cu un ac scurt sub el: acul arată exact punctul de pe hartă, discul
+ * ține semnul. Forma se citește ca „ceva stă aici", spre deosebire de un cerc
+ * simplu, care plutește fără să spună unde.
  */
 function drawPin(context: CanvasRenderingContext2D, size: number, color: string, emoji: string) {
-  const center = size / 2;
-  // Latura pătratului care, rotit, încape exact în desen.
-  const side = size / Math.SQRT2;
-  const shadow = 2;
+  const shadow = size * 0.06;
+  const discRadius = (size - 2 * shadow) / 2;
+  const centerX = size / 2;
+  const centerY = discRadius + shadow;
+  const tipY = size - shadow * 0.5;
+  // Unghiul din care pleacă acul: destul de jos ca laturile lui să iasă din disc
+  // fără colț vizibil, destul de sus ca vârful să rămână ascuțit.
+  const spread = Math.asin(Math.min(1, (discRadius * 0.42) / discRadius));
 
   context.clearRect(0, 0, size, size);
   context.save();
 
-  // Centrul cercului stă mai sus decât centrul desenului: sub el rămâne vârful.
-  context.translate(center, center - shadow);
-  context.rotate(-Math.PI / 4);
-
   context.beginPath();
-  context.roundRect(-side / 2, -side / 2, side, side, [side / 2, side / 2, side / 2, 3]);
+  context.arc(centerX, centerY, discRadius, Math.PI / 2 - spread, Math.PI / 2 + spread, true);
+  context.lineTo(centerX, tipY);
+  context.closePath();
 
-  context.shadowColor = "rgba(15, 26, 20, 0.35)";
-  context.shadowBlur = 4;
-  context.shadowOffsetY = 2;
+  context.shadowColor = "rgba(15, 26, 20, 0.4)";
+  context.shadowBlur = size * 0.1;
+  context.shadowOffsetY = size * 0.04;
   context.fillStyle = "#ffffff";
   context.fill();
 
@@ -66,11 +68,10 @@ function drawPin(context: CanvasRenderingContext2D, size: number, color: string,
   context.restore();
 
   context.save();
-  context.translate(center, center - shadow);
-  context.font = `${Math.round(size * EMOJI_RATIO)}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+  context.font = `${Math.round(discRadius * 2 * EMOJI_RATIO)}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.fillText(emoji, 0, 0);
+  context.fillText(emoji, centerX, centerY);
   context.restore();
 }
 

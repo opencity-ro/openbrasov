@@ -1,7 +1,7 @@
 "use client";
 
 import type { Feature, FeatureCollection, Point } from "geojson";
-import type { GeoJSONSource, MapGeoJSONFeature } from "maplibre-gl";
+import type { ExpressionSpecification, GeoJSONSource, MapGeoJSONFeature } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 
 import type { PublicReport } from "@/lib/reports/queries";
@@ -13,6 +13,23 @@ export const REPORTS_SOURCE = "reports";
 export const REPORTS_PIN_LAYER = "reports-pins";
 const CLUSTER_LAYER = "reports-clusters";
 const CLUSTER_COUNT_LAYER = "reports-cluster-count";
+const CLUSTER_HALO_LAYER = "reports-cluster-halo";
+
+/**
+ * Grupurile sunt chihlimbar, nu verde. Verdele mărcii se pierdea în parcurile
+ * hărții, iar pe hartă un grup trebuie să fie primul lucru care sare în ochi.
+ *
+ * Umplerea e deschisă și cifra e închisă, nu invers: alb pe portocaliu ar fi
+ * ținut sub pragul de contrast la mărimea asta, iar aproape-negru pe chihlimbar
+ * trece lejer, și pe temă deschisă, și pe temă închisă.
+ */
+const CLUSTER_COLOR = "#fbbf24";
+const CLUSTER_TEXT = "#1c1917";
+
+/** Discul crește cu numărul de sesizări, dar se oprește: altfel acoperă cartierul. */
+function clusterRadius(): ExpressionSpecification {
+  return ["interpolate", ["linear"], ["get", "point_count"], 2, 17, 10, 21, 50, 26, 200, 32];
+}
 
 /** Peste pragul ăsta sesizările se despart; sub el se adună în grupuri. */
 const CLUSTER_MAX_ZOOM = 15;
@@ -103,6 +120,22 @@ export function ReportsLayer({ reports, visibleIds, onSelect }: ReportsLayerProp
         map.addImage(image.id, image.data, { pixelRatio: image.pixelRatio });
       }
 
+      // Aureola: același chihlimbar, aproape transparent, care dă grupului volum
+      // și îl desparte de hartă fără să adauge încă un contur.
+      if (!map.getLayer(CLUSTER_HALO_LAYER)) {
+        map.addLayer({
+          id: CLUSTER_HALO_LAYER,
+          type: "circle",
+          source: REPORTS_SOURCE,
+          filter: ["has", "point_count"],
+          paint: {
+            "circle-color": CLUSTER_COLOR,
+            "circle-opacity": 0.22,
+            "circle-radius": ["+", clusterRadius(), 7],
+          },
+        });
+      }
+
       if (!map.getLayer(CLUSTER_LAYER)) {
         map.addLayer({
           id: CLUSTER_LAYER,
@@ -110,23 +143,10 @@ export function ReportsLayer({ reports, visibleIds, onSelect }: ReportsLayerProp
           source: REPORTS_SOURCE,
           filter: ["has", "point_count"],
           paint: {
-            "circle-color": "#1b5e3b",
+            "circle-color": CLUSTER_COLOR,
             "circle-stroke-color": "#ffffff",
-            "circle-stroke-width": 2,
-            // Grupurile mari se văd mai mari, dar nu la nesfârșit.
-            "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["get", "point_count"],
-              2,
-              15,
-              10,
-              19,
-              50,
-              24,
-              200,
-              30,
-            ],
+            "circle-stroke-width": 2.5,
+            "circle-radius": clusterRadius(),
           },
         });
       }
@@ -140,10 +160,11 @@ export function ReportsLayer({ reports, visibleIds, onSelect }: ReportsLayerProp
           layout: {
             "text-field": ["get", "point_count_abbreviated"],
             "text-font": ["Inter Bold"],
-            "text-size": 13,
+            // Cifra crește odată cu discul, ca să umple grupul la fel la orice mărime.
+            "text-size": ["interpolate", ["linear"], ["get", "point_count"], 2, 14, 50, 17],
             "text-allow-overlap": true,
           },
-          paint: { "text-color": "#ffffff" },
+          paint: { "text-color": CLUSTER_TEXT },
         });
       }
 
