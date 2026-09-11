@@ -4,16 +4,18 @@ import type { Feature, FeatureCollection, Point } from "geojson";
 import type { ExpressionSpecification, GeoJSONSource, MapGeoJSONFeature } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 
+import { pinColor } from "@/lib/reports/categories";
 import type { PublicReport } from "@/lib/reports/queries";
 
 import { useMapInstance } from "./map-context";
-import { pinImageId, renderPinImages } from "./report-pins";
+import { PIN_HEIGHT, pinImageId, renderPinImages } from "./report-pins";
 
 export const REPORTS_SOURCE = "reports";
 export const REPORTS_PIN_LAYER = "reports-pins";
 const CLUSTER_LAYER = "reports-clusters";
 const CLUSTER_COUNT_LAYER = "reports-cluster-count";
 const CLUSTER_HALO_LAYER = "reports-cluster-halo";
+const PULSE_LAYER = "reports-pulse";
 
 /**
  * Grupurile sunt chihlimbar, nu verde. Verdele mărcii se pierdea în parcurile
@@ -51,14 +53,37 @@ const CLUSTER_RADIUS = 46;
  */
 const POP_MS = 380;
 
+/**
+ * Pulsul sesizărilor noi: un cerc în culoarea pinului care se lărgește din spatele
+ * capului și se stinge, ca o undă.
+ *
+ * Numai pe cele din ultimele două zile. Treizeci de pinuri care pulsează toate
+ * deodată fac harta agitată și nu mai spun nimic; câteva, da — „aici s-a întâmplat
+ * ceva de curând" e exact genul de lucru după care merită să-ți muți privirea.
+ *
+ * Se animă doar prin raza și transparența unui strat de cercuri, proprietăți de
+ * desenare, în două comenzi pe ciclu: una care îl readuce mic, una care îl trimite
+ * mare, cu trecerea făcută de hartă. Nimic pe cadru, nimic de așezare.
+ */
+const RECENT_MS = 48 * 60 * 60 * 1000;
+const PULSE_MS = 1600;
+const PULSE_FROM = { radius: 20, opacity: 0.22 };
+const PULSE_TO = { radius: 48, opacity: 0 };
+
+/** Centrul capului, măsurat de la vârf în sus: acolo pleacă unda, nu din vârf. */
+const HEAD_LIFT = PIN_HEIGHT - 24;
+
 type Properties = {
   id: string;
   category: PublicReport["category"];
   status: PublicReport["status"];
   icon: string;
+  color: string;
+  recent: boolean;
 };
 
 function toFeatureCollection(reports: PublicReport[]): FeatureCollection<Point, Properties> {
+  const now = Date.now();
   return {
     type: "FeatureCollection",
     features: reports.map((report) => ({
@@ -70,6 +95,8 @@ function toFeatureCollection(reports: PublicReport[]): FeatureCollection<Point, 
         category: report.category,
         status: report.status,
         icon: pinImageId(report.category, report.status),
+        color: pinColor(report.category, report.status),
+        recent: now - new Date(report.createdAt).getTime() < RECENT_MS,
       },
     })) satisfies Feature<Point, Properties>[],
   };
@@ -196,6 +223,24 @@ export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
         });
       }
 
+      // Sub pinuri, ca unda să pară că iese din spatele lor.
+      if (!map.getLayer(PULSE_LAYER)) {
+        map.addLayer({
+          id: PULSE_LAYER,
+          type: "circle",
+          source: REPORTS_SOURCE,
+          filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "recent"], true]],
+          paint: {
+            "circle-color": ["get", "color"],
+            "circle-radius": PULSE_FROM.radius,
+            "circle-opacity": PULSE_FROM.opacity,
+            "circle-translate": [0, -HEAD_LIFT],
+            "circle-radius-transition": { duration: 0 },
+            "circle-opacity-transition": { duration: 0 },
+          },
+        });
+      }
+
       if (!map.getLayer(REPORTS_PIN_LAYER)) {
         map.addLayer({
           id: REPORTS_PIN_LAYER,
@@ -271,6 +316,48 @@ export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
     };
   }, [map, reports]);
 
+  /**
+   * Unda sesizărilor noi. Stă pe loc când tabul nu se vede — nimeni nu se uită,
+   * iar o buclă care merge degeaba mănâncă baterie — și nu pornește deloc dacă
+   * omul a cerut mișcare redusă: atunci rămâne un cerc liniștit, fără puls.
+   */
+  useEffect(() => {
+    if (!map) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let timer = 0;
+    let frame = 0;
+
+    const set = (radius: number, opacity: number, duration: number) => {
+      if (!map.getLayer(PULSE_LAYER)) return;
+      map.setPaintProperty(PULSE_LAYER, "circle-radius-transition", { duration });
+      map.setPaintProperty(PULSE_LAYER, "circle-opacity-transition", { duration });
+      map.setPaintProperty(PULSE_LAYER, "circle-radius", radius);
+      map.setPaintProperty(PULSE_LAYER, "circle-opacity", opacity);
+    };
+
+    if (reduced) {
+      set(PULSE_FROM.radius + 6, PULSE_FROM.opacity * 0.8, 0);
+      return;
+    }
+
+    const beat = () => {
+      if (document.hidden) return;
+      set(PULSE_FROM.radius, PULSE_FROM.opacity, 0);
+      // Un cadru de răgaz, ca harta să apuce să deseneze cercul mic înainte să-l
+      // trimită mare; pornite în același cadru, cele două s-ar anula.
+      frame = requestAnimationFrame(() => set(PULSE_TO.radius, PULSE_TO.opacity, PULSE_MS));
+    };
+
+    beat();
+    timer = window.setInterval(beat, PULSE_MS);
+
+    return () => {
+      window.clearInterval(timer);
+      cancelAnimationFrame(frame);
+    };
+  }, [map]);
+
   useEffect(() => {
     if (!map) return;
 
@@ -293,14 +380,33 @@ export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
       });
     };
 
+    // Harta rămâne cu săgeata obișnuită, dar ce se poate apăsa pe ea arată asta
+    // sub cursor: pinul și grupul primesc mâna de click, exact ca un buton.
+    //
     // Aceleași referințe la adăugare și la scoatere: `off` compară funcția, iar
     // una creată pe loc ar lăsa ascultătorul în urmă la fiecare remontare.
+    const showHand = () => {
+      map.getCanvas().style.cursor = "pointer";
+    };
+    const hideHand = () => {
+      map.getCanvas().style.cursor = "";
+    };
+    const clickable = [REPORTS_PIN_LAYER, CLUSTER_LAYER];
+
     map.on("click", REPORTS_PIN_LAYER, openReport);
     map.on("click", CLUSTER_LAYER, zoomIntoCluster);
+    for (const layer of clickable) {
+      map.on("mouseenter", layer, showHand);
+      map.on("mouseleave", layer, hideHand);
+    }
 
     return () => {
       map.off("click", REPORTS_PIN_LAYER, openReport);
       map.off("click", CLUSTER_LAYER, zoomIntoCluster);
+      for (const layer of clickable) {
+        map.off("mouseenter", layer, showHand);
+        map.off("mouseleave", layer, hideHand);
+      }
     };
   }, [map]);
 

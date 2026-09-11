@@ -1,4 +1,4 @@
-import { statusColor, type ReportCategory, type ReportStatus } from "@/lib/reports/categories";
+import { pinColor, type ReportCategory, type ReportStatus } from "@/lib/reports/categories";
 
 import { loadReportIcon, reportIconName } from "./report-icons";
 
@@ -70,20 +70,22 @@ const STEM_WAIST = { x: 0.363, y: 0.332 };
 const TIP_RADIUS = 1.63;
 
 /**
- * Moneda albă de sub semn și cât din ea ocupă semnul.
+ * Cât din discul colorat ocupă icoana.
  *
- * Fără ea, o icoană galbenă pe un disc chihlimbariu dispare, iar una verde pe
- * discul unei sesizări rezolvate la fel. Varianta ușoară ar fi fost o aură albă
- * în jurul desenului, dar aia face fiecare icoană să pară un abțibild lipit.
- * Moneda rezolvă contrastul prin structură: semnul stă mereu pe alb, iar
- * culoarea stării rămâne un inel gros în jur, destul cât starea să se citească
- * de la depărtare, de unde harta se scanează după culori.
+ * Icoanele 3D își poartă singure lumina și umbra, deci se țin pe culoare fără o
+ * monedă albă sub ele — iar moneda le micșora cu o treime și făcea pinul să pară
+ * o insignă în loc de un semn. Rămâne un inel subțire de culoare în jur, cât să
+ * se vadă categoria.
  */
-const COIN_RADIUS = 13;
-const ICON_RATIO = 0.84;
+const ICON_RATIO = 0.82;
 
+/**
+ * Identitatea desenului. Culoarea și icoana vin amândouă din categorie — sau din
+ * faptul că sesizarea e rezolvată — deci starea nu mai face parte din ea: o
+ * groapă deschisă și una în lucru arată la fel pe hartă și împart același desen.
+ */
 export function pinImageId(category: ReportCategory, status: ReportStatus): string {
-  return `report-${status}-${reportIconName(category, status)}`;
+  return `report-${reportIconName(category, status)}`;
 }
 
 /**
@@ -134,7 +136,7 @@ function groundShadow(context: CanvasRenderingContext2D) {
 /**
  * Un cap rotund colorat, așezat pe un picior alb care se subțiază până la vârf.
  *
- * Piciorul rămâne alb, nu colorat: culoarea spune în ce stadiu e sesizarea și se
+ * Piciorul rămâne alb, nu colorat: culoarea spune despre ce e sesizarea și se
  * citește dintr-o privire dacă stă strânsă într-un disc, în timp ce un picior
  * colorat o întinde și o face să pară o pată, nu un semn.
  */
@@ -173,16 +175,9 @@ function drawPin(context: CanvasRenderingContext2D, color: string, icon: HTMLIma
   context.fill();
   context.restore();
 
-  context.save();
-  context.fillStyle = "#ffffff";
-  context.beginPath();
-  context.arc(HEAD_X, HEAD_Y, COIN_RADIUS, 0, Math.PI * 2);
-  context.fill();
-  context.restore();
-
   if (!icon) return;
 
-  const size = COIN_RADIUS * 2 * ICON_RATIO;
+  const size = (HEAD_RADIUS - RING) * 2 * ICON_RATIO;
   context.drawImage(icon, HEAD_X - size / 2, HEAD_Y - size / 2, size, size);
 }
 
@@ -207,7 +202,7 @@ export async function renderPinImages(
     const id = pinImageId(report.category, report.status);
     if (wanted.has(id) || alreadyRegistered(id)) continue;
     wanted.set(id, {
-      color: statusColor[report.status],
+      color: pinColor(report.category, report.status),
       icon: reportIconName(report.category, report.status),
     });
   }

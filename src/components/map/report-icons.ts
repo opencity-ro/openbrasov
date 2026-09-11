@@ -5,16 +5,18 @@ import type { ReportCategory, ReportStatus } from "@/lib/reports/categories";
  *
  * Emoji arată altfel pe Windows, pe Mac și pe Android — aceeași sesizare avea
  * trei chipuri, iar stilurile se băteau cap în cap pe aceeași hartă. Setul e
- * Fluent Emoji, licență MIT, luat **așa cum e livrat**: fără desene adăugate de
- * noi peste el și fără filtre proprii. Tocmai retușurile fac un set să arate
- * peticit, iar contrastul se rezolvă la desenare, nu stricând icoana.
+ * Fluent Emoji (licență MIT), în varianta 3D: plin, cu volum și lumină proprie,
+ * ca să se țină singur pe un disc colorat, fără monedă albă sub el.
+ *
+ * Fișierele se generează cu `pnpm map:icons` și se versionează în git. Singura
+ * intervenție e compunerea a două icoane Fluent acolo unde una nu ajunge.
  */
 
 /**
  * Calea poartă versiunea, ca glifele hărții: fișierele se servesc cu cache de un
  * an, iar un set nou primește un număr nou în loc să lupte cu memoria browserului.
  */
-const VERSION = 1;
+const VERSION = 2;
 
 /** Numele fișierului pentru o sesizare. O sesizare rezolvată arată la fel, oricare i-ar fi categoria. */
 export function reportIconName(category: ReportCategory, status: ReportStatus): string {
@@ -22,7 +24,7 @@ export function reportIconName(category: ReportCategory, status: ReportStatus): 
 }
 
 export function reportIconUrl(name: string): string {
-  return `/report-icons/${VERSION}/${name}.svg`;
+  return `/report-icons/${VERSION}/${name}.png`;
 }
 
 /**

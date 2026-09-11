@@ -13,12 +13,12 @@ import { reportIconName, reportIconUrl } from "./report-icons";
  * hartă ca un pin gol, iar un fișier rămas în urmă ar fi trimis degeaba în
  * pachet — de asta se numără aici, față de folderul adevărat.
  */
-const FOLDER = join(process.cwd(), "public", "report-icons", "1");
+const FOLDER = join(process.cwd(), "public", "report-icons", "2");
 
 const onDisk = new Set(
   readdirSync(FOLDER)
-    .filter((file) => file.endsWith(".svg"))
-    .map((file) => file.replace(/\.svg$/, "")),
+    .filter((file) => file.endsWith(".png"))
+    .map((file) => file.replace(/\.png$/, "")),
 );
 
 describe("setul de icoane", () => {
@@ -44,6 +44,6 @@ describe("setul de icoane", () => {
 
   /** Calea poartă versiunea, ca glifele: fișierele se servesc cu cache de un an. */
   it("cere fișierele de pe o cale versionată", () => {
-    expect(reportIconUrl("pothole")).toMatch(/^\/report-icons\/\d+\/pothole\.svg$/);
+    expect(reportIconUrl("pothole")).toMatch(/^\/report-icons\/\d+\/pothole\.png$/);
   });
 });
