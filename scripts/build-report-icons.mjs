@@ -68,7 +68,7 @@ const ICONS = {
   rodents: { base: fluent("Rat") },
   insects: { base: fluent("Mosquito") },
   public_transport: { base: fluent("Bus") },
-  signage: { base: fluent("Placard") },
+  signage: { base: fluent("Stop sign") },
   noise: { base: fluent("Speaker high volume") },
   accessibility: { base: fluent("Wheelchair symbol") },
   heritage: { base: fluent("Classical building") },
@@ -110,6 +110,92 @@ const resized = async (icon, size) =>
 /** Insigna ocupă puțin peste o treime: se citește, dar nu acoperă semnul de bază. */
 const BADGE_SIZE = Math.round(SIZE * 0.46);
 
+/** Sub transparența asta un pixel e doar umbra moale a desenului, nu desenul. */
+const SOLID_ALPHA = 24;
+
+/** Nicio icoană nu crește mai mult de-atât: unele sunt subțiri și s-ar umfla urât. */
+const MAX_GROWTH = 1.25;
+
+/**
+ * Aduce desenul în centru și îl scalează ca să încapă în cercul înscris în
+ * pătrat, oricare i-ar fi forma.
+ *
+ * Icoanele vin într-un pătrat, dar pe pin stau într-un disc, iar colțurile unui
+ * pătrat ies din cerc: triunghiul de avertizare își atingea marginea cu vârfurile
+ * de jos, iar insigna din colț cu marginea ei. Pe lângă asta, fiecare icoană își
+ * poartă greutatea altfel — triunghiul e greu jos — deci centrul pătratului nu e
+ * centrul desenului.
+ *
+ * Așa că fiecare icoană e măsurată: centrul e mijlocul a ceea ce chiar e desenat,
+ * iar mărimea e dată de pixelul cel mai depărtat de acel centru. După asta toate
+ * respectă aceeași regulă — desenul încape în cerc — iar pinul hotărăște singur
+ * cât aer lasă între desen și marginea discului.
+ */
+async function fitToCircle(buffer) {
+  const { data, info } = await sharp(buffer)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const { width, height } = info;
+
+  let left = width;
+  let right = -1;
+  let top = height;
+  let bottom = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (data[(y * width + x) * 4 + 3] <= SOLID_ALPHA) continue;
+      if (x < left) left = x;
+      if (x > right) right = x;
+      if (y < top) top = y;
+      if (y > bottom) bottom = y;
+    }
+  }
+  if (right < 0) return buffer;
+
+  const centerX = (left + right + 1) / 2;
+  const centerY = (top + bottom + 1) / 2;
+
+  let reach = 0;
+  for (let y = top; y <= bottom; y++) {
+    for (let x = left; x <= right; x++) {
+      if (data[(y * width + x) * 4 + 3] <= SOLID_ALPHA) continue;
+      // Colțul cel mai îndepărtat al pixelului, nu mijlocul lui: altfel marginea
+      // desenului ar ieși o jumătate de pixel din cerc.
+      const dx = Math.max(Math.abs(x - centerX), Math.abs(x + 1 - centerX));
+      const dy = Math.max(Math.abs(y - centerY), Math.abs(y + 1 - centerY));
+      reach = Math.max(reach, Math.hypot(dx, dy));
+    }
+  }
+
+  const scale = Math.min(SIZE / 2 / reach, MAX_GROWTH);
+  const scaledWidth = Math.max(1, Math.round(width * scale));
+  const scaledHeight = Math.max(1, Math.round(height * scale));
+
+  // Toată imaginea se scalează, apoi se așază pe o pânză de trei ori mai mare,
+  // cu centrul desenului în centrul ei, și se decupează mijlocul. Tăierea directă
+  // în jurul desenului nu merge: la o insignă din colț, pătratul din jurul
+  // desenului trece dincolo de marginea imaginii și ar fi fost trunchiat.
+  const scaled = await sharp(buffer).resize(scaledWidth, scaledHeight).png().toBuffer();
+  const pad = SIZE;
+  const placeLeft = Math.round(pad + SIZE / 2 - centerX * scale);
+  const placeTop = Math.round(pad + SIZE / 2 - centerY * scale);
+
+  const wide = await sharp({
+    create: {
+      width: SIZE * 3,
+      height: SIZE * 3,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([{ input: scaled, left: placeLeft, top: placeTop }])
+    .png()
+    .toBuffer();
+
+  return sharp(wide).extract({ left: pad, top: pad, width: SIZE, height: SIZE }).png().toBuffer();
+}
+
 async function build(name, { base, badge }) {
   const layers = [];
   if (badge) {
@@ -120,8 +206,15 @@ async function build(name, { base, badge }) {
     });
   }
 
-  const image = sharp(await resized(base, SIZE)).composite(layers);
-  await writeFile(join(OUT, `${name}.png`), await image.png({ compressionLevel: 9 }).toBuffer());
+  const composed = await sharp(await resized(base, SIZE))
+    .composite(layers)
+    .png()
+    .toBuffer();
+  const fitted = await fitToCircle(composed);
+  await writeFile(
+    join(OUT, `${name}.png`),
+    await sharp(fitted).png({ compressionLevel: 9 }).toBuffer(),
+  );
 }
 
 await rm(OUT, { recursive: true, force: true });

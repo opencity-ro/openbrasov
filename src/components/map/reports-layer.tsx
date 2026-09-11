@@ -54,21 +54,25 @@ const CLUSTER_RADIUS = 46;
 const POP_MS = 380;
 
 /**
- * Pulsul sesizărilor noi: un cerc în culoarea pinului care se lărgește din spatele
+ * Pulsul sesizărilor noi: un cerc în culoarea pinului care pleacă din spatele
  * capului și se stinge, ca o undă.
  *
- * Numai pe cele din ultimele două zile. Treizeci de pinuri care pulsează toate
- * deodată fac harta agitată și nu mai spun nimic; câteva, da — „aici s-a întâmplat
- * ceva de curând" e exact genul de lucru după care merită să-ți muți privirea.
+ * Numai pe cele din ultima săptămână. Toate pinurile pulsând deodată nu mai spun
+ * nimic; o parte dintre ele, da — „aici s-a întâmplat ceva de curând". O fereastră
+ * de două zile lăsa prea puține, iar harta părea moartă.
+ *
+ * Geometria urmează capul pinului: unda pleacă puțin mai mică decât el și ajunge
+ * la de 1,7 ori mărimea lui. Mai largă de-atât, aceeași culoare se întindea pe o
+ * suprafață prea mare și pulsul părea stins.
  *
  * Se animă doar prin raza și transparența unui strat de cercuri, proprietăți de
  * desenare, în două comenzi pe ciclu: una care îl readuce mic, una care îl trimite
  * mare, cu trecerea făcută de hartă. Nimic pe cadru, nimic de așezare.
  */
-const RECENT_MS = 48 * 60 * 60 * 1000;
+const RECENT_MS = 7 * 24 * 60 * 60 * 1000;
 const PULSE_MS = 1600;
-const PULSE_FROM = { radius: 20, opacity: 0.22 };
-const PULSE_TO = { radius: 48, opacity: 0 };
+const PULSE_FROM = { radius: 14.7, opacity: 0.21 };
+const PULSE_TO = { radius: 35.7, opacity: 0 };
 
 /** Centrul capului, măsurat de la vârf în sus: acolo pleacă unda, nu din vârf. */
 const HEAD_LIFT = PIN_HEIGHT - 24;
