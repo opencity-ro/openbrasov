@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/opencity-ro/openbrasov/compare/v0.4.0...v0.5.0) (2026-09-11)
+
+
+### Funcționalități
+
+* **map:** fill the pins with 3D icons, category colours and a pulse for new reports ([#25](https://github.com/opencity-ro/openbrasov/issues/25)) ([30a0ee1](https://github.com/opencity-ro/openbrasov/commit/30a0ee1e8e96a5abba2cd308f2db8bd64420f30d))
+
 ## [0.4.0](https://github.com/opencity-ro/openbrasov/compare/v0.3.0...v0.4.0) (2026-09-07)
 
 
