@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/opencity-ro/openbrasov/compare/v0.5.0...v0.6.0) (2026-09-11)
+
+
+### Funcționalități
+
+* **reports:** split illegal parking and add bollards, scooters and commercial spaces ([#31](https://github.com/opencity-ro/openbrasov/issues/31)) ([d18bf08](https://github.com/opencity-ro/openbrasov/commit/d18bf08983c2d53dfa280e96a4015fd5dbed67c4))
+
 ## [0.5.0](https://github.com/opencity-ro/openbrasov/compare/v0.4.0...v0.5.0) (2026-09-11)
 
 
