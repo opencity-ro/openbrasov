@@ -68,7 +68,9 @@ const ICONS = {
   rodents: { base: fluent("Rat") },
   insects: { base: fluent("Mosquito") },
   public_transport: { base: fluent("Bus") },
-  signage: { base: fluent("Stop sign") },
+  // Nu există emoji cu un indicator care să aibă text pe el. Plăcuța spune
+  // „indicator", avertizarea din colț spune „rutier".
+  signage: { base: fluent("Placard"), badge: fluent("Warning") },
   noise: { base: fluent("Speaker high volume") },
   accessibility: { base: fluent("Wheelchair symbol") },
   heritage: { base: fluent("Classical building") },
