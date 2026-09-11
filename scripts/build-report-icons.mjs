@@ -45,7 +45,14 @@ const ICONS = {
 
   // Interdicția ca insignă, nu peste tot semnul: pusă la mărime întreagă, fața ei
   // albă acoperea „P"-ul și parcarea ajungea să arate ca ocuparea domeniului public.
-  illegal_parking: { base: fluent("P button"), badge: fluent("Prohibited") },
+  illegal_parking_road: { base: fluent("P button"), badge: fluent("Prohibited") },
+  // Parcarea are o singură bază, semnul „P", ca toate problemele de parcare să se
+  // recunoască drept aceeași familie. Insigna spune unde: interdicția pe carosabil,
+  // pietonul pe trotuar, conul la stâlpii anti-parcare.
+  illegal_parking_sidewalk: { base: fluent("P button"), badge: fluent("Person walking", true) },
+  bollards: { base: fluent("P button"), badge: fluent("Construction") },
+  illegal_scooter_parking: { base: fluent("Kick scooter") },
+  commercial_space: { base: fluent("Convenience store") },
 
   sidewalk: { base: fluent("Person walking", true) },
   street_lighting: { base: fluent("Light bulb") },
