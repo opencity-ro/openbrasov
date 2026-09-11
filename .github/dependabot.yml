@@ -1,17 +1,40 @@
+# Actualizările automate ale dependențelor.
+#
+# O dată pe săptămână, Dependabot deschide PR-uri cu versiunile noi. Actualizările
+# minore și de patch vin strânse într-un singur PR; o versiune majoră vine separat,
+# fiindcă poate schimba API-ul și trebuie citită, nu doar mergiuită.
+#
+# Remedierile de securitate nu depind de fișierul ăsta: sunt pornite din setările
+# repo-ului și vin imediat ce apare o vulnerabilitate, nu o dată pe săptămână.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
+    # Limita implicită e 5. Cu PR-uri deschise la limită, Dependabot nu mai
+    # propune nimic până nu se închide unul — și actualizările se opresc în tăcere.
+    open-pull-requests-limit: 10
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # maplibre-gl 6 schimbă API-ul și nu merge încă cu Turbopack. Rămânem pe 5
+      # până la o migrare făcută separat; minorele și patch-urile din 5 vin normal.
+      - dependency-name: maplibre-gl
+        update-types: ["version-update:semver-major"]
+      # Tipurile lui Node urmează versiunea pe care rulăm (Node 22, vezi .nvmrc).
+      # Tipuri mai noi ar lăsa codul să folosească funcții care nu există pe server
+      # fără ca typecheck-ul să le prindă. Seria 22 primește în continuare update-uri.
+      - dependency-name: "@types/node"
+        versions: [">=23"]
     commit-message:
       prefix: "build"
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 10
     commit-message:
       prefix: "ci"
