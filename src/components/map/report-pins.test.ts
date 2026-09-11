@@ -15,17 +15,14 @@ describe("identitatea pinului", () => {
     expect(pinImageId("pothole", "open")).not.toBe(pinImageId("pothole", "resolved"));
   });
 
-  /**
-   * O sesizare rezolvată își păstrează categoria și primește bifa ca insignă, deci
-   * două rezolvate din categorii diferite nu mai pot împărți desenul.
-   */
-  it("păstrează categoria și la sesizările rezolvate", () => {
-    expect(pinImageId("sidewalk", "resolved")).not.toBe(pinImageId("traffic_light", "resolved"));
-    expect(pinImageId("sidewalk", "resolved")).not.toBe(pinImageId("sidewalk", "open"));
+  it("dă aceeași bifă tuturor sesizărilor rezolvate", () => {
+    expect(pinImageId("sidewalk", "resolved")).toBe(pinImageId("traffic_light", "resolved"));
   });
 
-  it("nu desparte stările care arată la fel pe hartă", () => {
-    expect(pinImageId("pothole", "open")).toBe(pinImageId("pothole", "in_progress"));
+  /** „În lucru" și „escaladată" poartă o insignă, deci nu pot împărți desenul cu „trimisă". */
+  it("desparte stările care au insignă", () => {
+    expect(pinImageId("pothole", "in_progress")).not.toBe(pinImageId("pothole", "open"));
+    expect(pinImageId("pothole", "escalated")).not.toBe(pinImageId("pothole", "in_progress"));
   });
 });
 
@@ -50,8 +47,8 @@ describe("desenarea pinurilor", () => {
       return true;
     });
 
-    // Patru sesizări, dar numai trei desene: groapa, trotuarul rezolvat și
-    // semaforul rezolvat. Cele două gropi deschise împart același desen.
-    expect(new Set(asked).size).toBe(3);
+    // Patru sesizări, dar numai două desene: groapa deschisă și bifa, pe care o
+    // împart trotuarul și semaforul rezolvate.
+    expect(new Set(asked).size).toBe(2);
   });
 });

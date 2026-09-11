@@ -17,10 +17,9 @@
 const VERSION = 2;
 
 /**
- * Insigna sesizărilor rezolvate. Stă în colțul discului, peste icoana categoriei,
- * nu în locul ei: o sesizare rezolvată rămâne o groapă sau un autobuz, iar bifa
- * spune doar că s-a terminat. Pusă în locul icoanei, toate rezolvatele arătau la
- * fel și nu mai știai despre ce fusese vorba.
+ * Icoana sesizărilor rezolvate: bifa mare, în locul icoanei categoriei. Pe hartă,
+ * o sesizare rezolvată nu mai are nevoie să spună despre ce fusese — contează că
+ * s-a terminat, iar bifa se citește mai repede decât orice categorie.
  */
 export const RESOLVED_BADGE = "resolved";
 
