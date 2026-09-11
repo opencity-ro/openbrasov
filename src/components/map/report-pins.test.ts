@@ -15,8 +15,14 @@ describe("identitatea pinului", () => {
     expect(pinImageId("pothole", "open")).not.toBe(pinImageId("pothole", "resolved"));
   });
 
-  it("adună sub o singură identitate toate sesizările rezolvate", () => {
+  it("dă aceeași bifă tuturor sesizărilor rezolvate", () => {
     expect(pinImageId("sidewalk", "resolved")).toBe(pinImageId("traffic_light", "resolved"));
+  });
+
+  /** „În lucru" și „escaladată" poartă o insignă, deci nu pot împărți desenul cu „trimisă". */
+  it("desparte stările care au insignă", () => {
+    expect(pinImageId("pothole", "in_progress")).not.toBe(pinImageId("pothole", "open"));
+    expect(pinImageId("pothole", "escalated")).not.toBe(pinImageId("pothole", "in_progress"));
   });
 });
 
@@ -26,22 +32,23 @@ describe("identitatea pinului", () => {
  * stiva: fiecare trecere redesena tot, deci fiecare trecere pornea alta.
  */
 describe("desenarea pinurilor", () => {
-  it("nu redesenează nimic dacă totul e deja înregistrat", () => {
+  it("nu redesenează nimic dacă totul e deja înregistrat", async () => {
     const registered = vi.fn(() => true);
 
-    expect(renderPinImages([...reports], 2, registered)).toEqual([]);
+    await expect(renderPinImages([...reports], 2, registered)).resolves.toEqual([]);
     // Fără o pânză atinsă nu există nici eveniment de stil, deci nici buclă.
     expect(registered).toHaveBeenCalled();
   });
 
-  it("cere desenul o singură dată pentru fiecare identitate distinctă", () => {
+  it("cere desenul o singură dată pentru fiecare identitate distinctă", async () => {
     const asked: string[] = [];
-    renderPinImages([...reports], 1, (id) => {
+    await renderPinImages([...reports], 1, (id) => {
       asked.push(id);
       return true;
     });
 
-    // Patru sesizări, dar numai două desene: o groapă deschisă și o bifă.
+    // Patru sesizări, dar numai două desene: groapa deschisă și bifa, pe care o
+    // împart trotuarul și semaforul rezolvate.
     expect(new Set(asked).size).toBe(2);
   });
 });

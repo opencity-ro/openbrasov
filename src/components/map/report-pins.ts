@@ -1,9 +1,11 @@
 import {
-  pinEmoji,
+  pinColor,
   statusColor,
   type ReportCategory,
   type ReportStatus,
 } from "@/lib/reports/categories";
+
+import { loadReportIcon, RESOLVED_BADGE } from "./report-icons";
 
 /**
  * Pinurile sesizărilor, desenate în browser și predate hărții ca imagini.
@@ -72,11 +74,25 @@ const STEM_WAIST = { x: 0.363, y: 0.332 };
  */
 const TIP_RADIUS = 1.63;
 
-/** Cât din discul colorat ocupă semnul dinăuntru. */
-const EMOJI_RATIO = 0.56;
+/**
+ * Cât din discul colorat ocupă icoana.
+ *
+ * Icoanele 3D își poartă singure lumina și umbra, deci se țin pe culoare fără o
+ * monedă albă sub ele — iar moneda le micșora cu o treime și făcea pinul să pară
+ * o insignă în loc de un semn. Rămâne un inel subțire de culoare în jur, cât să
+ * se vadă categoria.
+ */
+const ICON_RATIO = 0.82;
 
+/**
+ * Identitatea desenului. O sesizare rezolvată arată la fel oricare i-ar fi
+ * categoria — bifa mare spune tot ce mai contează. Celelalte poartă categoria,
+ * iar „în lucru" și „escaladată" își adaugă insigna de stare.
+ */
 export function pinImageId(category: ReportCategory, status: ReportStatus): string {
-  return `report-${status}-${pinEmoji(category, status)}`;
+  if (status === "resolved") return "report-resolved";
+  if (status === "open") return `report-${category}`;
+  return `report-${category}-${status}`;
 }
 
 /**
@@ -127,11 +143,79 @@ function groundShadow(context: CanvasRenderingContext2D) {
 /**
  * Un cap rotund colorat, așezat pe un picior alb care se subțiază până la vârf.
  *
- * Piciorul rămâne alb, nu colorat: culoarea spune în ce stadiu e sesizarea și se
+ * Piciorul rămâne alb, nu colorat: culoarea spune despre ce e sesizarea și se
  * citește dintr-o privire dacă stă strânsă într-un disc, în timp ce un picior
  * colorat o întinde și o face să pară o pată, nu un semn.
  */
-function drawPin(context: CanvasRenderingContext2D, color: string, emoji: string) {
+/**
+ * Insigna de stare: un cerc mic în colțul din dreapta sus al discului, în culoarea
+ * stării, cu un semn alb — lupa pentru „în lucru", semnul exclamării pentru
+ * „escaladată". Culoarea e aceeași ca în filtre și pe card, deci starea se
+ * citește la fel peste tot. O sesizare trimisă n-are insignă: e starea obișnuită,
+ * iar un semn pe fiecare pin nou n-ar mai spune nimic.
+ *
+ * Sus, nu jos: colțul din dreapta jos îl ocupă deja insignele din setul de icoane
+ * — interdicția de pe semnul de parcare, problema de pe conul de lucrări.
+ */
+const BADGE_RADIUS = 6.5;
+const BADGE_OFFSET = 10.5;
+
+type StatusMark = "in_progress" | "escalated";
+
+function drawStatusBadge(context: CanvasRenderingContext2D, mark: StatusMark) {
+  const x = HEAD_X + BADGE_OFFSET;
+  const y = HEAD_Y - BADGE_OFFSET;
+
+  context.save();
+  context.shadowColor = "rgba(15, 23, 42, 0.35)";
+  context.shadowBlur = 1.4;
+  context.shadowOffsetY = 0.5;
+  context.fillStyle = "#ffffff";
+  context.beginPath();
+  context.arc(x, y, BADGE_RADIUS + 1.4, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+
+  context.save();
+  context.fillStyle = statusColor[mark];
+  context.beginPath();
+  context.arc(x, y, BADGE_RADIUS, 0, Math.PI * 2);
+  context.fill();
+
+  context.strokeStyle = "#ffffff";
+  context.fillStyle = "#ffffff";
+  context.lineCap = "round";
+
+  if (mark === "in_progress") {
+    // Lupa: o lentilă și un mâner scurt, spre dreapta jos.
+    context.lineWidth = 1.5;
+    context.beginPath();
+    context.arc(x - 0.9, y - 0.9, 2.5, 0, Math.PI * 2);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(x + 0.9, y + 0.9);
+    context.lineTo(x + 3, y + 3);
+    context.stroke();
+  } else {
+    // Semnul exclamării: o bară și un punct.
+    context.lineWidth = 1.9;
+    context.beginPath();
+    context.moveTo(x, y - 3.4);
+    context.lineTo(x, y + 0.6);
+    context.stroke();
+    context.beginPath();
+    context.arc(x, y + 3, 1, 0, Math.PI * 2);
+    context.fill();
+  }
+  context.restore();
+}
+
+function drawPin(
+  context: CanvasRenderingContext2D,
+  color: string,
+  icon: HTMLImageElement | null,
+  mark: StatusMark | null,
+) {
   context.clearRect(0, 0, PIN_WIDTH, PIN_HEIGHT);
 
   groundShadow(context);
@@ -166,13 +250,12 @@ function drawPin(context: CanvasRenderingContext2D, color: string, emoji: string
   context.fill();
   context.restore();
 
-  context.save();
-  const emojiSize = Math.round((HEAD_RADIUS - RING) * 2 * EMOJI_RATIO);
-  context.font = `${emojiSize}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillText(emoji, HEAD_X, HEAD_Y);
-  context.restore();
+  if (icon) {
+    const size = (HEAD_RADIUS - RING) * 2 * ICON_RATIO;
+    context.drawImage(icon, HEAD_X - size / 2, HEAD_Y - size / 2, size, size);
+  }
+
+  if (mark) drawStatusBadge(context, mark);
 }
 
 export type PinImage = { id: string; data: ImageData; pixelRatio: number };
@@ -183,24 +266,36 @@ export type PinImage = { id: string; data: ImageData; pixelRatio: number };
  * unul existent nu are de ce să fie redesenat — iar redesenarea lui ar fi costat
  * de două ori: o dată pânza, o dată evenimentul de stil pe care îl declanșează.
  *
- * O sesizare rezolvată arată la fel indiferent de categorie, deci combinațiile
- * chiar folosite sunt puține.
+ * Desenele depind doar de categorie și de stare, iar toate rezolvatele împart
+ * unul singur, deci combinațiile chiar folosite sunt puține.
  */
-export function renderPinImages(
+export async function renderPinImages(
   reports: Array<{ category: ReportCategory; status: ReportStatus }>,
   pixelRatio: number,
   alreadyRegistered: (id: string) => boolean,
-): PinImage[] {
-  const wanted = new Map<string, { color: string; emoji: string }>();
+): Promise<PinImage[]> {
+  const wanted = new Map<string, { color: string; icon: string; mark: StatusMark | null }>();
   for (const report of reports) {
     const id = pinImageId(report.category, report.status);
     if (wanted.has(id) || alreadyRegistered(id)) continue;
+    const resolved = report.status === "resolved";
     wanted.set(id, {
-      color: statusColor[report.status],
-      emoji: pinEmoji(report.category, report.status),
+      color: pinColor(report.category, report.status),
+      icon: resolved ? RESOLVED_BADGE : report.category,
+      mark: report.status === "in_progress" || report.status === "escalated" ? report.status : null,
     });
   }
   if (wanted.size === 0) return [];
+
+  // Icoanele se aduc toate deodată, nu una după alta: sunt fișiere mici de pe
+  // aceeași origine, iar așteptarea lor pe rând ar fi ținut harta goală degeaba.
+  const icons = new Map(
+    await Promise.all(
+      [...new Set([...wanted.values()].map((want) => want.icon))].map(
+        async (name) => [name, await loadReportIcon(name)] as const,
+      ),
+    ),
+  );
 
   const width = Math.round(PIN_WIDTH * pixelRatio);
   const height = Math.round(PIN_HEIGHT * pixelRatio);
@@ -216,8 +311,8 @@ export function renderPinImages(
   context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
   const images: PinImage[] = [];
-  for (const [id, { color, emoji }] of wanted) {
-    drawPin(context, color, emoji);
+  for (const [id, { color, icon, mark }] of wanted) {
+    drawPin(context, color, icons.get(icon) ?? null, mark);
     images.push({ id, data: context.getImageData(0, 0, width, height), pixelRatio });
   }
   return images;

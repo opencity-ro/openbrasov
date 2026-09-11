@@ -4,16 +4,18 @@ import type { Feature, FeatureCollection, Point } from "geojson";
 import type { ExpressionSpecification, GeoJSONSource, MapGeoJSONFeature } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 
+import { pinColor } from "@/lib/reports/categories";
 import type { PublicReport } from "@/lib/reports/queries";
 
 import { useMapInstance } from "./map-context";
-import { pinImageId, renderPinImages } from "./report-pins";
+import { PIN_HEIGHT, pinImageId, renderPinImages } from "./report-pins";
 
 export const REPORTS_SOURCE = "reports";
 export const REPORTS_PIN_LAYER = "reports-pins";
 const CLUSTER_LAYER = "reports-clusters";
 const CLUSTER_COUNT_LAYER = "reports-cluster-count";
 const CLUSTER_HALO_LAYER = "reports-cluster-halo";
+const PULSE_LAYER = "reports-pulse";
 
 /**
  * Grupurile sunt chihlimbar, nu verde. Verdele mărcii se pierdea în parcurile
@@ -51,14 +53,51 @@ const CLUSTER_RADIUS = 46;
  */
 const POP_MS = 380;
 
+/**
+ * Pulsul sesizărilor noi: un cerc în culoarea pinului care pleacă din spatele
+ * capului și se stinge, ca o undă.
+ *
+ * Numai pe cele din ultima săptămână. Toate pinurile pulsând deodată nu mai spun
+ * nimic; o parte dintre ele, da — „aici s-a întâmplat ceva de curând". O fereastră
+ * de două zile lăsa prea puține, iar harta părea moartă.
+ *
+ * Geometria urmează capul pinului: unda pleacă puțin mai mică decât el și ajunge
+ * la de 1,7 ori mărimea lui. Mai largă de-atât, aceeași culoare se întindea pe o
+ * suprafață prea mare și pulsul părea stins.
+ *
+ * Se animă doar prin raza și transparența unui strat de cercuri, proprietăți de
+ * desenare, în două comenzi pe ciclu: una care îl readuce mic, una care îl trimite
+ * mare, cu trecerea făcută de hartă. Nimic pe cadru, nimic de așezare.
+ */
+const RECENT_MS = 7 * 24 * 60 * 60 * 1000;
+const PULSE_MS = 1600;
+/**
+ * Unda pleacă de la marginea capului, nu din interiorul lui. Pornită mai mică,
+ * prima parte a creșterii stătea ascunsă sub pin, iar transparența scădea în
+ * tot acest timp: până să iasă de sub cap ajungea la o zecime și nu se mai vedea.
+ *
+ * Stingerea începe abia după ce unda a apucat să crească, cu o întârziere pe
+ * transparență — același efect ca o creștere rapidă la început, dar tot din
+ * proprietăți de desenare.
+ */
+const PULSE_FROM = { radius: 19.5, opacity: 0.34 };
+const PULSE_TO = { radius: 36, opacity: 0 };
+const FADE_DELAY_MS = 550;
+
+/** Centrul capului, măsurat de la vârf în sus: acolo pleacă unda, nu din vârf. */
+const HEAD_LIFT = PIN_HEIGHT - 24;
+
 type Properties = {
   id: string;
   category: PublicReport["category"];
   status: PublicReport["status"];
   icon: string;
+  color: string;
+  recent: boolean;
 };
 
 function toFeatureCollection(reports: PublicReport[]): FeatureCollection<Point, Properties> {
+  const now = Date.now();
   return {
     type: "FeatureCollection",
     features: reports.map((report) => ({
@@ -70,6 +109,8 @@ function toFeatureCollection(reports: PublicReport[]): FeatureCollection<Point, 
         category: report.category,
         status: report.status,
         icon: pinImageId(report.category, report.status),
+        color: pinColor(report.category, report.status),
+        recent: now - new Date(report.createdAt).getTime() < RECENT_MS,
       },
     })) satisfies Feature<Point, Properties>[],
   };
@@ -110,19 +151,21 @@ export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
     // Adăugarea unei surse, a unui strat sau a unei imagini schimbă stilul, iar
     // schimbarea stilului anunță `styledata` — evenimentul care ne-a chemat aici.
     // Fără garda asta, prima instalare se cheamă pe sine până se umple stiva.
-    let installing = false;
+    // Instalările se pun la rând, nu se aruncă. Aducerea icoanelor cere o
+    // așteptare, iar o simplă santinelă „sunt ocupat" ar fi înghițit tocmai
+    // evenimentul care anunța un stil nou, lăsând harta fără sesizări.
+    let queue: Promise<void> = Promise.resolve();
+    let dropped = false;
 
     const install = () => {
-      if (installing) return;
-      installing = true;
-      try {
-        addEverything();
-      } finally {
-        installing = false;
-      }
+      queue = queue
+        .then(() => (dropped ? undefined : addEverything()))
+        .catch((error: unknown) => {
+          console.error("Nu am putut așeza stratul de sesizări:", error);
+        });
     };
 
-    const addEverything = () => {
+    const addEverything = async () => {
       if (!map.getSource(REPORTS_SOURCE)) {
         map.addSource(REPORTS_SOURCE, {
           type: "geojson",
@@ -133,11 +176,16 @@ export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
         });
       }
 
-      const images = renderPinImages(reports, Math.ceil(window.devicePixelRatio || 1), (id) =>
+      // Icoanele intră înaintea straturilor care le cer. Invers, harta s-ar fi
+      // plâns în consolă pentru fiecare imagine lipsă, la fiecare încărcare.
+      const images = await renderPinImages(reports, Math.ceil(window.devicePixelRatio || 1), (id) =>
         map.hasImage(id),
       );
+      if (dropped) return;
       for (const image of images) {
-        map.addImage(image.id, image.data, { pixelRatio: image.pixelRatio });
+        if (!map.hasImage(image.id)) {
+          map.addImage(image.id, image.data, { pixelRatio: image.pixelRatio });
+        }
       }
 
       // Aureola: același chihlimbar, aproape transparent, care dă grupului volum
@@ -189,6 +237,24 @@ export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
         });
       }
 
+      // Sub pinuri, ca unda să pară că iese din spatele lor.
+      if (!map.getLayer(PULSE_LAYER)) {
+        map.addLayer({
+          id: PULSE_LAYER,
+          type: "circle",
+          source: REPORTS_SOURCE,
+          filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "recent"], true]],
+          paint: {
+            "circle-color": ["get", "color"],
+            "circle-radius": PULSE_FROM.radius,
+            "circle-opacity": PULSE_FROM.opacity,
+            "circle-translate": [0, -HEAD_LIFT],
+            "circle-radius-transition": { duration: 0 },
+            "circle-opacity-transition": { duration: 0 },
+          },
+        });
+      }
+
       if (!map.getLayer(REPORTS_PIN_LAYER)) {
         map.addLayer({
           id: REPORTS_PIN_LAYER,
@@ -222,6 +288,7 @@ export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
     install();
     map.on("styledata", install);
     return () => {
+      dropped = true;
       map.off("styledata", install);
     };
   }, [map, reports]);
@@ -263,6 +330,54 @@ export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
     };
   }, [map, reports]);
 
+  /**
+   * Unda sesizărilor noi. Stă pe loc când tabul nu se vede — nimeni nu se uită,
+   * iar o buclă care merge degeaba mănâncă baterie — și nu pornește deloc dacă
+   * omul a cerut mișcare redusă: atunci rămâne un cerc liniștit, fără puls.
+   */
+  useEffect(() => {
+    if (!map) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let timer = 0;
+    let frame = 0;
+
+    const set = (radius: number, opacity: number, animated: boolean) => {
+      if (!map.getLayer(PULSE_LAYER)) return;
+      map.setPaintProperty(PULSE_LAYER, "circle-radius-transition", {
+        duration: animated ? PULSE_MS : 0,
+        delay: 0,
+      });
+      map.setPaintProperty(PULSE_LAYER, "circle-opacity-transition", {
+        duration: animated ? PULSE_MS - FADE_DELAY_MS : 0,
+        delay: animated ? FADE_DELAY_MS : 0,
+      });
+      map.setPaintProperty(PULSE_LAYER, "circle-radius", radius);
+      map.setPaintProperty(PULSE_LAYER, "circle-opacity", opacity);
+    };
+
+    if (reduced) {
+      set(PULSE_FROM.radius + 4, PULSE_FROM.opacity * 0.6, false);
+      return;
+    }
+
+    const beat = () => {
+      if (document.hidden) return;
+      set(PULSE_FROM.radius, PULSE_FROM.opacity, false);
+      // Un cadru de răgaz, ca harta să apuce să deseneze cercul mic înainte să-l
+      // trimită mare; pornite în același cadru, cele două s-ar anula.
+      frame = requestAnimationFrame(() => set(PULSE_TO.radius, PULSE_TO.opacity, true));
+    };
+
+    beat();
+    timer = window.setInterval(beat, PULSE_MS);
+
+    return () => {
+      window.clearInterval(timer);
+      cancelAnimationFrame(frame);
+    };
+  }, [map]);
+
   useEffect(() => {
     if (!map) return;
 
@@ -285,14 +400,33 @@ export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
       });
     };
 
+    // Harta rămâne cu săgeata obișnuită, dar ce se poate apăsa pe ea arată asta
+    // sub cursor: pinul și grupul primesc mâna de click, exact ca un buton.
+    //
     // Aceleași referințe la adăugare și la scoatere: `off` compară funcția, iar
     // una creată pe loc ar lăsa ascultătorul în urmă la fiecare remontare.
+    const showHand = () => {
+      map.getCanvas().style.cursor = "pointer";
+    };
+    const hideHand = () => {
+      map.getCanvas().style.cursor = "";
+    };
+    const clickable = [REPORTS_PIN_LAYER, CLUSTER_LAYER];
+
     map.on("click", REPORTS_PIN_LAYER, openReport);
     map.on("click", CLUSTER_LAYER, zoomIntoCluster);
+    for (const layer of clickable) {
+      map.on("mouseenter", layer, showHand);
+      map.on("mouseleave", layer, hideHand);
+    }
 
     return () => {
       map.off("click", REPORTS_PIN_LAYER, openReport);
       map.off("click", CLUSTER_LAYER, zoomIntoCluster);
+      for (const layer of clickable) {
+        map.off("mouseenter", layer, showHand);
+        map.off("mouseleave", layer, hideHand);
+      }
     };
   }, [map]);
 

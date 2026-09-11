@@ -154,6 +154,30 @@
   }
 }
 
+@layer base {
+  /*
+   * Mâna de click pe tot ce se poate apăsa.
+   *
+   * Tailwind 4 a scos-o implicit de pe butoane, ca în browser, iar fără ea un
+   * buton arată la fel ca un text: omul trebuie să ghicească ce reacționează.
+   * Regula stă aici o singură dată, nu pe fiecare componentă, ca un buton nou să
+   * n-o poată uita. Ce e dezactivat rămâne cu săgeata — mâna ar promite un click
+   * care nu face nimic.
+   */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([data-disabled]),
+  [role="menuitemcheckbox"]:not([data-disabled]),
+  [role="menuitemradio"]:not([data-disabled]),
+  [role="option"]:not([data-disabled]),
+  [role="tab"]:not([data-disabled]),
+  summary,
+  label[for],
+  select:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
 @layer components {
   /*
    * Săgeata obișnuită peste toată harta.
