@@ -60,7 +60,9 @@ const ICONS = {
   unsanitary_land: { base: fluent("Nauseated face") },
   vandalism: { base: fluent("Ninja", true) },
   illegal_street_vending: { base: fluent("Shopping cart") },
-  public_space_occupation: { base: fluent("Prohibited") },
+  // Cortul, nu interdicția: tarabele și standurile sunt ocuparea obișnuită, iar un
+  // cerc roșu de interdicție se confunda de la distanță cu indicatorul rutier.
+  public_space_occupation: { base: fluent("Tent") },
   illegal_construction: { base: fluent("Building construction") },
   air_quality: { base: fluent("Factory") },
   stray_animal: { base: fluent("Dog face") },
