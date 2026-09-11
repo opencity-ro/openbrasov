@@ -1,5 +1,3 @@
-import type { ReportCategory, ReportStatus } from "@/lib/reports/categories";
-
 /**
  * Semnele categoriilor: un set desenat, nu emoji.
  *
@@ -18,10 +16,13 @@ import type { ReportCategory, ReportStatus } from "@/lib/reports/categories";
  */
 const VERSION = 2;
 
-/** Numele fișierului pentru o sesizare. O sesizare rezolvată arată la fel, oricare i-ar fi categoria. */
-export function reportIconName(category: ReportCategory, status: ReportStatus): string {
-  return status === "resolved" ? "resolved" : category;
-}
+/**
+ * Insigna sesizărilor rezolvate. Stă în colțul discului, peste icoana categoriei,
+ * nu în locul ei: o sesizare rezolvată rămâne o groapă sau un autobuz, iar bifa
+ * spune doar că s-a terminat. Pusă în locul icoanei, toate rezolvatele arătau la
+ * fel și nu mai știai despre ce fusese vorba.
+ */
+export const RESOLVED_BADGE = "resolved";
 
 export function reportIconUrl(name: string): string {
   return `/report-icons/${VERSION}/${name}.png`;

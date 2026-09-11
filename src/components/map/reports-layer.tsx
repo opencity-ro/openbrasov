@@ -71,8 +71,18 @@ const POP_MS = 380;
  */
 const RECENT_MS = 7 * 24 * 60 * 60 * 1000;
 const PULSE_MS = 1600;
-const PULSE_FROM = { radius: 14.7, opacity: 0.21 };
-const PULSE_TO = { radius: 35.7, opacity: 0 };
+/**
+ * Unda pleacă de la marginea capului, nu din interiorul lui. Pornită mai mică,
+ * prima parte a creșterii stătea ascunsă sub pin, iar transparența scădea în
+ * tot acest timp: până să iasă de sub cap ajungea la o zecime și nu se mai vedea.
+ *
+ * Stingerea începe abia după ce unda a apucat să crească, cu o întârziere pe
+ * transparență — același efect ca o creștere rapidă la început, dar tot din
+ * proprietăți de desenare.
+ */
+const PULSE_FROM = { radius: 19.5, opacity: 0.34 };
+const PULSE_TO = { radius: 36, opacity: 0 };
+const FADE_DELAY_MS = 550;
 
 /** Centrul capului, măsurat de la vârf în sus: acolo pleacă unda, nu din vârf. */
 const HEAD_LIFT = PIN_HEIGHT - 24;
@@ -332,25 +342,31 @@ export function ReportsLayer({ reports, onSelect }: ReportsLayerProps) {
     let timer = 0;
     let frame = 0;
 
-    const set = (radius: number, opacity: number, duration: number) => {
+    const set = (radius: number, opacity: number, animated: boolean) => {
       if (!map.getLayer(PULSE_LAYER)) return;
-      map.setPaintProperty(PULSE_LAYER, "circle-radius-transition", { duration });
-      map.setPaintProperty(PULSE_LAYER, "circle-opacity-transition", { duration });
+      map.setPaintProperty(PULSE_LAYER, "circle-radius-transition", {
+        duration: animated ? PULSE_MS : 0,
+        delay: 0,
+      });
+      map.setPaintProperty(PULSE_LAYER, "circle-opacity-transition", {
+        duration: animated ? PULSE_MS - FADE_DELAY_MS : 0,
+        delay: animated ? FADE_DELAY_MS : 0,
+      });
       map.setPaintProperty(PULSE_LAYER, "circle-radius", radius);
       map.setPaintProperty(PULSE_LAYER, "circle-opacity", opacity);
     };
 
     if (reduced) {
-      set(PULSE_FROM.radius + 6, PULSE_FROM.opacity * 0.8, 0);
+      set(PULSE_FROM.radius + 4, PULSE_FROM.opacity * 0.6, false);
       return;
     }
 
     const beat = () => {
       if (document.hidden) return;
-      set(PULSE_FROM.radius, PULSE_FROM.opacity, 0);
+      set(PULSE_FROM.radius, PULSE_FROM.opacity, false);
       // Un cadru de răgaz, ca harta să apuce să deseneze cercul mic înainte să-l
       // trimită mare; pornite în același cadru, cele două s-ar anula.
-      frame = requestAnimationFrame(() => set(PULSE_TO.radius, PULSE_TO.opacity, PULSE_MS));
+      frame = requestAnimationFrame(() => set(PULSE_TO.radius, PULSE_TO.opacity, true));
     };
 
     beat();

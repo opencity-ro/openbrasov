@@ -9,7 +9,7 @@ import { categoryLabel, statusColor, statusLabel } from "@/lib/reports/categorie
 import type { PublicReport } from "@/lib/reports/queries";
 import { cn } from "@/lib/utils";
 
-import { reportIconName, reportIconUrl } from "./report-icons";
+import { reportIconUrl } from "./report-icons";
 import { useReportAddress } from "./use-report-address";
 
 const dateFormat = new Intl.DateTimeFormat("ro-RO", {
@@ -100,7 +100,7 @@ export function ReportCard({ report, onClose }: { report: PublicReport; onClose:
          */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={reportIconUrl(reportIconName(report.category, report.status))}
+          src={reportIconUrl(report.category)}
           alt=""
           aria-hidden="true"
           width={32}

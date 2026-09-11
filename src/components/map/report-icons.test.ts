@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { REPORT_CATEGORIES } from "@/lib/reports/categories";
 
-import { reportIconName, reportIconUrl } from "./report-icons";
+import { RESOLVED_BADGE, reportIconUrl } from "./report-icons";
 
 /**
  * Fișierele sunt servite de la calea publică, nu importate, deci nimic din
@@ -37,9 +37,8 @@ describe("setul de icoane", () => {
     expect(orphans).toEqual([]);
   });
 
-  it("dă aceeași icoană oricărei sesizări rezolvate", () => {
-    expect(reportIconName("pothole", "resolved")).toBe(reportIconName("vandalism", "resolved"));
-    expect(reportIconName("pothole", "open")).toBe("pothole");
+  it("are fișier pentru insigna sesizărilor rezolvate", () => {
+    expect(onDisk.has(RESOLVED_BADGE)).toBe(true);
   });
 
   /** Calea poartă versiunea, ca glifele: fișierele se servesc cu cache de un an. */

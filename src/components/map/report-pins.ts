@@ -1,6 +1,6 @@
 import { pinColor, type ReportCategory, type ReportStatus } from "@/lib/reports/categories";
 
-import { loadReportIcon, reportIconName } from "./report-icons";
+import { loadReportIcon, RESOLVED_BADGE } from "./report-icons";
 
 /**
  * Pinurile sesizărilor, desenate în browser și predate hărții ca imagini.
@@ -80,12 +80,12 @@ const TIP_RADIUS = 1.63;
 const ICON_RATIO = 0.82;
 
 /**
- * Identitatea desenului. Culoarea și icoana vin amândouă din categorie — sau din
- * faptul că sesizarea e rezolvată — deci starea nu mai face parte din ea: o
- * groapă deschisă și una în lucru arată la fel pe hartă și împart același desen.
+ * Identitatea desenului. Culoarea și icoana vin din categorie, iar rezolvarea
+ * adaugă insigna, deci starea contează doar cât să despartă rezolvatele: o
+ * groapă deschisă și una în lucru arată la fel și împart același desen.
  */
 export function pinImageId(category: ReportCategory, status: ReportStatus): string {
-  return `report-${reportIconName(category, status)}`;
+  return status === "resolved" ? `report-${category}-resolved` : `report-${category}`;
 }
 
 /**
@@ -140,7 +140,23 @@ function groundShadow(context: CanvasRenderingContext2D) {
  * citește dintr-o privire dacă stă strânsă într-un disc, în timp ce un picior
  * colorat o întinde și o face să pară o pată, nu un semn.
  */
-function drawPin(context: CanvasRenderingContext2D, color: string, icon: HTMLImageElement | null) {
+/**
+ * Insigna de rezolvare: în colțul din dreapta sus al discului, peste icoană, cu un
+ * inel alb subțire ca să se desprindă de desenul de sub ea.
+ *
+ * Sus, nu jos: colțul din dreapta jos îl ocupă deja insignele din setul de icoane
+ * — interdicția de pe semnul de parcare, problema de pe conul de lucrări — iar
+ * bifa pusă acolo le acoperea exact pe ele.
+ */
+const BADGE_RADIUS = 7;
+const BADGE_OFFSET = 10;
+
+function drawPin(
+  context: CanvasRenderingContext2D,
+  color: string,
+  icon: HTMLImageElement | null,
+  badge: HTMLImageElement | null,
+) {
   context.clearRect(0, 0, PIN_WIDTH, PIN_HEIGHT);
 
   groundShadow(context);
@@ -175,10 +191,30 @@ function drawPin(context: CanvasRenderingContext2D, color: string, icon: HTMLIma
   context.fill();
   context.restore();
 
-  if (!icon) return;
+  if (icon) {
+    const size = (HEAD_RADIUS - RING) * 2 * ICON_RATIO;
+    context.drawImage(icon, HEAD_X - size / 2, HEAD_Y - size / 2, size, size);
+  }
 
-  const size = (HEAD_RADIUS - RING) * 2 * ICON_RATIO;
-  context.drawImage(icon, HEAD_X - size / 2, HEAD_Y - size / 2, size, size);
+  if (!badge) return;
+
+  const badgeX = HEAD_X + BADGE_OFFSET;
+  const badgeY = HEAD_Y - BADGE_OFFSET;
+  context.save();
+  context.fillStyle = "#ffffff";
+  context.shadowColor = "rgba(15, 23, 42, 0.3)";
+  context.shadowBlur = 1.2;
+  context.beginPath();
+  context.arc(badgeX, badgeY, BADGE_RADIUS + 1.2, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+  context.drawImage(
+    badge,
+    badgeX - BADGE_RADIUS,
+    badgeY - BADGE_RADIUS,
+    BADGE_RADIUS * 2,
+    BADGE_RADIUS * 2,
+  );
 }
 
 export type PinImage = { id: string; data: ImageData; pixelRatio: number };
@@ -189,21 +225,22 @@ export type PinImage = { id: string; data: ImageData; pixelRatio: number };
  * unul existent nu are de ce să fie redesenat — iar redesenarea lui ar fi costat
  * de două ori: o dată pânza, o dată evenimentul de stil pe care îl declanșează.
  *
- * O sesizare rezolvată arată la fel indiferent de categorie, deci combinațiile
- * chiar folosite sunt puține.
+ * Desenele depind doar de categorie și de rezolvare, deci combinațiile chiar
+ * folosite sunt puține.
  */
 export async function renderPinImages(
   reports: Array<{ category: ReportCategory; status: ReportStatus }>,
   pixelRatio: number,
   alreadyRegistered: (id: string) => boolean,
 ): Promise<PinImage[]> {
-  const wanted = new Map<string, { color: string; icon: string }>();
+  const wanted = new Map<string, { color: string; icon: string; resolved: boolean }>();
   for (const report of reports) {
     const id = pinImageId(report.category, report.status);
     if (wanted.has(id) || alreadyRegistered(id)) continue;
     wanted.set(id, {
       color: pinColor(report.category, report.status),
-      icon: reportIconName(report.category, report.status),
+      icon: report.category,
+      resolved: report.status === "resolved",
     });
   }
   if (wanted.size === 0) return [];
@@ -212,7 +249,7 @@ export async function renderPinImages(
   // aceeași origine, iar așteptarea lor pe rând ar fi ținut harta goală degeaba.
   const icons = new Map(
     await Promise.all(
-      [...new Set([...wanted.values()].map((want) => want.icon))].map(
+      [...new Set([...[...wanted.values()].map((want) => want.icon), RESOLVED_BADGE])].map(
         async (name) => [name, await loadReportIcon(name)] as const,
       ),
     ),
@@ -232,8 +269,13 @@ export async function renderPinImages(
   context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
   const images: PinImage[] = [];
-  for (const [id, { color, icon }] of wanted) {
-    drawPin(context, color, icons.get(icon) ?? null);
+  for (const [id, { color, icon, resolved }] of wanted) {
+    drawPin(
+      context,
+      color,
+      icons.get(icon) ?? null,
+      resolved ? (icons.get(RESOLVED_BADGE) ?? null) : null,
+    );
     images.push({ id, data: context.getImageData(0, 0, width, height), pixelRatio });
   }
   return images;
