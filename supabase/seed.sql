@@ -33,12 +33,12 @@ values
    'Aleea Mercur 3', st_setsrid(st_point(25.6108, 45.6521), 4326)::geography,
    'Primăria Brașov', now() - interval '28 days', now() - interval '9 days'),
 
-  ('illegal_parking', 'open',
+  ('illegal_parking_sidewalk', 'open',
    'Mașini parcate pe trotuar zi de zi, nu mai poți trece cu căruciorul.',
    'Strada Mihail Kogălniceanu 15', st_setsrid(st_point(25.5924, 45.6438), 4326)::geography,
    'Poliția Locală Brașov', now() - interval '2 days', null),
 
-  ('illegal_parking', 'escalated',
+  ('illegal_parking_sidewalk', 'escalated',
    'Trotuar blocat complet în fața școlii. Sesizat de două luni, fără răspuns.',
    'Strada Cerbului 8', st_setsrid(st_point(25.5871, 45.6389), 4326)::geography,
    'Poliția Locală Brașov', now() - interval '64 days', null),
@@ -161,4 +161,24 @@ values
   ('speed_bump_request', 'open',
    'Se circulă foarte repede pe lângă școală, ar trebui un limitator.',
    'Strada Panselelor 11', st_setsrid(st_point(25.6271, 45.6462), 4326)::geography,
-   'Primăria Brașov', now() - interval '20 days', null);
+   'Primăria Brașov', now() - interval '20 days', null),
+
+  ('illegal_parking_road', 'open',
+   'Mașini oprite pe banda a doua în fiecare dimineață, autobuzele nu mai trec.',
+   'Strada Nicolae Bălcescu 20', st_setsrid(st_point(25.5930, 45.6465), 4326)::geography,
+   'Poliția Locală Brașov', now() - interval '1 day', null),
+
+  ('bollards', 'in_progress',
+   'Doi stâlpi anti-parcare smulși la intrarea pe strada pietonală, mașinile urcă din nou.',
+   'Strada Republicii 35', st_setsrid(st_point(25.5913, 45.6452), 4326)::geography,
+   'Primăria Brașov', now() - interval '4 days', null),
+
+  ('illegal_scooter_parking', 'open',
+   'Trotinete lăsate de-a lungul trotuarului, blochează trecerea spre stația de autobuz.',
+   'Bulevardul Eroilor 12', st_setsrid(st_point(25.5955, 45.6435), 4326)::geography,
+   'Poliția Locală Brașov', now() - interval '2 days', null),
+
+  ('commercial_space', 'escalated',
+   'Spațiu comercial al primăriei gol de doi ani, cu vitrina spartă și gunoi înăuntru.',
+   'Strada Mureșenilor 9', st_setsrid(st_point(25.5895, 45.6458), 4326)::geography,
+   'Primăria Brașov', now() - interval '45 days', null);
