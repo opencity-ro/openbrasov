@@ -20,6 +20,15 @@ type BrasovMapProps = {
   className?: string;
   /** Conținut așezat peste hartă, cu acces la instanța ei prin context. */
   children?: React.ReactNode;
+  /**
+   * Hartă de privit, nu de folosit: fără controale și fără apucat cu mouse-ul.
+   * O folosim pe pagina de pornire, unde harta e dovada că produsul există, iar
+   * locul unde chiar lucrezi cu ea e `/harta`. O hartă care se mișcă sub deget
+   * într-o pagină care se derulează fură gestul, nu îl servește.
+   */
+  preview?: boolean;
+  /** Apropierea de pornire, când cea obișnuită e prea largă pentru cadrul dat. */
+  zoom?: number;
 };
 
 /** Serverul de dale, de fonturi și de sprite-uri; deschidem conexiunea din timp. */
@@ -29,7 +38,7 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function BrasovMap({ className, children }: BrasovMapProps) {
+export function BrasovMap({ className, children, preview = false, zoom }: BrasovMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [is3d, setIs3d] = useState(false);
@@ -50,6 +59,9 @@ export function BrasovMap({ className, children }: BrasovMapProps) {
   useEffect(() => {
     themeRef.current = theme;
   }, [theme]);
+
+  /** La fel și astea două: se dau la montare și nu se schimbă pe parcurs. */
+  const setupRef = useRef({ preview, zoom });
 
   useEffect(() => {
     const container = containerRef.current;
@@ -74,8 +86,9 @@ export function BrasovMap({ className, children }: BrasovMapProps) {
         container,
         style: applyMapTheme(baseStyle, PALETTES[themeRef.current]),
         center: BRASOV_CENTER,
-        zoom: DEFAULT_ZOOM,
+        zoom: setupRef.current.zoom ?? DEFAULT_ZOOM,
         minZoom: MIN_ZOOM,
+        interactive: !setupRef.current.preview,
         // Harta pornește plată; înclinarea se deschide odată cu relieful.
         maxPitch: 0,
         attributionControl: false,
@@ -144,7 +157,7 @@ export function BrasovMap({ className, children }: BrasovMapProps) {
 
       <MapProvider value={map}>
         {children}
-        <MapControls ready={Boolean(map)} is3d={is3d} onToggle3d={toggle3d} />
+        {!preview && <MapControls ready={Boolean(map)} is3d={is3d} onToggle3d={toggle3d} />}
       </MapProvider>
 
       {!map && (
