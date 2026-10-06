@@ -2,7 +2,7 @@ import Image from "next/image";
 
 import { reportIconUrl } from "@/components/map/report-icons";
 import { t } from "@/lib/messages";
-import { categoryLabel, type ReportCategory } from "@/lib/reports/categories";
+import { categoryColor, categoryLabel, type ReportCategory } from "@/lib/reports/categories";
 
 /**
  * Categoriile, grupate pe domenii.
@@ -68,28 +68,32 @@ const GROUPS: { key: keyof typeof t.home.categoryGroups; items: ReportCategory[]
 
 export function ReportCategories() {
   return (
-    <ul className="grid gap-10 sm:grid-cols-2">
+    <ul className="grid gap-x-10 gap-y-10 sm:grid-cols-2">
       {GROUPS.map((group) => (
         <li key={group.key}>
-          <h3 className="text-muted-foreground text-sm font-semibold">
+          <h3 className="border-border text-muted-foreground border-b pb-2.5 text-sm font-semibold">
             {t.home.categoryGroups[group.key]}
           </h3>
-          <ul className="mt-3 flex flex-wrap gap-2">
+          <ul className="mt-4 flex flex-wrap gap-2">
             {group.items.map((category) => (
               <li
                 key={category}
-                className="border-border bg-card flex items-center gap-2 rounded-lg border py-1.5 pr-3 pl-2 text-sm"
+                className="border-border bg-card flex items-center gap-2.5 rounded-lg border py-1.5 pr-3.5 pl-1.5 text-sm"
               >
                 {/*
-                 * Icoana e aceeași care stă pe pin; eticheta de alături o spune în
-                 * cuvinte, deci pentru cititorul de ecran e decorativă.
-                 *
-                 * Trece prin optimizarea de imagini: fișierul sursă are 128 de puncte
-                 * și aproape 19 kilobocteți, iar aici se vede la 20. Treizeci și patru
-                 * de fișiere servite la mărimea lor ar fi însemnat peste jumătate de
-                 * megaoctet pentru niște pictograme cât o literă.
+                 * Icoana stă pe o plăcuță în culoarea categoriei, aceeași care îi
+                 * poartă pinul pe hartă. Fără ea, treizeci și patru de desene
+                 * colorate pe un rând de chenare cenușii arătau ca o grămadă de
+                 * autocolante; cu ea, culoarea devine parte din sistem.
                  */}
-                <Image src={reportIconUrl(category)} alt="" width={20} height={20} />
+                <span
+                  className="flex size-7 shrink-0 items-center justify-center rounded-md"
+                  style={{
+                    backgroundColor: `color-mix(in oklch, ${categoryColor[category]}, transparent 85%)`,
+                  }}
+                >
+                  <Image src={reportIconUrl(category)} alt="" width={18} height={18} />
+                </span>
                 {categoryLabel(category)}
               </li>
             ))}

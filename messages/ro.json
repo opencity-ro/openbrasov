@@ -20,7 +20,6 @@
     "ctaReport": "Sesizează o problemă",
     "ctaReportSoon": "în curând",
     "mapAria": "Vezi harta sesizărilor din Brașov",
-    "mapSample": "Harta arată deocamdată sesizări de probă. Primele sesizări reale apar odată cu formularul.",
     "stepsTitle": "Cum funcționează",
     "steps": [
       {
@@ -29,8 +28,7 @@
       },
       {
         "title": "AI-ul scrie sesizarea",
-        "body": "Text oficial, temei legal, instituția responsabilă. Tu citești, corectezi și aprobi înainte să plece ceva.",
-        "state": "în lucru"
+        "body": "Text oficial, temei legal, instituția responsabilă. Tu citești, corectezi și aprobi înainte să plece ceva."
       },
       {
         "title": "Instituția primește",
