@@ -7,8 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-bricolage), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-jakarta), ui-sans-serif, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -22,6 +23,10 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-pending: var(--pending);
+  --color-pending-foreground: var(--pending-foreground);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -47,75 +52,122 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ---------------------------------------------------------------------------
+ * Primitivele mărcii.
+ *
+ * Trei culori, atât. Nu se folosesc direct în componente: componentele citesc
+ * doar tokenii semantici de mai jos, iar aceia se leagă de primitivele astea.
+ * Dacă marca se schimbă vreodată, se schimbă aici și nicăieri altundeva.
+ *
+ * Onyxul e aceeași culoare în ambele teme: cerneala pe lumină, pânza pe întuneric.
+ * ------------------------------------------------------------------------- */
 :root {
-  --radius: 0.5rem; /* 8px pe controale; cardurile folosesc rounded-2xl = 16px */
-  --background: #fafaf7;
-  --foreground: #14261d;
-  --card: #ffffff;
-  --card-foreground: #14261d;
-  --popover: #ffffff;
-  --popover-foreground: #14261d;
-  --primary: #1b5e3b;
-  --primary-foreground: #ffffff;
-  --secondary: #eef1ec;
-  --secondary-foreground: #14261d;
-  --muted: #eef1ec;
-  --muted-foreground: #5b6b62;
-  --accent: #d97706;
-  --accent-foreground: #1c1917;
-  --destructive: #b91c1c;
-  --destructive-foreground: #ffffff;
-  --border: #dce3dd;
-  --input: #dce3dd;
-  --ring: #1b5e3b;
-  --chart-1: #1b5e3b;
-  --chart-2: #d97706;
-  --chart-3: #2563eb;
-  --chart-4: #b91c1c;
-  --chart-5: #5b6b62;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #14261d;
-  --sidebar-primary: #1b5e3b;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eef1ec;
-  --sidebar-accent-foreground: #14261d;
-  --sidebar-border: #dce3dd;
-  --sidebar-ring: #1b5e3b;
+  --brand-onyx: #0d160b;
+  --brand-green: #08a045;
+  --brand-orange: #d65108;
+
+  /* Celelalte două din paletă nu poartă marca: poartă date. Albastrul e starea
+   * „în lucru", galbenul e ce încă nu s-a întâmplat. Stau aici ca să fie un
+   * singur loc unde se schimbă, nu ca să fie folosite ca accente de pagină. */
+  --brand-blue: #2b59c3;
+  --brand-yellow: #f5cb5c;
 }
 
+:root {
+  /* Spune browserului în ce temă suntem, ca bara de derulare, câmpurile native și
+   * meniurile de sistem să nu rămână albe peste o pagină închisă. */
+  color-scheme: light;
+
+  --radius: 0.5rem; /* 8px pe controale; cardurile folosesc rounded-2xl = 16px */
+
+  --background: #f7f8f5;
+  --foreground: var(--brand-onyx);
+  --card: #ffffff;
+  --card-foreground: var(--brand-onyx);
+  --popover: #ffffff;
+  --popover-foreground: var(--brand-onyx);
+
+  /* Verdele mărcii dă 3.43:1 cu albul, sub pragul AA. Pe lumină interactivul
+   * coboară o treaptă, la 5.06:1, și rămâne aceeași culoare la privire.
+   * Verdele curat trăiește în semn, pe hartă și pe tema închisă. */
+  --primary: #078037;
+  --primary-foreground: #ffffff;
+  --accent: #b84507;
+  --accent-foreground: #ffffff;
+
+  --secondary: #ecefe8;
+  --secondary-foreground: var(--brand-onyx);
+  --muted: #ecefe8;
+  --muted-foreground: #546152;
+  --destructive: #b91c1c;
+  --destructive-foreground: #ffffff;
+  --info: var(--brand-blue);
+  --info-foreground: #ffffff;
+  --pending: var(--brand-yellow);
+  --pending-foreground: var(--brand-onyx);
+  --border: #dce2d7;
+  --input: #dce2d7;
+  --ring: #078037;
+  --chart-1: #078037;
+  --chart-2: #b84507;
+  --chart-3: var(--brand-blue);
+  --chart-4: #b91c1c;
+  --chart-5: #546152;
+  --sidebar: #ffffff;
+  --sidebar-foreground: var(--brand-onyx);
+  --sidebar-primary: #078037;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ecefe8;
+  --sidebar-accent-foreground: var(--brand-onyx);
+  --sidebar-border: #dce2d7;
+  --sidebar-ring: #078037;
+}
+
+/* Pe Onyx suprafețele urcă în trepte mici, iar separarea o fac liniile de o
+ * grosime, nu umbrele: pe o pânză aproape neagră o umbră nu se vede oricum. */
 .dark {
-  --background: #0f1a14;
-  --foreground: #e8efe9;
-  --card: #16241c;
-  --card-foreground: #e8efe9;
-  --popover: #16241c;
-  --popover-foreground: #e8efe9;
-  --primary: #5cb381;
-  --primary-foreground: #0f1a14;
-  --secondary: #1f2f26;
-  --secondary-foreground: #e8efe9;
-  --muted: #1f2f26;
-  --muted-foreground: #9fb0a6;
-  --accent: #f59e0b;
-  --accent-foreground: #1c1917;
+  color-scheme: dark;
+
+  --background: var(--brand-onyx);
+  --foreground: #e9efe6;
+  --card: #131d11;
+  --card-foreground: #e9efe6;
+  --popover: #131d11;
+  --popover-foreground: #e9efe6;
+
+  /* Pe întuneric culorile mărcii merg nealterate, cu cerneala deasupra lor:
+   * verde 5.39:1, portocaliu deschis cu o treaptă ca să treacă de 4.5:1. */
+  --primary: var(--brand-green);
+  --primary-foreground: var(--brand-onyx);
+  --accent: #e86520;
+  --accent-foreground: var(--brand-onyx);
+
+  --secondary: #182417;
+  --secondary-foreground: #e9efe6;
+  --muted: #182417;
+  --muted-foreground: #9fb09b;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #2a3d32;
-  --input: #2a3d32;
-  --ring: #5cb381;
-  --chart-1: #5cb381;
-  --chart-2: #f59e0b;
-  --chart-3: #60a5fa;
+  --info: #6f93f0;
+  --info-foreground: var(--brand-onyx);
+  --pending: var(--brand-yellow);
+  --pending-foreground: var(--brand-onyx);
+  --border: #243021;
+  --input: #243021;
+  --ring: var(--brand-green);
+  --chart-1: #0bb54e;
+  --chart-2: #e86520;
+  --chart-3: #6f93f0;
   --chart-4: #ef4444;
-  --chart-5: #9fb0a6;
-  --sidebar: #16241c;
-  --sidebar-foreground: #e8efe9;
-  --sidebar-primary: #5cb381;
-  --sidebar-primary-foreground: #0f1a14;
-  --sidebar-accent: #1f2f26;
-  --sidebar-accent-foreground: #e8efe9;
-  --sidebar-border: #2a3d32;
-  --sidebar-ring: #5cb381;
+  --chart-5: #9fb09b;
+  --sidebar: #131d11;
+  --sidebar-foreground: #e9efe6;
+  --sidebar-primary: var(--brand-green);
+  --sidebar-primary-foreground: var(--brand-onyx);
+  --sidebar-accent: #182417;
+  --sidebar-accent-foreground: #e9efe6;
+  --sidebar-border: #243021;
+  --sidebar-ring: var(--brand-green);
 }
 
 @layer base {
@@ -175,6 +227,53 @@
   label[for],
   select:not(:disabled) {
     cursor: pointer;
+  }
+}
+
+@layer base {
+  /*
+   * Părțile pe care nu le desenăm noi.
+   *
+   * Selecția textului, cursorul de scriere, bifele native și bara de derulare vin
+   * din browser și nu seamănă cu nimic din restul paginii. Lăsate așa, trădează o
+   * interfață asamblată, nu construită. Se leagă aici de aceiași tokeni ca tot
+   * restul, deci urmează singure tema.
+   */
+  ::selection {
+    background: color-mix(in oklch, var(--primary), transparent 78%);
+    color: var(--foreground);
+  }
+
+  html {
+    caret-color: var(--primary);
+    accent-color: var(--primary);
+    scrollbar-color: var(--border) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    height: 12px;
+    width: 12px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  /* Marginea de aceeași culoare cu fundalul subțiază optic bara, fără a-i micșora
+   * suprafața de prins cu mouse-ul. */
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    background-clip: padding-box;
+    border: 3px solid var(--background);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+    background-clip: padding-box;
+    border: 3px solid var(--background);
+  }
+
+  a {
+    text-decoration-thickness: from-font;
+    text-underline-offset: 0.18em;
   }
 }
 
