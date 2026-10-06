@@ -47,6 +47,7 @@ typography:
 rounded:
   control: 8px
   card: 16px
+  pill: 9999px
 
 spacing:
   base: 4px
@@ -103,13 +104,25 @@ Nu se desenează cu contur, nu primește umbră, nu se pune pe un pătrat colora
 
 ## Formele și adâncimea
 
-- Colțuri: **8px** pe controale, **16px** pe carduri. Un singur sistem, fără excepții.
+- Colțuri: **8px** pe controale, **16px** pe carduri. Pilula completă apare în două locuri și numai acolo: eticheta mică dintr-un buton și degetul barei de derulare, adică forme care nu sunt nici control, nici card.
 - Separarea se face cu **linii de un punct** și cu trepte de suprafață, nu cu umbre. Pe o pânză aproape neagră umbra nu se vede, iar pe cea deschisă îngroașă interfața degeaba.
 - Treptele de suprafață pe întuneric: pânza `#0d160b` → cardul `#131d11` → suprafața a doua `#182417`. Nu se sare o treaptă.
 
+## Harta desenată
+
+Pagina de pornire nu încarcă harta adevărată. Geometria Brașovului se extrage o dată din dalele vectoriale pe care le servim oricum, cu `pnpm map:city`, și ajunge în `src/components/landing/city-map-data.ts` ca un set de contururi. Pagina desenează un SVG: fără bibliotecă de hărți, fără dale, fără nicio cerere de rețea.
+
+Culorile ei stau în tokeni separați (`--map-canvas`, `--map-green`, `--map-water`, `--map-street`, `--map-road`, `--map-major`, `--map-pin-ring`), fiindcă o hartă nu folosește aceeași scară de suprafețe ca interfața: pânza ei e puțin mai închisă decât a paginii, ca panoul să se citească drept obiect așezat pe pagină.
+
+Semnele cad pe vârfuri de stradă adevărate din aceeași geometrie, nu împrăștiate pe pânză, și poartă culorile de categorie din aplicație.
+
 ## Mișcarea
 
-Discretă și motivată. 150-300ms pe micro-interacțiuni, `transform` și `opacity`, niciodată lățime sau înălțime. Orice mișcare respectă `prefers-reduced-motion`. Pulsul de pe hartă e singura animație care se repetă, și spune ceva: sesizarea e din ultimele șapte zile.
+Discretă și motivată. 150-300ms pe micro-interacțiuni, până la 550ms pe intrările de secțiune, `transform` și `opacity`, niciodată lățime sau înălțime. Curba e aceeași peste tot, `cubic-bezier(0.16, 1, 0.3, 1)`, ca totul să frâneze la fel.
+
+Blocurile de pagină intră o singură dată, la prima trecere prin dreptul lor, cu `motion` (`Reveal`). Pe pagina de pornire semnele hărții intră etajate, câte unul la 70ms.
+
+Orice mișcare respectă `prefers-reduced-motion`; cu ea pornită, conținutul apare direct. Singurele animații care se repetă sunt pulsurile, și spun ceva: sesizarea e nouă.
 
 ## Ce nu facem
 

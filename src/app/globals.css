@@ -121,6 +121,17 @@
   --sidebar-accent-foreground: var(--brand-onyx);
   --sidebar-border: #dce2d7;
   --sidebar-ring: #078037;
+
+  /* Harta desenată de pe pagina de pornire. Pânza ei nu e pânza paginii: un
+   * panou puțin mai închis se citește ca obiect așezat pe pagină, nu ca un desen
+   * care curge din ea. */
+  --map-canvas: #e7ece1;
+  --map-green: #d6e2c9;
+  --map-water: #c7d9e8;
+  --map-street: #f3f6ef;
+  --map-road: #fbfcfa;
+  --map-major: #e9b96c;
+  --map-pin-ring: #ffffff;
 }
 
 /* Pe Onyx suprafețele urcă în trepte mici, iar separarea o fac liniile de o
@@ -168,6 +179,14 @@
   --sidebar-accent-foreground: #e9efe6;
   --sidebar-border: #243021;
   --sidebar-ring: var(--brand-green);
+
+  --map-canvas: #0f180d;
+  --map-green: #162513;
+  --map-water: #17304a;
+  --map-street: #22311f;
+  --map-road: #31432c;
+  --map-major: #9a7238;
+  --map-pin-ring: #0d160b;
 }
 
 @layer base {
@@ -278,6 +297,52 @@
 }
 
 @layer components {
+  /*
+   * Semnele de pe harta desenată.
+   *
+   * Intră etajat, nu toate deodată: harta se populează sub ochi, așa cum se
+   * populează și cea adevărată. Pulsul îl poartă doar câteva, altfel ar fi
+   * mișcare peste tot și n-ar mai însemna nimic.
+   *
+   * Regula generală de mișcare redusă, mai sus, le oprește pe amândouă; semnele
+   * rămân vizibile, fiindcă animația se termină instantaneu pe ultimul cadru.
+   */
+  .city-map-pin {
+    animation: city-pin-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--pin-delay, 0ms);
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+  }
+
+  @keyframes city-pin-in {
+    from {
+      opacity: 0;
+      transform: translateY(7px) scale(0.82);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .city-map-pulse {
+    animation: city-pulse 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+  }
+
+  @keyframes city-pulse {
+    0% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(2.8);
+    }
+  }
+
   /*
    * Săgeata obișnuită peste toată harta.
    *

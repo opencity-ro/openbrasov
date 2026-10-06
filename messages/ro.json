@@ -10,31 +10,44 @@
     "signIn": "Autentificare",
     "signOut": "Deconectare",
     "profile": "Profilul meu",
-    "theme": "Schimbă tema"
+    "theme": "Schimbă tema",
+    "skip": "Sari la conținut"
   },
   "home": {
-    "eyebrow": "Platforma civică din Brașov",
     "title": "Fotografiezi. AI-ul scrie. Instituția primește.",
-    "subtitle": "O groapă, un stâlp căzut, gunoi lăsat pe stradă. Faci o poză, noi generăm sesizarea oficială cu temei legal și o trimiți instituției responsabile din emailul tău. Durează două minute.",
+    "subtitle": "Faci poza, noi scriem sesizarea oficială cu temei legal, tu o trimiți din emailul tău. Durează două minute.",
     "ctaMap": "Vezi harta",
     "ctaReport": "Sesizează o problemă",
-    "ctaReportSoon": "În curând",
+    "ctaReportSoon": "în curând",
+    "mapAria": "Vezi harta sesizărilor din Brașov",
+    "stepsTitle": "Cum funcționează",
     "steps": [
       {
         "title": "Fotografiezi problema",
-        "body": "Orice problemă din spațiul public al Brașovului, direct de pe telefon."
+        "body": "Orice problemă din spațiul public al Brașovului, direct de pe telefon. Locul îl ia din poză sau de pe hartă."
       },
       {
         "title": "AI-ul scrie sesizarea",
-        "body": "Text oficial, temei legal, instituția responsabilă. Tu verifici și aprobi."
+        "body": "Text oficial, temei legal, instituția responsabilă. Tu citești, corectezi și aprobi înainte să plece ceva."
       },
       {
         "title": "Instituția primește",
-        "body": "Sesizarea pleacă din emailul tău către Primărie, Poliția Locală sau operatorul responsabil."
+        "body": "Sesizarea pleacă din emailul tău către Primărie, Poliția Locală sau operatorul responsabil. Rămâne pe hartă până se rezolvă."
       }
     ],
+    "categoriesTitle": "Ce poți raporta",
+    "categoriesBody": "Treizeci și patru de categorii, fiecare cu instituția ei. Dacă problema ta nu se potrivește nicăieri, rămâne „Altceva”.",
+    "categoryGroups": {
+      "road": "Drum și trotuar",
+      "parking": "Parcare și vehicule",
+      "clean": "Curățenie, mediu și spații verzi",
+      "order": "Ordine publică și construcții",
+      "animals": "Animale",
+      "utilities": "Utilități și altele"
+    },
     "openSourceTitle": "Deschis de la primul commit",
-    "openSourceBody": "Codul este public sub licență AGPL-3.0. Poți verifica cum funcționează, raporta probleme sau contribui."
+    "openSourceBody": "Codul este public sub licență AGPL-3.0. Poți citi cum se construiește sesizarea, ce date păstrăm și ce plecă mai departe. Proiectul e independent și nu e afiliat Primăriei Brașov sau altei instituții publice.",
+    "openSourceCta": "Vezi codul pe GitHub"
   },
   "map": {
     "title": "Harta sesizărilor",
