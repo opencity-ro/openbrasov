@@ -15,9 +15,11 @@ type LogoMarkProps = {
  * decupat, deci lasă pagina să treacă prin el și semnul stă la fel de bine pe
  * orice fundal.
  *
- * Punctul nu stă în centrul capului, ci al siluetei întregi: coada trage greutatea
- * în jos, iar un punct centrat doar pe cap se citește urcat, mai ales pe fundal
- * închis, unde inelul decupat se pierde în pagină.
+ * Capul e pătrat, nu dreptunghiular, iar punctul stă fix în mijlocul lui: așa
+ * rama verde iese egală pe toate patru laturile. Pe fundal închis inelul decupat
+ * dispare în pagină și singurul lucru care spune unde e centrul rămâne grosimea
+ * ramei — cu un cap mai lat decât înalt, punctul se citea descentrat oriunde
+ * l-am fi pus.
  *
  * Coada iese cât toată latura de jos dintre colțuri, ca să curgă din corp în loc
  * să pară un ciob lipit dedesubt.
@@ -37,10 +39,10 @@ export function LogoMark({ size = 32, className }: LogoMarkProps) {
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M10.4 2.4H21.6A7 7 0 0 1 28.6 9.4V17.8A7 7 0 0 1 21.6 24.8H21.5L17.1 28.5A1.1 1.1 0 0 1 14.9 28.5L10.5 24.8H10.4A7 7 0 0 1 3.4 17.8V9.4A7 7 0 0 1 10.4 2.4ZM10 14.1a6 6 0 1 0 12 0a6 6 0 1 0-12 0"
+        d="M11 1.8H21A7 7 0 0 1 28 8.8V18.8A7 7 0 0 1 21 25.8L17.1 29.3A1.1 1.1 0 0 1 14.9 29.3L11 25.8A7 7 0 0 1 4 18.8V8.8A7 7 0 0 1 11 1.8ZM9.5 13.8a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0"
         className="fill-primary"
       />
-      <path d="M11.5 14.1a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0-9 0" fill="var(--brand-orange)" />
+      <path d="M10.8 13.8a5.2 5.2 0 1 0 10.4 0a5.2 5.2 0 1 0-10.4 0" fill="var(--brand-orange)" />
     </svg>
   );
 }
