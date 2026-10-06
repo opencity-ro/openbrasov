@@ -18,8 +18,13 @@ type LogoMarkProps = {
  * Capul e pătrat, nu dreptunghiular, iar punctul stă fix în mijlocul lui: așa
  * rama verde iese egală pe toate patru laturile. Pe fundal închis inelul decupat
  * dispare în pagină și singurul lucru care spune unde e centrul rămâne grosimea
- * ramei — cu un cap mai lat decât înalt, punctul se citea descentrat oriunde
- * l-am fi pus.
+ * ramei, deci un cap mai lat decât înalt face punctul să pară descentrat oriunde
+ * l-ai pune.
+ *
+ * Toate coordonatele sunt întregi sau jumătăți, iar centrul cercurilor cade pe
+ * (16, 14). La 34 sau 48 de puncte, un centru la 13,8 ar fi căzut în mijlocul
+ * unui pixel, iar netezirea ar fi subțiat inelul într-o parte și l-ar fi îngroșat
+ * în cealaltă — exact ce se vede ca „nu e centrat" la mărime mică.
  *
  * Coada iese cât toată latura de jos dintre colțuri, ca să curgă din corp în loc
  * să pară un ciob lipit dedesubt.
@@ -39,10 +44,10 @@ export function LogoMark({ size = 32, className }: LogoMarkProps) {
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M11 1.8H21A7 7 0 0 1 28 8.8V18.8A7 7 0 0 1 21 25.8L17.1 29.3A1.1 1.1 0 0 1 14.9 29.3L11 25.8A7 7 0 0 1 4 18.8V8.8A7 7 0 0 1 11 1.8ZM9.5 13.8a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0"
+        d="M11 2H21A7 7 0 0 1 28 9V19A7 7 0 0 1 21 26L17.1 28.9A1.1 1.1 0 0 1 14.9 28.9L11 26A7 7 0 0 1 4 19V9A7 7 0 0 1 11 2ZM9.4 14a6.6 6.6 0 1 0 13.2 0a6.6 6.6 0 1 0-13.2 0"
         className="fill-primary"
       />
-      <path d="M10.8 13.8a5.2 5.2 0 1 0 10.4 0a5.2 5.2 0 1 0-10.4 0" fill="var(--brand-orange)" />
+      <path d="M10.8 14a5.2 5.2 0 1 0 10.4 0a5.2 5.2 0 1 0-10.4 0" fill="var(--brand-orange)" />
     </svg>
   );
 }

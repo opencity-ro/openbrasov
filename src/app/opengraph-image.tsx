@@ -8,8 +8,8 @@ export const contentType = "image/png";
 
 /** Aceleași căi ca în `src/app/icon.svg`; cardul nu are acces la componente. */
 const MARK =
-  "M11 1.8H21A7 7 0 0 1 28 8.8V18.8A7 7 0 0 1 21 25.8L17.1 29.3A1.1 1.1 0 0 1 14.9 29.3L11 25.8A7 7 0 0 1 4 18.8V8.8A7 7 0 0 1 11 1.8ZM9.5 13.8a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0";
-const MARK_PIP = "M10.8 13.8a5.2 5.2 0 1 0 10.4 0a5.2 5.2 0 1 0-10.4 0";
+  "M11 2H21A7 7 0 0 1 28 9V19A7 7 0 0 1 21 26L17.1 28.9A1.1 1.1 0 0 1 14.9 28.9L11 26A7 7 0 0 1 4 19V9A7 7 0 0 1 11 2ZM9.4 14a6.6 6.6 0 1 0 13.2 0a6.6 6.6 0 1 0-13.2 0";
+const MARK_PIP = "M10.8 14a5.2 5.2 0 1 0 10.4 0a5.2 5.2 0 1 0-10.4 0";
 
 /**
  * Cardul care pleacă în Facebook, WhatsApp și grupurile de cartier, adică primul
