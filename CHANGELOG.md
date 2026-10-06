@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/opencity-ro/openbrasov/compare/v0.6.0...v0.7.0) (2026-10-06)
+
+
+### Funcționalități
+
+* **brand:** new visual identity ([#37](https://github.com/opencity-ro/openbrasov/issues/37)) ([3e1957d](https://github.com/opencity-ro/openbrasov/commit/3e1957d2627d97a027fa0ab0a79f663438401106))
+
 ## [0.6.0](https://github.com/opencity-ro/openbrasov/compare/v0.5.0...v0.6.0) (2026-09-11)
 
 
