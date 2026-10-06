@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Source_Serif_4 } from "next/font/google";
 
 import { ThemeProvider } from "@/components/site/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -7,15 +7,21 @@ import { SITE_URL } from "@/lib/site";
 
 import "./globals.css";
 
-const inter = Inter({
+/** Interfața și textul: o singură voce, de la buton la paragraf. */
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin", "latin-ext"],
-  variable: "--font-inter",
+  variable: "--font-jakarta",
   display: "swap",
 });
 
-const bricolage = Bricolage_Grotesque({
+/**
+ * Serifa stă doar pe afirmațiile mari, niciodată pe interfață. Un serviciu
+ * public se citește altfel decât un produs: literele cu picior aduc registrul
+ * de instituție, dar numai acolo unde chiar se face o afirmație.
+ */
+const sourceSerif = Source_Serif_4({
   subsets: ["latin", "latin-ext"],
-  variable: "--font-bricolage",
+  variable: "--font-source-serif",
   display: "swap",
 });
 
@@ -32,8 +38,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fafaf7" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f1a14" },
+    { media: "(prefers-color-scheme: light)", color: "#f7f8f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d160b" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -43,7 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ro"
-      className={`${inter.variable} ${bricolage.variable} antialiased`}
+      className={`${jakarta.variable} ${sourceSerif.variable} antialiased`}
       suppressHydrationWarning
     >
       <body className="bg-background text-foreground flex min-h-dvh flex-col">

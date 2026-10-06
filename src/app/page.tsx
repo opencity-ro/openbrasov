@@ -17,7 +17,7 @@ export default function HomePage() {
           <p className="text-primary text-sm font-semibold tracking-wide uppercase">
             {t.home.eyebrow}
           </p>
-          <h1 className="font-heading mt-3 max-w-3xl text-4xl font-bold text-balance sm:text-6xl">
+          <h1 className="font-display mt-3 max-w-3xl text-4xl font-semibold tracking-[-0.015em] text-balance sm:text-6xl">
             {t.home.title}
           </h1>
           <p className="text-muted-foreground mt-6 max-w-2xl text-lg leading-relaxed">

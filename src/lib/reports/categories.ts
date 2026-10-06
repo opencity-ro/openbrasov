@@ -56,9 +56,9 @@ export function statusLabel(status: ReportStatus): string {
  * să nu se depărteze niciodată una de alta.
  */
 export const statusColor: Record<ReportStatus, string> = {
-  open: "#d97706",
-  in_progress: "#2563eb",
-  resolved: "#1b5e3b",
+  open: "#d65108",
+  in_progress: "#2b59c3",
+  resolved: "#08a045",
   escalated: "#b91c1c",
 };
 
