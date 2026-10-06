@@ -6,9 +6,10 @@ export const alt = "Open Brașov";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-/** Aceeași cale ca în `src/app/icon.svg`; cardul nu are acces la componente. */
+/** Aceleași căi ca în `src/app/icon.svg`; cardul nu are acces la componente. */
 const MARK =
-  "M10.4 2.4H21.6A7 7 0 0 1 28.6 9.4V17.8A7 7 0 0 1 21.6 24.8H21.5L17.1 28.5A1.1 1.1 0 0 1 14.9 28.5L10.5 24.8H10.4A7 7 0 0 1 3.4 17.8V9.4A7 7 0 0 1 10.4 2.4ZM10.8 13.6a5.2 5.2 0 1 0 10.4 0a5.2 5.2 0 1 0-10.4 0";
+  "M10.4 2.4H21.6A7 7 0 0 1 28.6 9.4V17.8A7 7 0 0 1 21.6 24.8H21.5L17.1 28.5A1.1 1.1 0 0 1 14.9 28.5L10.5 24.8H10.4A7 7 0 0 1 3.4 17.8V9.4A7 7 0 0 1 10.4 2.4ZM10.6 13.6a5.4 5.4 0 1 0 10.8 0a5.4 5.4 0 1 0-10.8 0";
+const MARK_PIP = "M12.1 13.6a3.9 3.9 0 1 0 7.8 0a3.9 3.9 0 1 0-7.8 0";
 
 /**
  * Cardul care pleacă în Facebook, WhatsApp și grupurile de cartier, adică primul
@@ -33,6 +34,7 @@ export default function OpenGraphImage() {
       <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
         <svg width="44" height="44" viewBox="0 0 32 32">
           <path fill="#08a045" fillRule="evenodd" d={MARK} />
+          <path fill="#d65108" d={MARK_PIP} />
         </svg>
         <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: -0.6 }}>{t.brand.name}</div>
       </div>

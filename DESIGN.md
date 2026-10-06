@@ -1,11 +1,15 @@
 ---
 name: open-brasov-design
-description: "Limbajul vizual al platformei: Onyx ca ancoră, verde ca singura culoare de voltaj, portocaliu doar pentru acțiune. Plus Jakarta Sans peste tot, Source Serif 4 numai pe afirmațiile mari. Suprafețe separate prin linii de un punct, nu prin umbre. Inspirat de limbajul Linear, adaptat: ținem și tema deschisă, fiindcă oamenii deschid aplicația afară, în soare."
+description: "Limbajul vizual al platformei: Onyx ca ancoră, verde ca singura culoare de voltaj, portocaliu doar pentru acțiune, albastru și galben numai pe date. Plus Jakarta Sans peste tot, Bricolage Grotesque numai pe titlurile mari. Suprafețe separate prin linii de un punct, nu prin umbre. Inspirat de limbajul Linear, adaptat: ținem și tema deschisă, fiindcă oamenii deschid aplicația afară, în soare."
 
 brand:
   onyx: "#0d160b"
   green: "#08a045"
   orange: "#d65108"
+
+data:
+  blue: "#2b59c3"
+  yellow: "#f5cb5c"
 
 colors-light:
   background: "#f7f8f5"
@@ -35,9 +39,9 @@ colors-dark:
 
 typography:
   sans: Plus Jakarta Sans
-  display: Source Serif 4
+  display: Bricolage Grotesque
   scale: [12, 14, 16, 18, 20, 24, 30, 36, 48, 60]
-  display-tracking: "-0.015em"
+  display-tracking: "-0.02em"
   body-line-height: 1.6
 
 rounded:
@@ -65,24 +69,37 @@ Ce am schimbat față de el, cu motiv:
 
 Trei primitive de marcă, în `src/app/globals.css`. Componentele nu le ating niciodată direct: citesc tokenii semantici, iar aceia se leagă de primitive. Dacă marca se schimbă, se schimbă într-un singur loc.
 
-| Rol | Ce face |
-| --- | --- |
-| **Onyx** `#0d160b` | Cerneala pe temă deschisă, pânza pe temă închisă. Aceeași culoare, două meserii. |
-| **Verde** `#08a045` | Marca. Semnul, acțiunea principală, inelul de focus, legătura accentuată. Niciodată ca fundal de secțiune sau umplutură de card. |
-| **Portocaliu** `#d65108` | Acțiunea care cere ceva de la om: butonul de sesizare, starea deschisă pe hartă. |
+| Rol                      | Ce face                                                                                                                          |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Onyx** `#0d160b`       | Cerneala pe temă deschisă, pânza pe temă închisă. Aceeași culoare, două meserii.                                                 |
+| **Verde** `#08a045`      | Marca. Semnul, acțiunea principală, inelul de focus, legătura accentuată. Niciodată ca fundal de secțiune sau umplutură de card. |
+| **Portocaliu** `#d65108` | Acțiunea care cere ceva de la om: butonul de sesizare, starea deschisă pe hartă.                                                 |
 
 Două locuri unde culoarea mărcii nu trece pragul de contrast, și ce facem:
 
 - alb pe verdele mărcii dă **3.43:1**, sub AA. Pe temă deschisă interactivul coboară o treaptă, la `#078037`, și ajunge la **5.06:1**. Culoarea arată la fel la privire; verdele curat trăiește în semn, pe hartă și pe tema închisă, unde dă **5.39:1** cu cerneala deasupra.
 - alb pe portocaliul mărcii dă **4.17:1**. Pe deschis coborâm la `#b84507` (**5.4:1**), pe închis urcăm la `#e86520` (**5.55:1** cu Onyx deasupra).
 
-Albastrul și galbenul **nu fac parte din identitate**. Trăiesc în paleta hărții, unde deosebesc categorii și stări, și nu intră niciodată în navigație, butoane sau pagini.
+Celelalte două culori din paletă poartă **date, nu marcă**, și au fiecare un singur înțeles:
+
+| Rol                                | Unde apare                                                                                                                                 |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Albastru** `#2b59c3` (`--info`)  | starea „în lucru": insigna de pe pin, punctul din filtre, eticheta din card. Pe întuneric urcă la `#6f93f0`, ca să rămână lizibil pe Onyx. |
+| **Galben** `#f5cb5c` (`--pending`) | ce încă nu s-a întâmplat: eticheta „în curând" de pe o acțiune care nu e gata. Cu Onyx deasupra dă 11.95:1, în ambele teme.                |
+
+Niciuna nu devine culoare de fundal de secțiune, de buton principal sau de navigație. Dacă într-o zi una dintre ele ajunge să decoreze, înseamnă că a încetat să mai însemne ceva.
 
 ## Literele
 
 - **Plus Jakarta Sans** duce tot: interfață, titluri de card, text. O singură voce, de la buton la paragraf.
-- **Source Serif 4** apare numai pe afirmațiile mari, adică titlul `h1` al unei pagini de conținut. Nu pe interfață, nu pe titluri de card, nu pe butoane. Serifa aduce registrul de instituție; pusă peste tot, l-ar toci.
-- Pe display, tracking negativ (`-0.015em`). Textul curent rămâne la tracking normal și 1.6 înălțime de rând.
+- **Bricolage Grotesque** apare numai pe titlul `h1` al unei pagini. Nu pe interfață, nu pe titluri de card, nu pe butoane. Are talia mai largă și tăietura mai apăsată, deci titlul se desparte de pagină fără să crească în corp de literă; pusă peste tot, ar striga.
+- Pe display, 700 și tracking negativ (`-0.02em`). Textul curent rămâne la tracking normal și 1.6 înălțime de rând.
+
+## Semnul
+
+O bulă de mesaj cu vârful în jos și punctul locului în mijloc. Verdele poartă forma, portocaliul stă în punct: a doua culoare a mărcii intră acolo unde se uită ochiul oricum, iar inelul dintre punct și bulă rămâne decupat, deci semnul funcționează pe orice fundal fără o versiune separată.
+
+Nu se desenează cu contur, nu primește umbră, nu se pune pe un pătrat colorat. Mărimea minimă e 16 puncte, unde încă se citesc toate trei formele.
 
 ## Formele și adâncimea
 

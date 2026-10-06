@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Source_Serif_4 } from "next/font/google";
+import { Bricolage_Grotesque, Plus_Jakarta_Sans } from "next/font/google";
 
 import { ThemeProvider } from "@/components/site/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -15,13 +15,13 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 /**
- * Serifa stă doar pe afirmațiile mari, niciodată pe interfață. Un serviciu
- * public se citește altfel decât un produs: literele cu picior aduc registrul
- * de instituție, dar numai acolo unde chiar se face o afirmație.
+ * Vocea de afiș, numai pe titlurile mari. Are talia mai largă și tăietura mai
+ * apăsată decât Jakarta, deci un titlu scris cu ea se desparte de restul paginii
+ * fără să urce în corp de literă. Pe interfață nu intră: acolo ar începe să strige.
  */
-const sourceSerif = Source_Serif_4({
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin", "latin-ext"],
-  variable: "--font-source-serif",
+  variable: "--font-bricolage",
   display: "swap",
 });
 
@@ -49,7 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ro"
-      className={`${jakarta.variable} ${sourceSerif.variable} antialiased`}
+      className={`${jakarta.variable} ${bricolage.variable} antialiased`}
       suppressHydrationWarning
     >
       <body className="bg-background text-foreground flex min-h-dvh flex-col">
