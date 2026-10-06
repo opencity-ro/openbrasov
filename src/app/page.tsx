@@ -17,7 +17,7 @@ export default function HomePage() {
           <p className="text-primary text-sm font-semibold tracking-wide uppercase">
             {t.home.eyebrow}
           </p>
-          <h1 className="font-heading mt-3 max-w-3xl text-4xl font-bold text-balance sm:text-6xl">
+          <h1 className="font-display mt-3 max-w-3xl text-4xl font-bold tracking-[-0.02em] text-balance sm:text-6xl">
             {t.home.title}
           </h1>
           <p className="text-muted-foreground mt-6 max-w-2xl text-lg leading-relaxed">
@@ -27,9 +27,9 @@ export default function HomePage() {
             <Button asChild size="xl">
               <Link href="/harta">{t.home.ctaMap}</Link>
             </Button>
-            <Button size="xl" variant="accent" disabled aria-disabled="true">
+            <Button size="xl" variant="outline" disabled aria-disabled="true">
               {t.home.ctaReport}
-              <span className="bg-accent-foreground/10 rounded-full px-2 py-0.5 text-xs font-medium">
+              <span className="bg-pending text-pending-foreground rounded-full px-2 py-0.5 text-xs font-semibold">
                 {t.home.ctaReportSoon}
               </span>
             </Button>
