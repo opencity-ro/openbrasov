@@ -64,6 +64,10 @@
 }
 
 :root {
+  /* Spune browserului în ce temă suntem, ca bara de derulare, câmpurile native și
+   * meniurile de sistem să nu rămână albe peste o pagină închisă. */
+  color-scheme: light;
+
   --radius: 0.5rem; /* 8px pe controale; cardurile folosesc rounded-2xl = 16px */
 
   --background: #f7f8f5;
@@ -108,6 +112,8 @@
 /* Pe Onyx suprafețele urcă în trepte mici, iar separarea o fac liniile de o
  * grosime, nu umbrele: pe o pânză aproape neagră o umbră nu se vede oricum. */
 .dark {
+  color-scheme: dark;
+
   --background: var(--brand-onyx);
   --foreground: #e9efe6;
   --card: #131d11;
@@ -203,6 +209,53 @@
   label[for],
   select:not(:disabled) {
     cursor: pointer;
+  }
+}
+
+@layer base {
+  /*
+   * Părțile pe care nu le desenăm noi.
+   *
+   * Selecția textului, cursorul de scriere, bifele native și bara de derulare vin
+   * din browser și nu seamănă cu nimic din restul paginii. Lăsate așa, trădează o
+   * interfață asamblată, nu construită. Se leagă aici de aceiași tokeni ca tot
+   * restul, deci urmează singure tema.
+   */
+  ::selection {
+    background: color-mix(in oklch, var(--primary), transparent 78%);
+    color: var(--foreground);
+  }
+
+  html {
+    caret-color: var(--primary);
+    accent-color: var(--primary);
+    scrollbar-color: var(--border) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    height: 12px;
+    width: 12px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  /* Marginea de aceeași culoare cu fundalul subțiază optic bara, fără a-i micșora
+   * suprafața de prins cu mouse-ul. */
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    background-clip: padding-box;
+    border: 3px solid var(--background);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+    background-clip: padding-box;
+    border: 3px solid var(--background);
+  }
+
+  a {
+    text-decoration-thickness: from-font;
+    text-underline-offset: 0.18em;
   }
 }
 
