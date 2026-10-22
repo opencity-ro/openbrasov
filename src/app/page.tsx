@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import { GithubIcon } from "@/components/icons/github";
@@ -23,16 +23,13 @@ export default function HomePage() {
         <section className="overflow-hidden">
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-12 pb-16 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:pt-20 lg:pb-24">
             <Reveal trigger="load" className="lg:col-span-5">
-              <h1 className="font-display text-[2.75rem] leading-[1.03] font-bold tracking-[-0.03em] text-balance sm:text-6xl lg:text-[4.25rem]">
+              <h1 className="font-display text-[2.9rem] leading-[1.02] font-medium tracking-[-0.025em] text-balance sm:text-6xl lg:text-[4.5rem]">
                 {t.home.title}
               </h1>
               <p className="text-muted-foreground mt-7 max-w-md text-lg leading-relaxed">
                 {t.home.subtitle}
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
-                <Button asChild size="xl">
-                  <Link href="/harta">{t.home.ctaMap}</Link>
-                </Button>
                 <Button size="xl" variant="outline" disabled aria-disabled="true">
                   {t.home.ctaReport}
                   <span className="bg-pending text-pending-foreground rounded-full px-2 py-0.5 text-xs font-semibold">
@@ -47,18 +44,19 @@ export default function HomePage() {
               delay={0.1}
               className="lg:col-span-7 lg:mr-[calc(50%-50vw)] lg:pl-4"
             >
-              <Link
-                href="/harta"
-                aria-label={t.home.mapAria}
-                className="group border-border focus-visible:ring-ring/50 focus-visible:border-ring relative block overflow-hidden rounded-2xl border focus-visible:ring-3 focus-visible:outline-none lg:rounded-r-none"
-              >
-                <div className="h-[clamp(19rem,46vh,30rem)] [mask-image:radial-gradient(130%_115%_at_42%_45%,#000_58%,transparent_100%)]">
-                  <CityMap className="scale-[1.02] transition-transform duration-700 ease-out group-hover:scale-[1.05]" />
+              <div className="border-border relative h-[clamp(20rem,52vh,34rem)] overflow-hidden rounded-2xl border bg-[var(--map-canvas)] lg:rounded-r-none">
+                <div className="absolute inset-0 [mask-image:radial-gradient(140%_125%_at_46%_44%,#000_56%,transparent_100%)]">
+                  <CityMap />
                 </div>
-                <span className="border-border bg-background/85 text-foreground absolute right-4 bottom-4 flex size-10 items-center justify-center rounded-full border backdrop-blur transition-transform duration-200 group-hover:-translate-y-0.5 lg:right-8">
-                  <ArrowUpRight aria-hidden="true" className="size-5" />
-                </span>
-              </Link>
+                {/* Acțiunea stă pe hartă, nu lângă ea: harta e lucrul la care te uiți
+                    deja, iar butonul e pasul următor al aceleiași priviri. */}
+                <Button asChild size="xl" className="absolute bottom-5 left-5 shadow-xl">
+                  <Link href="/harta">
+                    {t.home.ctaMap}
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                </Button>
+              </div>
             </Reveal>
           </div>
         </section>
@@ -71,7 +69,7 @@ export default function HomePage() {
         <section className="border-border bg-card border-y">
           <div className="mx-auto max-w-6xl px-4 py-18 sm:px-6 sm:py-24">
             <Reveal>
-              <h2 className="font-display text-3xl font-bold tracking-[-0.025em] sm:text-4xl">
+              <h2 className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-[2.5rem]">
                 {t.home.stepsTitle}
               </h2>
             </Reveal>
@@ -97,7 +95,7 @@ export default function HomePage() {
 
         <section className="mx-auto max-w-6xl px-4 py-18 sm:px-6 sm:py-24">
           <Reveal>
-            <h2 className="font-display text-3xl font-bold tracking-[-0.025em] sm:text-4xl">
+            <h2 className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-[2.5rem]">
               {t.home.categoriesTitle}
             </h2>
             <p className="text-muted-foreground mt-4 max-w-2xl text-lg leading-relaxed">
@@ -113,7 +111,7 @@ export default function HomePage() {
           <Reveal>
             <div className="border-border bg-card flex flex-col gap-7 rounded-2xl border p-8 sm:p-12 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
               <div>
-                <h2 className="font-display text-2xl font-bold tracking-[-0.02em] sm:text-3xl">
+                <h2 className="font-display text-2xl font-medium tracking-[-0.02em] sm:text-[2rem]">
                   {t.home.openSourceTitle}
                 </h2>
                 <p className="text-muted-foreground mt-3 max-w-2xl leading-relaxed">

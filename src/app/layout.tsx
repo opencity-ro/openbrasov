@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Plus_Jakarta_Sans } from "next/font/google";
+import { Montserrat, Newsreader } from "next/font/google";
 
 import { ThemeProvider } from "@/components/site/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -8,20 +8,25 @@ import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 /** Interfața și textul: o singură voce, de la buton la paragraf. */
-const jakarta = Plus_Jakarta_Sans({
+const montserrat = Montserrat({
   subsets: ["latin", "latin-ext"],
-  variable: "--font-jakarta",
+  variable: "--font-montserrat",
   display: "swap",
 });
 
 /**
- * Vocea de afiș, numai pe titlurile mari. Are talia mai largă și tăietura mai
- * apăsată decât Jakarta, deci un titlu scris cu ea se desparte de restul paginii
- * fără să urce în corp de literă. Pe interfață nu intră: acolo ar începe să strige.
+ * Vocea de afiș, numai pe titluri. E croită pentru citit lung, deci la corp mare
+ * are desenul așezat al unei pagini tipărite, nu zvâcul unui titlu de reclamă.
+ * Lângă geometria lui Montserrat face contrastul care lipsea când tot ce scria pe
+ * pagină era același sans îngroșat.
+ *
+ * Cursivul ei poartă cuvântul accentuat dintr-un titlu; nu amestecăm două familii
+ * ca să scoatem un cuvânt în față.
  */
-const bricolage = Bricolage_Grotesque({
+const newsreader = Newsreader({
   subsets: ["latin", "latin-ext"],
-  variable: "--font-bricolage",
+  style: ["normal", "italic"],
+  variable: "--font-newsreader",
   display: "swap",
 });
 
@@ -38,8 +43,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f8f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d160b" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f7f8" },
+    { media: "(prefers-color-scheme: dark)", color: "#14171a" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -49,7 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ro"
-      className={`${jakarta.variable} ${bricolage.variable} antialiased`}
+      className={`${montserrat.variable} ${newsreader.variable} antialiased`}
       suppressHydrationWarning
     >
       <body className="bg-background text-foreground flex min-h-dvh flex-col">

@@ -26,7 +26,7 @@ export function SiteHeader() {
         <Link href="/" aria-label={t.brand.name}>
           <Wordmark />
         </Link>
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-1 text-[0.9375rem] font-semibold">
           <Button asChild variant="ghost" size="xl">
             <Link href="/harta" aria-label={t.nav.map}>
               <MapPin aria-hidden="true" />
