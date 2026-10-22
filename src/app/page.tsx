@@ -45,9 +45,7 @@ export default function HomePage() {
               className="lg:col-span-7 lg:mr-[calc(50%-50vw)] lg:pl-4"
             >
               <div className="border-border relative h-[clamp(20rem,52vh,34rem)] overflow-hidden rounded-2xl border bg-[var(--map-canvas)] lg:rounded-r-none">
-                <div className="absolute inset-0 [mask-image:radial-gradient(140%_125%_at_46%_44%,#000_56%,transparent_100%)]">
-                  <CityMap />
-                </div>
+                <CityMap />
                 {/* Acțiunea stă pe hartă, nu lângă ea: harta e lucrul la care te uiți
                     deja, iar butonul e pasul următor al aceleiași priviri. */}
                 <Button asChild size="xl" className="absolute bottom-5 left-5 shadow-xl">

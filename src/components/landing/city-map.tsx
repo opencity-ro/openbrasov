@@ -113,7 +113,7 @@ export function CityMap({ className }: { className?: string }) {
           preserveAspectRatio="xMidYMid slice"
           role="img"
           aria-label="Harta Brașovului"
-          className="absolute inset-0 size-full"
+          className="absolute inset-0 size-full [mask-image:radial-gradient(135%_120%_at_46%_46%,#000_52%,transparent_100%)]"
         >
           <rect x={VIEW_X} y={VIEW_Y} width={VIEW_W} height={VIEW_H} fill="var(--map-canvas)" />
           <path d={CITY_GREEN} fill="var(--map-green)" fillRule="evenodd" />
