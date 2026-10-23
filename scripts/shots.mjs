@@ -46,10 +46,26 @@ for (const theme of ["dark", "light"]) {
     });
 
     if (viewport.name === "desktop") {
-      const hero = page.locator("main > section").first();
-      if (await hero.count()) {
-        await hero.screenshot({ path: `${OUT}/${theme}-hero.png` });
+      // Scena agățată: o parcurgem în trepte și prindem fiecare capitol.
+      for (const [name, ratio] of [
+        ["cap1", 0.04],
+        ["cap2", 0.42],
+        ["cap3", 0.82],
+      ]) {
+        await page.evaluate((value) => {
+          const stage = document.querySelector("main > div");
+          if (!stage) return;
+          const span = stage.scrollHeight - window.innerHeight;
+          window.scrollTo(0, stage.offsetTop + span * value);
+        }, ratio);
+        await page.waitForTimeout(900);
+        await page.screenshot({
+          path: `${OUT}/${theme}-${name}.png`,
+          clip: { x: 0, y: 0, width: viewport.width, height: viewport.height },
+        });
       }
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.waitForTimeout(600);
       // Blocurile intră la prima trecere prin dreptul lor, deci pagina trebuie
       // parcursă o dată înainte de captura întreagă; altfel ies secțiuni goale.
       await page.evaluate(async () => {

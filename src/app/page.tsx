@@ -3,10 +3,8 @@ import Link from "next/link";
 
 import { GithubIcon } from "@/components/icons/github";
 import { CategoriesWall } from "@/components/landing/categories-wall";
-import { Hero } from "@/components/landing/hero";
+import { CityStage } from "@/components/landing/city-stage";
 import { Reveal } from "@/components/landing/reveal";
-import { Statement } from "@/components/landing/statement";
-import { Steps } from "@/components/landing/steps";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
 import { Button } from "@/components/ui/button";
@@ -17,15 +15,7 @@ export default function HomePage() {
     <>
       <SiteHeader />
       <main id="continut" className="flex-1">
-        <Hero />
-
-        <section className="border-border border-y">
-          <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
-            <Statement text={t.home.statement} />
-          </div>
-        </section>
-
-        <Steps />
+        <CityStage />
 
         <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
           <Reveal>

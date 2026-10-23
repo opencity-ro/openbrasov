@@ -1,6 +1,13 @@
 "use client";
 
-import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
+import {
+  motion,
+  type MotionValue,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+} from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useState } from "react";
@@ -94,7 +101,7 @@ const PIN_CATEGORIES: ReportCategory[] = [
  * Cât din lățime ține textul eroului. Semnele care ar cădea acolo nu se desenează:
  * un pin sub un titlu nu se poate apăsa, nu se poate citi și murdărește litera.
  */
-const TEXT_COLUMN = 46;
+const TEXT_COLUMN = 54;
 
 /** Cât de mare se desenează pinul în pagină, față de cutia lui de pe hartă. */
 const PIN_SCALE = 0.96;
@@ -102,7 +109,28 @@ const PIN_SCALE = 0.96;
 /** Semnele cu puls: cele mai noi sesizări, ca pe hartă. Câteva, nu toate. */
 const PULSING = new Set([2, 9, 17]);
 
-export function CityMap({ className }: { className?: string }) {
+/**
+ * Camera, când o conduce altcineva decât cursorul: derularea paginii. Valorile
+ * sunt de mișcare, deci harta urmează fără să redeseneze React la fiecare cadru.
+ */
+export type CityCamera = {
+  zoom: MotionValue<number>;
+  panX: MotionValue<number>;
+  panY: MotionValue<number>;
+  tilt: MotionValue<number>;
+  spin: MotionValue<number>;
+};
+
+export function CityMap({
+  className,
+  camera,
+  clearTextColumn = false,
+}: {
+  className?: string;
+  camera?: CityCamera;
+  /** Lasă coloana din stânga goală, pentru paginile care pun text peste hartă. */
+  clearTextColumn?: boolean;
+}) {
   const reduce = useReducedMotion();
   const [hovered, setHovered] = useState<number | null>(null);
 
@@ -113,8 +141,12 @@ export function CityMap({ className }: { className?: string }) {
   const swayX = useSpring(useTransform(pointerY, [-1, 1], [SWAY, -SWAY]), spring);
   const driftX = useSpring(useTransform(pointerX, [-1, 1], [26, -26]), spring);
   const driftY = useSpring(useTransform(pointerY, [-1, 1], [14, -14]), spring);
-  const rotateX = useTransform(swayX, (value) => `${TILT + (reduce ? 0 : value)}deg`);
-  const rotateZ = useTransform(swayZ, (value) => `${-8 + (reduce ? 0 : value)}deg`);
+  const ownRotateX = useTransform(swayX, (value) => `${TILT + (reduce ? 0 : value)}deg`);
+  const ownRotateZ = useTransform(swayZ, (value) => `${-8 + (reduce ? 0 : value)}deg`);
+  const camRotateX = useTransform(camera?.tilt ?? swayX, (value) => `${value}deg`);
+  const camRotateZ = useTransform(camera?.spin ?? swayZ, (value) => `${value}deg`);
+  const rotateX = camera ? camRotateX : ownRotateX;
+  const rotateZ = camera ? camRotateZ : ownRotateZ;
 
   const follow = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
@@ -150,7 +182,13 @@ export function CityMap({ className }: { className?: string }) {
        */}
       <motion.div
         style={
-          { rotateZ, "--plane-z": rotateZ, x: reduce ? 0 : driftX, y: reduce ? 0 : driftY } as never
+          {
+            rotateZ,
+            "--plane-z": rotateZ,
+            x: camera ? camera.panX : reduce ? 0 : driftX,
+            y: camera ? camera.panY : reduce ? 0 : driftY,
+            scale: camera ? camera.zoom : 1,
+          } as never
         }
         className="absolute inset-0 [transform-style:preserve-3d]"
       >
@@ -220,7 +258,7 @@ export function CityMap({ className }: { className?: string }) {
 
           {CITY_PINS.map(([x, y], index) => {
             const plainLeft = (x / CITY_VIEW_WIDTH) * 100;
-            if (plainLeft < TEXT_COLUMN) return null;
+            if (clearTextColumn && plainLeft < TEXT_COLUMN) return null;
             const category = PIN_CATEGORIES[index % PIN_CATEGORIES.length];
             const color = categoryColor[category];
             const left = (x / CITY_VIEW_WIDTH) * 100;
