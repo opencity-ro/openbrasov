@@ -17,7 +17,7 @@ export default async function MapPage() {
   return (
     <>
       <SiteHeader />
-      <main className="relative flex-1">
+      <main id="continut" className="relative flex-1">
         <h1 className="sr-only">{t.map.title}</h1>
         {/* Filtrele se citesc din adresă, iar asta cere o graniță de așteptare. */}
         <Suspense>

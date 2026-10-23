@@ -7,9 +7,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-bricolage), var(--font-jakarta), ui-sans-serif, sans-serif;
+  --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bodoni), ui-serif, Georgia, serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -59,10 +60,12 @@
  * doar tokenii semantici de mai jos, iar aceia se leagă de primitivele astea.
  * Dacă marca se schimbă vreodată, se schimbă aici și nicăieri altundeva.
  *
- * Onyxul e aceeași culoare în ambele teme: cerneala pe lumină, pânza pe întuneric.
+ * Cerneala e aceeași culoare în ambele teme: scrisul pe lumină, pânza pe întuneric.
+ * E neutră, nu verzuie: o pânză cu tentă de culoare trage toate culorile de pe ea
+ * către ea, iar verdele mărcii nu mai iese din fundal, ci se topește în el.
  * ------------------------------------------------------------------------- */
 :root {
-  --brand-onyx: #0d160b;
+  --brand-ink: #14171a;
   --brand-green: #08a045;
   --brand-orange: #d65108;
 
@@ -80,12 +83,12 @@
 
   --radius: 0.5rem; /* 8px pe controale; cardurile folosesc rounded-2xl = 16px */
 
-  --background: #f7f8f5;
-  --foreground: var(--brand-onyx);
+  --background: #f6f7f8;
+  --foreground: var(--brand-ink);
   --card: #ffffff;
-  --card-foreground: var(--brand-onyx);
+  --card-foreground: var(--brand-ink);
   --popover: #ffffff;
-  --popover-foreground: var(--brand-onyx);
+  --popover-foreground: var(--brand-ink);
 
   /* Verdele mărcii dă 3.43:1 cu albul, sub pragul AA. Pe lumină interactivul
    * coboară o treaptă, la 5.06:1, și rămâne aceeași culoare la privire.
@@ -95,32 +98,50 @@
   --accent: #b84507;
   --accent-foreground: #ffffff;
 
-  --secondary: #ecefe8;
-  --secondary-foreground: var(--brand-onyx);
-  --muted: #ecefe8;
-  --muted-foreground: #546152;
+  --secondary: #eef0ed;
+  --secondary-foreground: var(--brand-ink);
+  --muted: #eef0ed;
+  --muted-foreground: #585e62;
   --destructive: #b91c1c;
   --destructive-foreground: #ffffff;
   --info: var(--brand-blue);
   --info-foreground: #ffffff;
   --pending: var(--brand-yellow);
-  --pending-foreground: var(--brand-onyx);
-  --border: #dce2d7;
-  --input: #dce2d7;
+  --pending-foreground: var(--brand-ink);
+  --border: #dde0db;
+  --input: #dde0db;
   --ring: #078037;
   --chart-1: #078037;
   --chart-2: #b84507;
   --chart-3: var(--brand-blue);
   --chart-4: #b91c1c;
-  --chart-5: #546152;
+  --chart-5: #585e62;
   --sidebar: #ffffff;
-  --sidebar-foreground: var(--brand-onyx);
+  --sidebar-foreground: var(--brand-ink);
   --sidebar-primary: #078037;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #ecefe8;
-  --sidebar-accent-foreground: var(--brand-onyx);
-  --sidebar-border: #dce2d7;
+  --sidebar-accent: #eef0ed;
+  --sidebar-accent-foreground: var(--brand-ink);
+  --sidebar-border: #dde0db;
   --sidebar-ring: #078037;
+
+  /* Harta desenată de pe pagina de pornire. Pânza ei nu e pânza paginii: un
+   * panou puțin mai închis se citește ca obiect așezat pe pagină, nu ca un desen
+   * care curge din ea. */
+  --map-canvas: #e7ece1;
+  --map-green: #d6e2c9;
+  --map-water: #c7d9e8;
+  --map-street: #f3f6ef;
+  --map-road: #fbfcfa;
+  --map-major: #e9b96c;
+  --map-building: #e3e5e2;
+  --map-building-wall: #c9cdc6;
+  --map-building-edge: #d2d6cf;
+  --map-pin-ring: #ffffff;
+  /* Umbra semnului, pe pământ. Pe hârtie e negru obișnuit. */
+  --map-pin-shadow: rgb(0 0 0 / 0.34);
+  --map-pin-shadow-core: rgb(0 0 0 / 0.5);
+  --map-pin-glow: transparent;
 }
 
 /* Pe Onyx suprafețele urcă în trepte mici, iar separarea o fac liniile de o
@@ -128,46 +149,63 @@
 .dark {
   color-scheme: dark;
 
-  --background: var(--brand-onyx);
-  --foreground: #e9efe6;
-  --card: #131d11;
-  --card-foreground: #e9efe6;
-  --popover: #131d11;
-  --popover-foreground: #e9efe6;
+  --background: var(--brand-ink);
+  --foreground: #e9ecef;
+  --card: #1a1e22;
+  --card-foreground: #e9ecef;
+  --popover: #1a1e22;
+  --popover-foreground: #e9ecef;
 
   /* Pe întuneric culorile mărcii merg nealterate, cu cerneala deasupra lor:
    * verde 5.39:1, portocaliu deschis cu o treaptă ca să treacă de 4.5:1. */
   --primary: var(--brand-green);
-  --primary-foreground: var(--brand-onyx);
+  --primary-foreground: var(--brand-ink);
   --accent: #e86520;
-  --accent-foreground: var(--brand-onyx);
+  --accent-foreground: var(--brand-ink);
 
-  --secondary: #182417;
-  --secondary-foreground: #e9efe6;
-  --muted: #182417;
-  --muted-foreground: #9fb09b;
+  --secondary: #202429;
+  --secondary-foreground: #e9ecef;
+  --muted: #202429;
+  --muted-foreground: #9ba2ab;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --info: #6f93f0;
-  --info-foreground: var(--brand-onyx);
+  --info-foreground: var(--brand-ink);
   --pending: var(--brand-yellow);
-  --pending-foreground: var(--brand-onyx);
-  --border: #243021;
-  --input: #243021;
+  --pending-foreground: var(--brand-ink);
+  --border: #2a2f35;
+  --input: #2a2f35;
   --ring: var(--brand-green);
   --chart-1: #0bb54e;
   --chart-2: #e86520;
   --chart-3: #6f93f0;
   --chart-4: #ef4444;
-  --chart-5: #9fb09b;
-  --sidebar: #131d11;
-  --sidebar-foreground: #e9efe6;
+  --chart-5: #9ba2ab;
+  --sidebar: #1a1e22;
+  --sidebar-foreground: #e9ecef;
   --sidebar-primary: var(--brand-green);
-  --sidebar-primary-foreground: var(--brand-onyx);
-  --sidebar-accent: #182417;
-  --sidebar-accent-foreground: #e9efe6;
-  --sidebar-border: #243021;
+  --sidebar-primary-foreground: var(--brand-ink);
+  --sidebar-accent: #202429;
+  --sidebar-accent-foreground: #e9ecef;
+  --sidebar-border: #2a2f35;
   --sidebar-ring: var(--brand-green);
+
+  --map-canvas: #12151a;
+  --map-green: #1b2a1d;
+  --map-water: #18314c;
+  --map-street: #262b31;
+  --map-road: #343a42;
+  --map-major: #9a7238;
+  --map-building: #2f353e;
+  --map-building-wall: #1c2128;
+  --map-building-edge: #343b44;
+  --map-pin-ring: #ffffff;
+  /* Pe pânza închisă o umbră neagră nu se mai vede: se îngroașă, iar sub ea se
+   * pune un halou rece, ca pământul care prinde lumina în jurul obiectului.
+   * Despărțirea o face haloul, nu întunericul. */
+  --map-pin-shadow: rgb(0 0 0 / 0.72);
+  --map-pin-shadow-core: rgb(0 0 0 / 0.92);
+  --map-pin-glow: rgb(190 214 255 / 0.1);
 }
 
 @layer base {
@@ -277,7 +315,129 @@
   }
 }
 
+/*
+ * Înălțimea la care plutește un semn deasupra hărții. Înregistrată ca lungime,
+ * ca browserul să o poată interpola: o variabilă neînregistrată sare dintr-o
+ * valoare în alta, fără tranziție.
+ */
+@property --pin-lift {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@property --pin-height {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 16px;
+}
+
 @layer components {
+  /*
+   * Semnele de pe harta desenată.
+   *
+   * Planul e culcat, iar semnul se ridică perpendicular pe el: de asta corpul
+   * lui se rotește înapoi cu exact unghiul planului. Umbra rămâne culcată, și ea
+   * e tot ce trebuie ca ochiul să vadă un obiect ridicat deasupra orașului, nu un
+   * desen lipit peste el.
+   *
+   * Intră etajat, nu toate deodată: harta se populează sub ochi. Pulsul îl poartă
+   * doar câteva, altfel ar fi mișcare peste tot și n-ar mai însemna nimic.
+   *
+   * Regula generală de mișcare redusă, mai sus, le oprește pe amândouă; semnele
+   * rămân vizibile, fiindcă animația se termină instantaneu pe ultimul cadru.
+   */
+  /*
+   * Ridicarea semnului se animează prin variabilă, nu prin `transform` pe semn.
+   * Un `transform` pe elementul din afară, fie el și plat, aplatizează tot ce are
+   * dedesubt: corpul semnului nu se mai poate întoarce spre privitor și rămâne
+   * culcat pe asfalt ca un autocolant. Măsurat, capul ieșea 44 pe 26 în loc de
+   * 47 pe 47. Variabila intră direct în transformarea corpului, deci stratul 3D
+   * rămâne neatins.
+   */
+  /*
+   * Intrarea și estomparea stau pe cap și pe umbră, niciodată pe semnul întreg.
+   * O transparență sub 1 pe un element îi forțează copiii înapoi în plan, oricât
+   * de 3D ar fi declarați: cât ținea animația, semnele stăteau culcate pe asfalt
+   * ca niște autocolante. Măsurat, capul ieșea 42 pe 28 în loc de 42 pe 42.
+   * Capul și umbra sunt frunze, deci le putem stinge fără să stricăm nimic.
+   */
+  .city-pin-head,
+  .city-pin-shadow {
+    animation: city-pin-in 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--pin-delay, 0ms);
+  }
+
+  /*
+   * Semnul anulează exact ce i-a făcut planul, în ordine inversă: întâi scoate
+   * înclinarea, apoi rotirea în plan. Fără a doua, semnele stau strâmbe cu atât
+   * cât e rotit orașul sub ele.
+   *
+   * Pe urmă se ridică pe `translateZ`, adică chiar spre privitor, nu doar mai sus
+   * pe ecran. Asta plus umbra lăsată culcată pe asfalt e ce face relieful: la
+   * mișcarea hărții, semnul și umbra lui se despart, cum se despart în realitate.
+   */
+  .city-pin-body {
+    transform: translate(-50%, -100%) rotateX(calc(-1 * var(--pin-tilt)))
+      rotateZ(calc(-1 * var(--plane-z, 0deg))) translateZ(var(--pin-height, 16px))
+      translateY(var(--pin-lift, 0px));
+    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .city-pin:hover,
+  .city-pin:focus-visible {
+    --pin-lift: -10px;
+    --pin-height: 34px;
+  }
+
+  .city-pin-head {
+    transition:
+      transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 220ms ease;
+  }
+
+  /* Umbra se lățește când semnul se ridică: asta e ce vinde înălțimea. */
+  .city-pin-shadow {
+    transition:
+      transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 220ms ease;
+  }
+
+  .city-pin:hover .city-pin-shadow,
+  .city-pin:focus-visible .city-pin-shadow {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1.35);
+  }
+
+  .city-pin:focus-visible .city-pin-head {
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+
+  @keyframes city-pin-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .city-pin-pulse {
+    animation: city-pulse 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
+  @keyframes city-pulse {
+    0% {
+      opacity: 0.45;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(2.6);
+    }
+  }
+
   /*
    * Săgeata obișnuită peste toată harta.
    *

@@ -10,7 +10,7 @@ export default function TermsPage() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-16 sm:px-6">
+      <main id="continut" className="mx-auto w-full max-w-3xl flex-1 px-4 py-16 sm:px-6">
         <h1 className="font-display text-3xl font-bold tracking-[-0.015em]">
           {t.legal.termsTitle}
         </h1>

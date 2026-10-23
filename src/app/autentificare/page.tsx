@@ -35,7 +35,7 @@ export default async function SignInPage({
   return (
     <>
       <SiteHeader />
-      <main className="flex flex-1 items-center justify-center px-4 py-12 sm:px-6">
+      <main id="continut" className="flex flex-1 items-center justify-center px-4 py-12 sm:px-6">
         <div className="bg-card border-border w-full max-w-md rounded-2xl border p-6 shadow-sm sm:p-8">
           <LogoMark size={40} className="mb-6" />
           <SignInForm initialError={eroare ? errorMessages[eroare] : undefined} />

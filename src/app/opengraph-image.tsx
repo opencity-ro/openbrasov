@@ -26,8 +26,8 @@ export default function OpenGraphImage() {
         flexDirection: "column",
         justifyContent: "space-between",
         padding: 88,
-        background: "#0d160b",
-        color: "#e9efe6",
+        background: "#14171a",
+        color: "#e9ecef",
         fontFamily: "sans-serif",
       }}
     >
@@ -42,7 +42,7 @@ export default function OpenGraphImage() {
         <div style={{ fontSize: 76, fontWeight: 700, lineHeight: 1.08, letterSpacing: -2.4 }}>
           {t.home.title}
         </div>
-        <div style={{ marginTop: 28, fontSize: 30, color: "#9fb09b" }}>{t.brand.tagline}</div>
+        <div style={{ marginTop: 28, fontSize: 30, color: "#9ba2ab" }}>{t.brand.tagline}</div>
       </div>
       <div style={{ display: "flex", height: 6, width: 160, background: "#08a045" }} />
     </div>,
