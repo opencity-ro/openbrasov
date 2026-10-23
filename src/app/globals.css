@@ -304,6 +304,17 @@
   }
 }
 
+/*
+ * Înălțimea la care plutește un semn deasupra hărții. Înregistrată ca lungime,
+ * ca browserul să o poată interpola: o variabilă neînregistrată sare dintr-o
+ * valoare în alta, fără tranziție.
+ */
+@property --pin-lift {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
 @layer components {
   /*
    * Semnele de pe harta desenată.
@@ -319,7 +330,23 @@
    * Regula generală de mișcare redusă, mai sus, le oprește pe amândouă; semnele
    * rămân vizibile, fiindcă animația se termină instantaneu pe ultimul cadru.
    */
-  .city-pin {
+  /*
+   * Ridicarea semnului se animează prin variabilă, nu prin `transform` pe semn.
+   * Un `transform` pe elementul din afară, fie el și plat, aplatizează tot ce are
+   * dedesubt: corpul semnului nu se mai poate întoarce spre privitor și rămâne
+   * culcat pe asfalt ca un autocolant. Măsurat, capul ieșea 44 pe 26 în loc de
+   * 47 pe 47. Variabila intră direct în transformarea corpului, deci stratul 3D
+   * rămâne neatins.
+   */
+  /*
+   * Intrarea și estomparea stau pe cap și pe umbră, niciodată pe semnul întreg.
+   * O transparență sub 1 pe un element îi forțează copiii înapoi în plan, oricât
+   * de 3D ar fi declarați: cât ținea animația, semnele stăteau culcate pe asfalt
+   * ca niște autocolante. Măsurat, capul ieșea 42 pe 28 în loc de 42 pe 42.
+   * Capul și umbra sunt frunze, deci le putem stinge fără să stricăm nimic.
+   */
+  .city-pin-head,
+  .city-pin-shadow {
     animation: city-pin-in 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
     animation-delay: var(--pin-delay, 0ms);
   }
@@ -330,14 +357,15 @@
     transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .city-pin {
-    transition: opacity 220ms ease;
-  }
-
   .city-pin:hover,
   .city-pin:focus-visible {
-    --pin-lift: -12px;
-    opacity: 1;
+    --pin-lift: -14px;
+  }
+
+  .city-pin-head {
+    transition:
+      transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 220ms ease;
   }
 
   /* Umbra se lățește când semnul se ridică: asta e ce vinde înălțimea. */
@@ -360,11 +388,9 @@
   @keyframes city-pin-in {
     from {
       opacity: 0;
-      transform: translateY(-14px) scale(0.72);
     }
     to {
       opacity: 1;
-      transform: none;
     }
   }
 

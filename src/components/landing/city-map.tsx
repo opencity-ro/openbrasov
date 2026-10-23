@@ -122,152 +122,168 @@ export function CityMap({ className }: { className?: string }) {
         className,
       )}
     >
+      {/*
+       * Două straturi, nu unul: rotirea în plan stă afară, înclinarea stă înăuntru.
+       * Dacă ambele ar sta pe același element, ordinea în care le compune motorul
+       * de animație ar fi `rotateX` apoi `rotateZ`, iar contra-rotația semnului
+       * n-ar mai anula înclinarea — semnele ar rămâne turtite pe asfalt. Separate,
+       * inversa semnului cade exact peste înclinare și el se ridică drept.
+       */}
       <motion.div
-        style={{ rotateX, rotateZ, x: reduce ? 0 : driftX, y: reduce ? 0 : driftY }}
-        className="absolute -inset-x-[28%] -top-[58%] -bottom-[18%] [transform-style:preserve-3d]"
+        style={{ rotateZ, x: reduce ? 0 : driftX, y: reduce ? 0 : driftY }}
+        className="absolute inset-0 [transform-style:preserve-3d]"
       >
-        <svg
-          viewBox={CITY_VIEW_BOX}
-          preserveAspectRatio="xMidYMid slice"
-          role="img"
-          aria-label="Harta Brașovului"
-          className="absolute inset-0 size-full"
+        <motion.div
+          style={{ rotateX }}
+          className="absolute -inset-x-[28%] -top-[58%] -bottom-[18%] [transform-style:preserve-3d]"
         >
-          <rect
-            x="0"
-            y="0"
-            width={CITY_VIEW_WIDTH}
-            height={CITY_VIEW_HEIGHT}
-            fill="var(--map-canvas)"
-          />
-          <path d={CITY_GREEN} fill="var(--map-green)" fillRule="evenodd" />
-          <path d={CITY_WATER} fill="var(--map-water)" fillRule="evenodd" />
-          <path
-            d={CITY_WATERWAY}
-            fill="none"
-            stroke="var(--map-water)"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <path
-            d={CITY_STREETS}
-            fill="none"
-            stroke="var(--map-street)"
-            strokeWidth="1.3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d={CITY_MINOR_ROADS}
-            fill="none"
-            stroke="var(--map-road)"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d={CITY_MAJOR_ROADS}
-            fill="none"
-            stroke="var(--map-major)"
-            strokeWidth="3.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Peretele, apoi acoperișul ridicat peste el: banda dintre ele e înălțimea. */}
-          <path d={CITY_BUILDINGS} fill="var(--map-building-wall)" fillRule="evenodd" />
-          <g transform={`translate(0 ${-ROOF_RISE})`}>
-            <path
-              d={CITY_BUILDINGS}
-              fill="var(--map-building)"
-              stroke="var(--map-building-edge)"
-              strokeWidth="0.5"
-              fillRule="evenodd"
+          <svg
+            viewBox={CITY_VIEW_BOX}
+            preserveAspectRatio="xMidYMid slice"
+            role="img"
+            aria-label="Harta Brașovului"
+            className="absolute inset-0 size-full"
+          >
+            <rect
+              x="0"
+              y="0"
+              width={CITY_VIEW_WIDTH}
+              height={CITY_VIEW_HEIGHT}
+              fill="var(--map-canvas)"
             />
-          </g>
-        </svg>
-
-        {CITY_PINS.map(([x, y], index) => {
-          const category = PIN_CATEGORIES[index % PIN_CATEGORIES.length];
-          const color = categoryColor[category];
-          const left = (x / CITY_VIEW_WIDTH) * 100;
-          const top = (y / CITY_VIEW_HEIGHT) * 100;
-          const open = hovered === index;
-
-          return (
-            <Link
-              key={`${x}-${y}`}
-              href={`/harta?categorie=${category}`}
-              aria-label={`${categoryLabel(category)} pe hartă`}
-              onPointerEnter={() => setHovered(index)}
-              onFocus={() => setHovered(index)}
-              onBlur={() => setHovered(null)}
-              style={
-                {
-                  left: `${left}%`,
-                  top: `${top}%`,
-                  "--pin-delay": `${index * 48}ms`,
-                  "--pin-tilt": `${TILT}deg`,
-                  zIndex: open ? 40 : 10 + Math.round(top / 3),
-                } as React.CSSProperties
-              }
-              className={cn(
-                "city-pin group absolute block [transform-style:preserve-3d] focus-visible:outline-none",
-                hovered !== null && !open && "opacity-55",
-              )}
-            >
-              {/* Umbra rămâne culcată pe plan: ea e ce spune că semnul stă deasupra lui. */}
-              <span
-                aria-hidden="true"
-                className="city-pin-shadow absolute top-0 left-0 block h-[9px] w-[26px] -translate-x-1/2 -translate-y-1/2 rounded-[50%] bg-black/50 blur-[3px]"
+            <path d={CITY_GREEN} fill="var(--map-green)" fillRule="evenodd" />
+            <path d={CITY_WATER} fill="var(--map-water)" fillRule="evenodd" />
+            <path
+              d={CITY_WATERWAY}
+              fill="none"
+              stroke="var(--map-water)"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+            <path
+              d={CITY_STREETS}
+              fill="none"
+              stroke="var(--map-street)"
+              strokeWidth="1.3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d={CITY_MINOR_ROADS}
+              fill="none"
+              stroke="var(--map-road)"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d={CITY_MAJOR_ROADS}
+              fill="none"
+              stroke="var(--map-major)"
+              strokeWidth="3.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Peretele, apoi acoperișul ridicat peste el: banda dintre ele e înălțimea. */}
+            <path d={CITY_BUILDINGS} fill="var(--map-building-wall)" fillRule="evenodd" />
+            <g transform={`translate(0 ${-ROOF_RISE})`}>
+              <path
+                d={CITY_BUILDINGS}
+                fill="var(--map-building)"
+                stroke="var(--map-building-edge)"
+                strokeWidth="0.5"
+                fillRule="evenodd"
               />
+            </g>
+          </svg>
 
-              <span className="city-pin-body block origin-bottom">
-                {PULSING.has(index) && !reduce && (
-                  <span
-                    aria-hidden="true"
-                    className="city-pin-pulse absolute top-[21px] left-1/2 block size-11 rounded-full"
-                    style={{ backgroundColor: color }}
-                  />
-                )}
+          {CITY_PINS.map(([x, y], index) => {
+            const category = PIN_CATEGORIES[index % PIN_CATEGORIES.length];
+            const color = categoryColor[category];
+            const left = (x / CITY_VIEW_WIDTH) * 100;
+            const top = (y / CITY_VIEW_HEIGHT) * 100;
+            const open = hovered === index;
+            const dimmed = hovered !== null && !open;
 
-                {/* Eticheta se ridică din semn, nu plutește lângă el. */}
-                <span
-                  className={cn(
-                    "border-border bg-popover text-popover-foreground pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 block w-max max-w-[12rem] -translate-x-1/2 rounded-lg border px-3 py-1.5 text-center text-xs leading-tight font-semibold shadow-xl transition duration-200",
-                    open ? "translate-y-0 opacity-100" : "translate-y-1.5 opacity-0",
-                  )}
-                >
-                  {categoryLabel(category)}
-                </span>
-
-                <span
-                  className="city-pin-head relative block size-[42px] rounded-full border-[3px] transition-transform duration-200 group-hover:scale-110"
-                  style={{ backgroundColor: color, borderColor: "var(--map-pin-ring)" }}
-                >
-                  <Image
-                    src={reportIconUrl(category)}
-                    alt=""
-                    width={30}
-                    height={30}
-                    className="absolute top-1/2 left-1/2 size-[30px] -translate-x-1/2 -translate-y-1/2"
-                  />
-                  {/* Lumina vine de sus-stânga, ca peste tot în pagină. */}
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_32%_26%,rgb(255_255_255/0.45),transparent_58%)]"
-                  />
-                </span>
-
-                {/* Piciorul: un triunghi în culoarea inelului, sub disc. */}
+            return (
+              <Link
+                key={`${x}-${y}`}
+                href={`/harta?categorie=${category}`}
+                aria-label={`${categoryLabel(category)} pe hartă`}
+                onPointerEnter={() => setHovered(index)}
+                onFocus={() => setHovered(index)}
+                onBlur={() => setHovered(null)}
+                style={
+                  {
+                    left: `${left}%`,
+                    top: `${top}%`,
+                    "--pin-delay": `${index * 48}ms`,
+                    "--pin-tilt": `${TILT}deg`,
+                    zIndex: open ? 40 : 10 + Math.round(top / 3),
+                  } as React.CSSProperties
+                }
+                className="city-pin group absolute block [transform-style:preserve-3d] focus-visible:outline-none"
+              >
+                {/* Umbra rămâne culcată pe plan: ea e ce spune că semnul stă deasupra lui. */}
                 <span
                   aria-hidden="true"
-                  className="absolute top-[37px] left-1/2 block size-0 -translate-x-1/2 border-x-[7px] border-t-[13px] border-x-transparent"
-                  style={{ borderTopColor: "var(--map-pin-ring)" }}
+                  className={cn(
+                    "city-pin-shadow absolute top-0 left-0 block h-[9px] w-[26px] -translate-x-1/2 -translate-y-1/2 rounded-[50%] bg-black/50 blur-[3px] transition-opacity duration-200",
+                    dimmed && "opacity-25",
+                  )}
                 />
-              </span>
-            </Link>
-          );
-        })}
+
+                <span className="city-pin-body block origin-bottom">
+                  {PULSING.has(index) && !reduce && (
+                    <span
+                      aria-hidden="true"
+                      className="city-pin-pulse absolute top-[21px] left-1/2 block size-11 rounded-full"
+                      style={{ backgroundColor: color }}
+                    />
+                  )}
+
+                  {/* Eticheta se ridică din semn, nu plutește lângă el. */}
+                  <span
+                    className={cn(
+                      "border-border bg-popover text-popover-foreground pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 block w-max max-w-[12rem] -translate-x-1/2 rounded-lg border px-3 py-1.5 text-center text-xs leading-tight font-semibold shadow-xl transition duration-200",
+                      open ? "translate-y-0 opacity-100" : "translate-y-1.5 opacity-0",
+                    )}
+                  >
+                    {categoryLabel(category)}
+                  </span>
+
+                  <span
+                    className={cn(
+                      "city-pin-head relative block size-[42px] rounded-full border-[3px] group-hover:scale-110",
+                      dimmed && "opacity-45",
+                    )}
+                    style={{ backgroundColor: color, borderColor: "var(--map-pin-ring)" }}
+                  >
+                    <Image
+                      src={reportIconUrl(category)}
+                      alt=""
+                      width={30}
+                      height={30}
+                      className="absolute top-1/2 left-1/2 size-[30px] -translate-x-1/2 -translate-y-1/2"
+                    />
+                    {/* Lumina vine de sus-stânga, ca peste tot în pagină. */}
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_32%_26%,rgb(255_255_255/0.45),transparent_58%)]"
+                    />
+                  </span>
+
+                  {/* Piciorul: un triunghi în culoarea inelului, sub disc. */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute top-[37px] left-1/2 block size-0 -translate-x-1/2 border-x-[7px] border-t-[13px] border-x-transparent"
+                    style={{ borderTopColor: "var(--map-pin-ring)" }}
+                  />
+                </span>
+              </Link>
+            );
+          })}
+        </motion.div>
       </motion.div>
     </div>
   );
