@@ -3,8 +3,10 @@ import Link from "next/link";
 
 import { GithubIcon } from "@/components/icons/github";
 import { CityMap } from "@/components/landing/city-map";
+import { HeroTitle } from "@/components/landing/hero-title";
 import { ReportCategories } from "@/components/landing/report-categories";
 import { Reveal } from "@/components/landing/reveal";
+import { Statement } from "@/components/landing/statement";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
 import { Button } from "@/components/ui/button";
@@ -22,33 +24,40 @@ export default function HomePage() {
          */}
         <section className="overflow-hidden">
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-12 pb-16 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:pt-20 lg:pb-24">
-            <Reveal trigger="load" className="lg:col-span-5">
-              <h1 className="font-display text-[2.9rem] leading-[1.02] font-medium tracking-[-0.025em] text-balance sm:text-6xl lg:text-[4.5rem]">
-                {t.home.title}
-              </h1>
-              <p className="text-muted-foreground mt-7 max-w-md text-lg leading-relaxed">
-                {t.home.subtitle}
-              </p>
-              <div className="mt-9 flex flex-wrap gap-3">
-                <Button size="xl" variant="outline" disabled aria-disabled="true">
-                  {t.home.ctaReport}
-                  <span className="bg-pending text-pending-foreground rounded-full px-2 py-0.5 text-xs font-semibold">
-                    {t.home.ctaReportSoon}
-                  </span>
-                </Button>
-              </div>
-            </Reveal>
+            <div className="lg:col-span-5">
+              <HeroTitle
+                title={t.home.title}
+                className="font-display text-[2.9rem] leading-[1.02] font-medium tracking-[-0.03em] sm:text-6xl lg:text-[4.5rem]"
+              />
+              <Reveal trigger="load" delay={0.42}>
+                <p className="text-muted-foreground mt-7 max-w-md text-lg leading-relaxed">
+                  {t.home.subtitle}
+                </p>
+                <div className="mt-9 flex flex-wrap gap-3">
+                  <Button size="xl" variant="outline" disabled aria-disabled="true">
+                    {t.home.ctaReport}
+                    <span className="bg-pending text-pending-foreground rounded-full px-2 py-0.5 text-xs font-semibold">
+                      {t.home.ctaReportSoon}
+                    </span>
+                  </Button>
+                </div>
+              </Reveal>
+            </div>
 
             <Reveal
               trigger="load"
-              delay={0.1}
+              delay={0.16}
               className="lg:col-span-7 lg:mr-[calc(50%-50vw)] lg:pl-4"
             >
-              <div className="border-border relative h-[clamp(20rem,52vh,34rem)] overflow-hidden rounded-2xl border bg-[var(--map-canvas)] lg:rounded-r-none">
+              <div className="border-border relative h-[clamp(22rem,58vh,38rem)] overflow-hidden rounded-2xl border bg-[var(--map-canvas)] lg:rounded-r-none">
                 <CityMap />
                 {/* Acțiunea stă pe hartă, nu lângă ea: harta e lucrul la care te uiți
                     deja, iar butonul e pasul următor al aceleiași priviri. */}
-                <Button asChild size="xl" className="absolute bottom-5 left-5 shadow-xl">
+                <Button
+                  asChild
+                  size="xl"
+                  className="absolute bottom-5 left-5 shadow-2xl transition-transform duration-200 hover:-translate-y-0.5"
+                >
                   <Link href="/harta">
                     {t.home.ctaMap}
                     <ArrowRight aria-hidden="true" />
@@ -59,15 +68,21 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section className="border-border border-y">
+          <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
+            <Statement text={t.home.statement} />
+          </div>
+        </section>
+
         {/*
          * Pașii, ca un parcurs pe o linie, nu ca trei cutii alăturate. Cutiile ar
          * fi spus că sunt trei lucruri independente; linia spune că e unul singur,
          * cu trei opriri.
          */}
-        <section className="border-border bg-card border-y">
+        <section className="bg-card border-border border-b">
           <div className="mx-auto max-w-6xl px-4 py-18 sm:px-6 sm:py-24">
             <Reveal>
-              <h2 className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-[2.5rem]">
+              <h2 className="font-display text-3xl font-medium tracking-[-0.025em] sm:text-[2.5rem]">
                 {t.home.stepsTitle}
               </h2>
             </Reveal>
@@ -78,8 +93,8 @@ export default function HomePage() {
               />
               {t.home.steps.map((step, index) => (
                 <Reveal key={step.title} delay={index * 0.08}>
-                  <li className="relative">
-                    <span className="bg-primary text-primary-foreground ring-card relative flex size-10 items-center justify-center rounded-full text-sm font-bold tabular-nums ring-8">
+                  <li className="group relative">
+                    <span className="bg-primary text-primary-foreground ring-card relative flex size-10 items-center justify-center rounded-full text-sm font-bold tabular-nums ring-8 transition-transform duration-300 group-hover:scale-110">
                       {index + 1}
                     </span>
                     <h3 className="mt-6 text-lg font-semibold">{step.title}</h3>
@@ -93,16 +108,16 @@ export default function HomePage() {
 
         <section className="mx-auto max-w-6xl px-4 py-18 sm:px-6 sm:py-24">
           <Reveal>
-            <h2 className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-[2.5rem]">
+            <h2 className="font-display text-3xl font-medium tracking-[-0.025em] sm:text-[2.5rem]">
               {t.home.categoriesTitle}
             </h2>
             <p className="text-muted-foreground mt-4 max-w-2xl text-lg leading-relaxed">
               {t.home.categoriesBody}
             </p>
           </Reveal>
-          <Reveal delay={0.08} className="mt-12">
+          <div className="mt-12">
             <ReportCategories />
-          </Reveal>
+          </div>
         </section>
 
         <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 sm:pb-28">
@@ -116,7 +131,12 @@ export default function HomePage() {
                   {t.home.openSourceBody}
                 </p>
               </div>
-              <Button asChild size="xl" variant="outline" className="self-start lg:self-auto">
+              <Button
+                asChild
+                size="xl"
+                variant="outline"
+                className="self-start transition-transform duration-200 hover:-translate-y-0.5 lg:self-auto"
+              >
                 <a
                   href="https://github.com/opencity-ro/openbrasov"
                   target="_blank"

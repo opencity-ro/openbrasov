@@ -6,6 +6,10 @@
  * desen și se simplifică până rămâne silueta orașului. Iese un Brașov recognoscibil
  * care nu costă nicio cerere de rețea la încărcarea paginii.
  *
+ * Nivelul 14 e ales pentru clădiri: sub el nu există în dale, iar fără ele orașul
+ * se vede ca o rețea de linii pe un câmp gol. Cu ele, planul înclinat capătă
+ * textura unui oraș adevărat.
+ *
  * Rulează doar când vrem alt cadru sau alte straturi; rezultatul se versionează.
  */
 
@@ -16,42 +20,53 @@ import { VectorTile } from "@mapbox/vector-tile";
 import { PbfReader } from "pbf";
 
 const TILEJSON_URL = "https://tiles.openfreemap.org/planet";
-const ZOOM = 13;
+const ZOOM = 14;
 const EXTENT = 4096;
 
-/** Cadrul: centrul Brașovului plus dealurile din jur, pe un format lat. */
-const TILES_X = [4677, 4678, 4679];
-const TILES_Y = [2925, 2926];
+/** Cadrul: centrul Brașovului, de la Bartolomeu la Noua și de la Tâmpa la Tractorul. */
+const TILES_X = [9355, 9356, 9357, 9358, 9359];
+const TILES_Y = [5850, 5851, 5852];
 
-/** Cutia de desen. Raportul urmează blocul de dale, 3 pe 2. */
-const WIDTH = 1200;
-const HEIGHT = 800;
+/** Cutia de desen. Raportul urmează blocul de dale, 5 pe 3. */
+const WIDTH = 1500;
+const HEIGHT = 900;
 
 /**
  * Cât de aproape pot sta două puncte vecine înainte ca al doilea să fie de prisos.
  * La mărimea la care se vede harta, sub atât nu se mai distinge nimic, iar fiecare
  * punct păstrat degeaba e greutate în pagină.
  */
-const MIN_STEP = 3.4;
+const MIN_STEP = 3.0;
 
 /**
- * Decupajul care ajunge pe pagină, din cutia mare. Blocul de dale prinde și
- * dealurile din jur, dar pe pagină vrem orașul dens, nu pădurea din marginea lui.
+ * Clădirile se simplifică mai tare și se cern după suprafață. Sunt de zece ori
+ * mai multe decât toate drumurile la un loc, iar o casă de patru metri pe plan
+ * înclinat e un punct. Rămân blocurile, halele și clădirile de centru, adică
+ * exact textura care face orașul să pară oraș.
  */
-const VIEW = { x: 250, y: 40, width: 900, height: 560 };
+const BUILDING_STEP = 4.2;
+const BUILDING_MIN_AREA = 46;
 
 /** Câte semne așezăm pe hartă și cât de rar, în puncte de desen. */
-const PIN_COUNT = 22;
-const PIN_SPACING = 62;
+const PIN_COUNT = 26;
+const PIN_SPACING = 78;
 
 /** Sub lungimea asta un contur e un ciot care nu se citește ca drum. */
-const MIN_LENGTH = { street: 26, minor: 14, major: 10, water: 0, waterway: 18, green: 22 };
+const MIN_LENGTH = {
+  street: 22,
+  minor: 10,
+  major: 8,
+  water: 0,
+  waterway: 14,
+  green: 26,
+  building: 14,
+};
 
-/** Ce luăm din fiecare strat, și în ce grup ajunge. */
+/** Ce luăm din stratul de transport, și în ce grup ajunge. */
 const ROAD_GROUPS = {
   major: ["motorway", "trunk", "primary"],
   minor: ["secondary", "tertiary"],
-  street: ["minor"],
+  street: ["minor", "service"],
 };
 
 const scaleX = WIDTH / (TILES_X.length * EXTENT);
@@ -78,23 +93,37 @@ const project = (point, tx, ty) => [
 
 const round = (value) => Math.round(value * 10) / 10;
 
+const groups = {
+  major: [],
+  minor: [],
+  street: [],
+  water: [],
+  waterway: [],
+  green: [],
+  building: [],
+};
+
+/** Vârfuri de drum, din care ies pozițiile semnelor. */
+const roadPoints = [];
+
 /**
  * Un contur, scris ca o comandă SVG, cu punctele prea apropiate aruncate.
  * Întoarce un șir gol dacă din formă n-a mai rămas nimic de desenat.
  */
-function toPath(ring, tx, ty, close, minLength, collectPoints = false) {
+function toPath(ring, tx, ty, close, minLength, collectPoints = false, minArea = 0) {
   const points = [];
+  const step = minArea > 0 ? BUILDING_STEP : MIN_STEP;
   for (const point of ring) {
     const [x, y] = project(point, tx, ty);
     const last = points.at(-1);
-    if (last && Math.hypot(x - last[0], y - last[1]) < MIN_STEP) continue;
+    if (last && Math.hypot(x - last[0], y - last[1]) < step) continue;
     points.push([x, y]);
   }
   if (points.length < 2) return "";
 
   // Ce cade cu totul în afara cadrului nu se desenează: dalele sunt tăiate cu o
   // margine de siguranță, iar marginea aia ar fi ieșit din cutie.
-  if (points.every(([x, y]) => x < -40 || x > WIDTH + 40 || y < -40 || y > HEIGHT + 40)) return "";
+  if (points.every(([x, y]) => x < -30 || x > WIDTH + 30 || y < -30 || y > HEIGHT + 30)) return "";
 
   let length = 0;
   for (let i = 1; i < points.length; i++) {
@@ -102,13 +131,20 @@ function toPath(ring, tx, ty, close, minLength, collectPoints = false) {
   }
   if (length < minLength) return "";
 
+  if (minArea > 0) {
+    // Suprafața prin formula lacetului: o poligonală închisă prea mică nu se vede.
+    let twice = 0;
+    for (let i = 0; i < points.length; i++) {
+      const [x1, y1] = points[i];
+      const [x2, y2] = points[(i + 1) % points.length];
+      twice += x1 * y2 - x2 * y1;
+    }
+    if (Math.abs(twice) / 2 < minArea) return "";
+  }
+
   if (collectPoints) {
     for (const [x, y] of points) {
-      const inside =
-        x > VIEW.x + 40 &&
-        x < VIEW.x + VIEW.width - 40 &&
-        y > VIEW.y + 40 &&
-        y < VIEW.y + VIEW.height - 40;
+      const inside = x > 70 && x < WIDTH - 70 && y > 70 && y < HEIGHT - 70;
       if (inside) roadPoints.push([round(x), round(y)]);
     }
   }
@@ -120,11 +156,6 @@ function toPath(ring, tx, ty, close, minLength, collectPoints = false) {
     .join("");
   return head + tail + (close ? "Z" : "");
 }
-
-const groups = { major: [], minor: [], street: [], water: [], waterway: [], green: [] };
-
-/** Vârfuri de drum din decupaj, din care ies pozițiile semnelor. */
-const roadPoints = [];
 
 const url = await tileUrl();
 
@@ -148,6 +179,7 @@ for (const tx of TILES_X) {
             close,
             MIN_LENGTH[bucket],
             bucket === "street" || bucket === "minor",
+            bucket === "building" ? BUILDING_MIN_AREA : 0,
           );
           if (path) groups[bucket].push(path);
         }
@@ -169,6 +201,7 @@ for (const tx of TILES_X) {
       true,
     );
     collect("park", () => "green", true);
+    collect("building", () => "building", true);
   }
 }
 
@@ -177,7 +210,7 @@ for (const tx of TILES_X) {
  * fiecare cade pe o stradă adevărată, cum ar cădea o sesizare reală. Alegerea e
  * deterministă, deci harta arată la fel la fiecare generare.
  */
-const centre = [VIEW.x + VIEW.width / 2, VIEW.y + VIEW.height / 2];
+const centre = [WIDTH / 2, HEIGHT / 2];
 const ordered = roadPoints
   .map((point, index) => ({ point, index }))
   .sort((a, b) => {
@@ -207,12 +240,11 @@ await writeFile(
  * Nu se editează de mână.
  */
 
-/** Decupajul care se desenează, în coordonatele cutiei mari. */
-export const CITY_VIEW_BOX = "${VIEW.x} ${VIEW.y} ${VIEW.width} ${VIEW.height}";
-export const CITY_VIEW_WIDTH = ${VIEW.width};
-export const CITY_VIEW_HEIGHT = ${VIEW.height};
+export const CITY_VIEW_BOX = "0 0 ${WIDTH} ${HEIGHT}";
+export const CITY_VIEW_WIDTH = ${WIDTH};
+export const CITY_VIEW_HEIGHT = ${HEIGHT};
 
-/** Pozițiile semnelor, fiecare pe o stradă adevărată din decupaj. */
+/** Pozițiile semnelor, fiecare pe o stradă adevărată din cadru. */
 export const CITY_PINS: readonly (readonly [number, number])[] = [
 ${pins.map(([x, y]) => `  [${x}, ${y}],`).join("\n")}
 ];
@@ -220,6 +252,7 @@ ${pins.map(([x, y]) => `  [${x}, ${y}],`).join("\n")}
 ${literal("CITY_GREEN", groups.green)}
 ${literal("CITY_WATER", groups.water)}
 ${literal("CITY_WATERWAY", groups.waterway)}
+${literal("CITY_BUILDINGS", groups.building)}
 ${literal("CITY_STREETS", groups.street)}
 ${literal("CITY_MINOR_ROADS", groups.minor)}
 ${literal("CITY_MAJOR_ROADS", groups.major)}`,
@@ -236,4 +269,4 @@ console.log(
     .map(([name, list]) => `${name} ${list.length}`)
     .join(" · "),
 );
-console.log(`${total} contururi, ${(bytes / 1024).toFixed(0)} KB de cale, în ${out}`);
+console.log(`${total} contururi, ${(bytes / 1024).toFixed(0)} KB de cale`);

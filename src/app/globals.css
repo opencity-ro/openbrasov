@@ -133,6 +133,9 @@
   --map-street: #f3f6ef;
   --map-road: #fbfcfa;
   --map-major: #e9b96c;
+  --map-building: #e3e5e2;
+  --map-building-wall: #c9cdc6;
+  --map-building-edge: #d2d6cf;
   --map-pin-ring: #ffffff;
 }
 
@@ -183,11 +186,14 @@
   --sidebar-ring: var(--brand-green);
 
   --map-canvas: #12151a;
-  --map-green: #19231b;
+  --map-green: #1b2a1d;
   --map-water: #18314c;
   --map-street: #262b31;
   --map-road: #343a42;
   --map-major: #9a7238;
+  --map-building: #2f353e;
+  --map-building-wall: #1c2128;
+  --map-building-edge: #343b44;
   --map-pin-ring: #14171a;
 }
 
@@ -324,9 +330,27 @@
     transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
+  .city-pin {
+    transition: opacity 220ms ease;
+  }
+
   .city-pin:hover,
   .city-pin:focus-visible {
-    --pin-lift: -9px;
+    --pin-lift: -12px;
+    opacity: 1;
+  }
+
+  /* Umbra se lățește când semnul se ridică: asta e ce vinde înălțimea. */
+  .city-pin-shadow {
+    transition:
+      transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      opacity 220ms ease;
+  }
+
+  .city-pin:hover .city-pin-shadow,
+  .city-pin:focus-visible .city-pin-shadow {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1.35);
   }
 
   .city-pin:focus-visible .city-pin-head {

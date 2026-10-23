@@ -4,6 +4,8 @@ import { reportIconUrl } from "@/components/map/report-icons";
 import { t } from "@/lib/messages";
 import { categoryColor, categoryLabel, type ReportCategory } from "@/lib/reports/categories";
 
+import { Reveal } from "./reveal";
+
 /**
  * Categoriile, grupate pe domenii.
  *
@@ -69,36 +71,38 @@ const GROUPS: { key: keyof typeof t.home.categoryGroups; items: ReportCategory[]
 export function ReportCategories() {
   return (
     <ul className="grid gap-x-10 gap-y-10 sm:grid-cols-2">
-      {GROUPS.map((group) => (
-        <li key={group.key}>
-          <h3 className="border-border text-muted-foreground border-b pb-2.5 text-sm font-semibold">
-            {t.home.categoryGroups[group.key]}
-          </h3>
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {group.items.map((category) => (
-              <li
-                key={category}
-                className="border-border bg-card flex items-center gap-2.5 rounded-lg border py-1.5 pr-3.5 pl-1.5 text-sm"
-              >
-                {/*
-                 * Icoana stă pe o plăcuță în culoarea categoriei, aceeași care îi
-                 * poartă pinul pe hartă. Fără ea, treizeci și patru de desene
-                 * colorate pe un rând de chenare cenușii arătau ca o grămadă de
-                 * autocolante; cu ea, culoarea devine parte din sistem.
-                 */}
-                <span
-                  className="flex size-7 shrink-0 items-center justify-center rounded-md"
-                  style={{
-                    backgroundColor: `color-mix(in oklch, ${categoryColor[category]}, transparent 85%)`,
-                  }}
+      {GROUPS.map((group, index) => (
+        <Reveal key={group.key} delay={index * 0.06}>
+          <li>
+            <h3 className="border-border text-muted-foreground border-b pb-2.5 text-sm font-semibold">
+              {t.home.categoryGroups[group.key]}
+            </h3>
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {group.items.map((category) => (
+                <li
+                  key={category}
+                  className="border-border bg-card hover:border-foreground/25 flex items-center gap-2.5 rounded-lg border py-1.5 pr-3.5 pl-1.5 text-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm"
                 >
-                  <Image src={reportIconUrl(category)} alt="" width={18} height={18} />
-                </span>
-                {categoryLabel(category)}
-              </li>
-            ))}
-          </ul>
-        </li>
+                  {/*
+                   * Icoana stă pe o plăcuță în culoarea categoriei, aceeași care îi
+                   * poartă pinul pe hartă. Fără ea, treizeci și patru de desene
+                   * colorate pe un rând de chenare cenușii arătau ca o grămadă de
+                   * autocolante; cu ea, culoarea devine parte din sistem.
+                   */}
+                  <span
+                    className="flex size-7 shrink-0 items-center justify-center rounded-md"
+                    style={{
+                      backgroundColor: `color-mix(in oklch, ${categoryColor[category]}, transparent 85%)`,
+                    }}
+                  >
+                    <Image src={reportIconUrl(category)} alt="" width={18} height={18} />
+                  </span>
+                  {categoryLabel(category)}
+                </li>
+              ))}
+            </ul>
+          </li>
+        </Reveal>
       ))}
     </ul>
   );
