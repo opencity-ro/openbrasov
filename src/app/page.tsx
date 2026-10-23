@@ -1,9 +1,5 @@
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
-
 import { GithubIcon } from "@/components/icons/github";
-import { CityMap } from "@/components/landing/city-map";
-import { HeroTitle } from "@/components/landing/hero-title";
+import { Hero } from "@/components/landing/hero";
 import { ReportCategories } from "@/components/landing/report-categories";
 import { Reveal } from "@/components/landing/reveal";
 import { Statement } from "@/components/landing/statement";
@@ -17,56 +13,7 @@ export default function HomePage() {
     <>
       <SiteHeader />
       <main id="continut" className="flex-1">
-        {/*
-         * Eroul: textul pe stânga, orașul pe dreapta, ieșind din container până în
-         * marginea ecranului. O hartă oprită la aceeași linie cu textul ar fi fost
-         * o ilustrație; una care trece dincolo de margine se citește ca o fereastră.
-         */}
-        <section className="overflow-hidden">
-          <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-12 pb-16 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:pt-20 lg:pb-24">
-            <div className="lg:col-span-5">
-              <HeroTitle
-                title={t.home.title}
-                className="font-display text-[2.9rem] leading-[1.02] font-medium tracking-[-0.03em] sm:text-6xl lg:text-[4.5rem]"
-              />
-              <Reveal trigger="load" delay={0.42}>
-                <p className="text-muted-foreground mt-7 max-w-md text-lg leading-relaxed">
-                  {t.home.subtitle}
-                </p>
-                <div className="mt-9 flex flex-wrap gap-3">
-                  <Button size="xl" variant="outline" disabled aria-disabled="true">
-                    {t.home.ctaReport}
-                    <span className="bg-pending text-pending-foreground rounded-full px-2 py-0.5 text-xs font-semibold">
-                      {t.home.ctaReportSoon}
-                    </span>
-                  </Button>
-                </div>
-              </Reveal>
-            </div>
-
-            <Reveal
-              trigger="load"
-              delay={0.16}
-              className="lg:col-span-7 lg:mr-[calc(50%-50vw)] lg:pl-4"
-            >
-              <div className="border-border relative h-[clamp(22rem,58vh,38rem)] overflow-hidden rounded-2xl border bg-[var(--map-canvas)] lg:rounded-r-none">
-                <CityMap />
-                {/* Acțiunea stă pe hartă, nu lângă ea: harta e lucrul la care te uiți
-                    deja, iar butonul e pasul următor al aceleiași priviri. */}
-                <Button
-                  asChild
-                  size="xl"
-                  className="absolute bottom-5 left-5 shadow-2xl transition-transform duration-200 hover:-translate-y-0.5"
-                >
-                  <Link href="/harta">
-                    {t.home.ctaMap}
-                    <ArrowRight aria-hidden="true" />
-                  </Link>
-                </Button>
-              </div>
-            </Reveal>
-          </div>
-        </section>
+        <Hero />
 
         <section className="border-border border-y">
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">

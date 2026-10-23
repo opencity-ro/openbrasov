@@ -127,6 +127,41 @@ function silhouette(context: CanvasRenderingContext2D) {
 }
 
 /**
+ * Același contur, scris ca o cale SVG, pentru pinurile desenate direct în pagină.
+ *
+ * Harta pune pinuri pe pânză, pagina de pornire le pune în DOM, dar forma trebuie
+ * să fie una singură: dacă ar fi două, s-ar depărta una de alta la prima reglare.
+ */
+export const PIN_SVG_PATH = (() => {
+  const exitX = HEAD_X + HEAD_RADIUS * Math.sin(STEM_EXIT);
+  const exitY = HEAD_Y + HEAD_RADIUS * Math.cos(STEM_EXIT);
+  const endY = TIP_Y - TIP_RADIUS;
+  const reach = exitX - HEAD_X;
+  const drop = endY - exitY;
+  const shoulderX = HEAD_X + reach * STEM_SHOULDER.x;
+  const shoulderY = exitY + drop * STEM_SHOULDER.y;
+  const waistX = HEAD_X + reach * STEM_WAIST.x;
+  const waistY = exitY + drop * STEM_WAIST.y;
+  const mirror = (value: number) => 2 * HEAD_X - value;
+  const n = (value: number) => String(Math.round(value * 100) / 100);
+
+  return (
+    `M${n(mirror(exitX))} ${n(exitY)}` +
+    `A${n(HEAD_RADIUS)} ${n(HEAD_RADIUS)} 0 1 1 ${n(exitX)} ${n(exitY)}` +
+    `C${n(shoulderX)} ${n(shoulderY)} ${n(waistX)} ${n(waistY)} ${n(HEAD_X + TIP_RADIUS)} ${n(endY)}` +
+    `A${n(TIP_RADIUS)} ${n(TIP_RADIUS)} 0 0 1 ${n(HEAD_X - TIP_RADIUS)} ${n(endY)}` +
+    `C${n(mirror(waistX))} ${n(waistY)} ${n(mirror(shoulderX))} ${n(shoulderY)} ${n(mirror(exitX))} ${n(exitY)}Z`
+  );
+})();
+
+/** Centrul capului, raza discului colorat și latura icoanei, în unitățile cutiei. */
+export const PIN_HEAD_CENTRE = { x: HEAD_X, y: HEAD_Y };
+export const PIN_DISC_RADIUS = HEAD_RADIUS - RING;
+export const PIN_ICON_SIZE = (HEAD_RADIUS - RING) * 2 * ICON_RATIO;
+export const PIN_TIP_Y = TIP_Y;
+export const PIN_OUTLINE = OUTLINE;
+
+/**
  * Umbra de la sol: o pată joasă, chiar sub vârf. Fără ea pinul plutește peste
  * hartă; cu ea, vârful chiar atinge locul pe care îl arată.
  */

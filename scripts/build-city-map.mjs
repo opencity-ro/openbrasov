@@ -48,8 +48,8 @@ const BUILDING_STEP = 4.2;
 const BUILDING_MIN_AREA = 46;
 
 /** Câte semne așezăm pe hartă și cât de rar, în puncte de desen. */
-const PIN_COUNT = 26;
-const PIN_SPACING = 78;
+const PIN_COUNT = 44;
+const PIN_SPACING = 58;
 
 /** Sub lungimea asta un contur e un ciot care nu se citește ca drum. */
 const MIN_LENGTH = {

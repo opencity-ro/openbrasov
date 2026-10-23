@@ -194,7 +194,7 @@
   --map-building: #2f353e;
   --map-building-wall: #1c2128;
   --map-building-edge: #343b44;
-  --map-pin-ring: #14171a;
+  --map-pin-ring: #ffffff;
 }
 
 @layer base {

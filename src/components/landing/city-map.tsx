@@ -6,6 +6,16 @@ import Link from "next/link";
 import { useCallback, useState } from "react";
 
 import { reportIconUrl } from "@/components/map/report-icons";
+import {
+  PIN_DISC_RADIUS,
+  PIN_HEAD_CENTRE,
+  PIN_ICON_SIZE,
+  PIN_OUTLINE,
+  PIN_SVG_PATH,
+  PIN_WIDTH,
+  PIN_HEIGHT,
+  PIN_TIP_Y,
+} from "@/components/map/report-pins";
 import { categoryColor, categoryLabel, type ReportCategory } from "@/lib/reports/categories";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +48,7 @@ import {
  */
 
 /** Cât de culcat stă planul. Mai mult și străzile din fund se string într-o dungă. */
-const TILT = 44;
+const TILT = 40;
 
 /** Cât se mișcă planul după cursor. Atât cât să pară viu, nu cât să fugă. */
 const SWAY = 3.5;
@@ -79,6 +89,15 @@ const PIN_CATEGORIES: ReportCategory[] = [
   "rodents",
   "wildlife",
 ];
+
+/**
+ * Cât din lățime ține textul eroului. Semnele care ar cădea acolo nu se desenează:
+ * un pin sub un titlu nu se poate apăsa, nu se poate citi și murdărește litera.
+ */
+const TEXT_COLUMN = 46;
+
+/** Cât de mare se desenează pinul în pagină, față de cutia lui de pe hartă. */
+const PIN_SCALE = 0.96;
 
 /** Semnele cu puls: cele mai noi sesizări, ca pe hartă. Câteva, nu toate. */
 const PULSING = new Set([2, 9, 17]);
@@ -135,7 +154,7 @@ export function CityMap({ className }: { className?: string }) {
       >
         <motion.div
           style={{ rotateX }}
-          className="absolute -inset-x-[28%] -top-[58%] -bottom-[18%] [transform-style:preserve-3d]"
+          className="absolute -inset-x-[12%] -top-[42%] -bottom-[6%] [transform-style:preserve-3d]"
         >
           <svg
             viewBox={CITY_VIEW_BOX}
@@ -198,6 +217,8 @@ export function CityMap({ className }: { className?: string }) {
           </svg>
 
           {CITY_PINS.map(([x, y], index) => {
+            const plainLeft = (x / CITY_VIEW_WIDTH) * 100;
+            if (plainLeft < TEXT_COLUMN) return null;
             const category = PIN_CATEGORIES[index % PIN_CATEGORIES.length];
             const color = categoryColor[category];
             const left = (x / CITY_VIEW_WIDTH) * 100;
@@ -233,52 +254,76 @@ export function CityMap({ className }: { className?: string }) {
                   )}
                 />
 
-                <span className="city-pin-body block origin-bottom">
+                <span
+                  className="city-pin-body relative block"
+                  style={{
+                    width: PIN_WIDTH * PIN_SCALE,
+                    height: PIN_HEIGHT * PIN_SCALE,
+                    transformOrigin: `50% ${(PIN_TIP_Y / PIN_HEIGHT) * 100}%`,
+                  }}
+                >
                   {PULSING.has(index) && !reduce && (
                     <span
                       aria-hidden="true"
-                      className="city-pin-pulse absolute top-[21px] left-1/2 block size-11 rounded-full"
-                      style={{ backgroundColor: color }}
+                      className="city-pin-pulse absolute rounded-full"
+                      style={{
+                        backgroundColor: color,
+                        width: PIN_DISC_RADIUS * 2 * PIN_SCALE,
+                        height: PIN_DISC_RADIUS * 2 * PIN_SCALE,
+                        left: `${(PIN_HEAD_CENTRE.x / PIN_WIDTH) * 100}%`,
+                        top: `${(PIN_HEAD_CENTRE.y / PIN_HEIGHT) * 100}%`,
+                      }}
                     />
                   )}
 
                   {/* Eticheta se ridică din semn, nu plutește lângă el. */}
                   <span
                     className={cn(
-                      "border-border bg-popover text-popover-foreground pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 block w-max max-w-[12rem] -translate-x-1/2 rounded-lg border px-3 py-1.5 text-center text-xs leading-tight font-semibold shadow-xl transition duration-200",
+                      "border-border bg-popover text-popover-foreground pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 block w-max max-w-[12rem] -translate-x-1/2 rounded-lg border px-3 py-1.5 text-center text-xs leading-tight font-semibold shadow-xl transition duration-200",
                       open ? "translate-y-0 opacity-100" : "translate-y-1.5 opacity-0",
                     )}
                   >
                     {categoryLabel(category)}
                   </span>
 
+                  {/*
+                   * Pinul întreg, cu aceeași cale ca pe hartă: corp alb conturat,
+                   * disc colorat, icoana categoriei. Nu e o reinterpretare, e exact
+                   * forma pe care o vezi când deschizi harta.
+                   */}
                   <span
                     className={cn(
-                      "city-pin-head relative block size-[42px] rounded-full border-[3px] group-hover:scale-110",
+                      "city-pin-head relative block size-full origin-bottom drop-shadow-[0_6px_10px_rgb(0_0_0/0.45)] group-hover:scale-110",
                       dimmed && "opacity-45",
                     )}
-                    style={{ backgroundColor: color, borderColor: "var(--map-pin-ring)" }}
                   >
+                    <svg
+                      viewBox={`0 0 ${PIN_WIDTH} ${PIN_HEIGHT}`}
+                      className="absolute inset-0 size-full"
+                      aria-hidden="true"
+                    >
+                      <path d={PIN_SVG_PATH} fill="#ffffff" stroke={PIN_OUTLINE} strokeWidth="1" />
+                      <circle
+                        cx={PIN_HEAD_CENTRE.x}
+                        cy={PIN_HEAD_CENTRE.y}
+                        r={PIN_DISC_RADIUS}
+                        fill={color}
+                      />
+                    </svg>
                     <Image
                       src={reportIconUrl(category)}
                       alt=""
-                      width={30}
-                      height={30}
-                      className="absolute top-1/2 left-1/2 size-[30px] -translate-x-1/2 -translate-y-1/2"
-                    />
-                    {/* Lumina vine de sus-stânga, ca peste tot în pagină. */}
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle_at_32%_26%,rgb(255_255_255/0.45),transparent_58%)]"
+                      width={Math.round(PIN_ICON_SIZE)}
+                      height={Math.round(PIN_ICON_SIZE)}
+                      className="absolute -translate-x-1/2 -translate-y-1/2"
+                      style={{
+                        left: `${(PIN_HEAD_CENTRE.x / PIN_WIDTH) * 100}%`,
+                        top: `${(PIN_HEAD_CENTRE.y / PIN_HEIGHT) * 100}%`,
+                        width: PIN_ICON_SIZE * PIN_SCALE,
+                        height: PIN_ICON_SIZE * PIN_SCALE,
+                      }}
                     />
                   </span>
-
-                  {/* Piciorul: un triunghi în culoarea inelului, sub disc. */}
-                  <span
-                    aria-hidden="true"
-                    className="absolute top-[37px] left-1/2 block size-0 -translate-x-1/2 border-x-[7px] border-t-[13px] border-x-transparent"
-                    style={{ borderTopColor: "var(--map-pin-ring)" }}
-                  />
                 </span>
               </Link>
             );
