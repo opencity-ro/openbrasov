@@ -2,37 +2,80 @@ import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { CityMap } from "@/components/landing/city-map";
+import { HeroMap } from "@/components/landing/hero-map";
 import { Marked } from "@/components/landing/marked";
 import { Reveal } from "@/components/landing/reveal";
 import { reportIconUrl } from "@/components/map/report-icons";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/messages";
-import {
-  categoryColor,
-  categoryLabel,
-  REPORT_CATEGORIES,
-  type ReportCategory,
-} from "@/lib/reports/categories";
+import { categoryColor, categoryLabel, type ReportCategory } from "@/lib/reports/categories";
 
 /**
  * Pagina de pornire: două priveliști, nimic de citit pe derulate.
  *
- * Prima e fișa orașului — tiparul pe stânga, planșa hărții ancorată jos-dreapta
- * și ieșind din cadru pe două laturi, cu o cheie de citire pe margine. Harta nu
- * stă ca fundal sub text și nici ca poză într-o ramă: e obiectul despre care e
- * vorba, așezat în pagină ca pe o masă.
+ * Prima e orașul, pe toată lățimea, cu tiparul peste el și cu o cheie de citire
+ * care aprinde semnele unei categorii când treci peste ea. Harta nu e fundal
+ * decorativ: e produsul, iar cheia o dovedește.
  *
- * A doua e indexul: toate cele treizeci și patru de categorii, numai iconițele,
- * strânse într-o bandă. Lista întreagă e singurul argument care nu se poate scrie
- * din cuvinte, iar ca bandă de culoare se citește dintr-o privire.
+ * A doua e indexul categoriilor, scris ca un cuprins: șase domenii numerotate,
+ * fiecare cu rândurile lui. Lista întreagă e singurul argument care nu se poate
+ * scrie din cuvinte, iar ca cuprins se parcurge, nu se îndură.
  *
- * Nimic nu se mișcă la derulare. Ce ține pagina trează sunt tiparul, liniile,
- * vocea tehnică pe date și semnele care se ridică sub mouse.
+ * Nimic nu se mișcă la derulare.
  */
 
-/** Cele trei categorii din cheia de citire, alese ca să acopere trei domenii. */
-const KEY_CATEGORIES: ReportCategory[] = ["pothole", "green_space", "illegal_dumping"];
+/** Domeniile indexului, în ordinea în care se gândește omul la oraș. */
+const DOMAINS: { key: keyof typeof t.home.categoryGroups; items: ReportCategory[] }[] = [
+  {
+    key: "road",
+    items: [
+      "pothole",
+      "sidewalk",
+      "crosswalk_marking",
+      "road_marking",
+      "traffic_light",
+      "signage",
+      "speed_bump_request",
+      "public_transport",
+      "accessibility",
+    ],
+  },
+  {
+    key: "parking",
+    items: [
+      "illegal_parking_road",
+      "illegal_parking_sidewalk",
+      "bollards",
+      "illegal_scooter_parking",
+      "abandoned_vehicle",
+    ],
+  },
+  {
+    key: "clean",
+    items: [
+      "illegal_dumping",
+      "waste_collection",
+      "unsanitary_land",
+      "air_quality",
+      "noise",
+      "green_space",
+      "park",
+    ],
+  },
+  {
+    key: "order",
+    items: [
+      "vandalism",
+      "illegal_construction",
+      "public_space_occupation",
+      "illegal_street_vending",
+      "commercial_space",
+      "heritage",
+    ],
+  },
+  { key: "animals", items: ["stray_animal", "wildlife", "rodents", "insects"] },
+  { key: "utilities", items: ["street_lighting", "water_or_heating", "other"] },
+];
 
 export function Masthead() {
   const lines = t.home.title
@@ -42,29 +85,11 @@ export function Masthead() {
 
   return (
     <section className="relative isolate overflow-hidden">
-      {/*
-       * Planșa: ancorată jos-dreapta și tăiată de marginile ecranului pe două
-       * laturi. Un dreptunghi întreg, centrat, ar fi fost o ilustrație; tăiat, se
-       * citește ca o bucată dintr-un oraș care continuă dincolo de pagină.
-       */}
-      <div className="pointer-events-none absolute inset-0 lg:left-[38%]">
-        <div className="pointer-events-auto absolute inset-0 lg:top-14 lg:-right-24 lg:-bottom-20 lg:left-0">
-          <CityMap clearTextColumn />
-        </div>
-      </div>
+      <HeroMap />
 
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(104deg,var(--background)_0%,var(--background)_26%,color-mix(in_oklch,var(--background),transparent_40%)_44%,transparent_72%)]"
-      />
-      <div
-        aria-hidden="true"
-        className="from-background pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t to-transparent"
-      />
-
-      <div className="relative mx-auto grid min-h-[clamp(32rem,82vh,46rem)] max-w-6xl content-center px-4 py-16 sm:px-6 lg:py-20">
+      <div className="relative mx-auto grid min-h-[clamp(32rem,84vh,48rem)] max-w-6xl content-center px-4 py-16 sm:px-6 lg:py-20">
         <Reveal trigger="load" className="max-w-2xl">
-          <h1 className="font-display text-[2.75rem] leading-[0.96] font-medium tracking-[-0.038em] sm:text-[3.75rem] lg:text-[4.75rem]">
+          <h1 className="font-display text-[2.6rem] leading-[1.08] font-medium tracking-[-0.02em] sm:text-[3.5rem] lg:text-[4.25rem]">
             {lines.map((line, index) => (
               <span key={line} className="block">
                 {index === 1 ? (
@@ -122,32 +147,6 @@ export function Masthead() {
           </ol>
         </Reveal>
       </div>
-
-      {/*
-       * Cheia de citire: trei semne de pe hartă, numite. Stă pe marginea de jos a
-       * planșei, cu o linie care leagă fiecare rând de hartă, ca legenda unei fișe.
-       */}
-      <Reveal
-        trigger="load"
-        delay={0.2}
-        className="pointer-events-none absolute right-6 bottom-8 hidden lg:block"
-      >
-        <ul className="space-y-2.5">
-          {KEY_CATEGORIES.map((category) => (
-            <li key={category} className="flex items-center justify-end gap-3">
-              <span className="text-muted-foreground font-mono text-[0.625rem] tracking-[0.14em] uppercase">
-                {categoryLabel(category)}
-              </span>
-              <span aria-hidden="true" className="bg-border block h-px w-8" />
-              <span
-                aria-hidden="true"
-                className="block size-2.5 rounded-full ring-2 ring-white/80"
-                style={{ backgroundColor: categoryColor[category] }}
-              />
-            </li>
-          ))}
-        </ul>
-      </Reveal>
     </section>
   );
 }
@@ -155,46 +154,70 @@ export function Masthead() {
 export function CategoryIndex() {
   return (
     <section className="border-border bg-card border-t">
-      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:py-16">
-        <Reveal className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3">
-          <h2 className="font-display text-2xl font-medium tracking-[-0.025em] sm:text-[2rem]">
-            {t.home.indexTitle}
-          </h2>
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+        <Reveal className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
+          <div>
+            <h2 className="font-display text-2xl font-medium tracking-[-0.025em] sm:text-[2.25rem]">
+              {t.home.indexTitle}
+            </h2>
+            <p className="text-muted-foreground mt-3 max-w-md leading-relaxed">
+              {t.home.indexBody}
+            </p>
+          </div>
           <p className="text-muted-foreground font-mono text-[0.6875rem] tracking-[0.14em] uppercase">
             {t.home.indexNote}
           </p>
         </Reveal>
 
         {/*
-         * Numai iconițele, strânse. Cu eticheta lângă fiecare ar fi ieșit o listă
-         * de treizeci și patru de rânduri, adică exact lucrul pe care nu-l citește
-         * nimeni. Numele apare sub mouse și îl poartă cititorul de ecran.
+         * Cuprins, nu grămadă de plăcuțe: șase domenii numerotate, fiecare cu
+         * rândurile lui și cu numărul lor. Numele categoriei se vede, fiindcă
+         * jumătate din ele nu se ghicesc dintr-o iconiță.
          */}
-        <Reveal delay={0.06}>
-          <ul className="mt-9 flex flex-wrap gap-2">
-            {REPORT_CATEGORIES.map((category) => (
-              <li key={category}>
-                <Link
-                  href={`/harta?categorie=${category}`}
-                  title={categoryLabel(category)}
-                  className="group focus-visible:ring-ring/50 relative flex size-12 items-center justify-center rounded-lg transition-transform duration-200 hover:-translate-y-1 focus-visible:ring-3 focus-visible:outline-none sm:size-[3.25rem]"
-                  style={{
-                    backgroundColor: `color-mix(in oklch, ${categoryColor[category]}, transparent 86%)`,
-                  }}
-                >
-                  <span className="sr-only">{categoryLabel(category)}</span>
-                  <Image
-                    src={reportIconUrl(category)}
-                    alt=""
-                    width={28}
-                    height={28}
-                    className="size-7 transition-transform duration-200 group-hover:scale-110"
-                  />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Reveal>
+        <div className="border-border divide-border mt-10 grid divide-y border-t sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-3">
+          {DOMAINS.map((domain, index) => (
+            <Reveal key={domain.key} delay={index * 0.05}>
+              <section className="border-border h-full py-7 sm:px-7 sm:py-8 sm:first:pl-0 lg:border-l lg:first:border-l-0 lg:[&:nth-child(4)]:border-l-0">
+                <header className="flex items-baseline gap-3">
+                  <span className="text-primary font-mono text-[0.625rem] tracking-[0.18em] tabular-nums">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <h3 className="font-semibold">{t.home.categoryGroups[domain.key]}</h3>
+                  <span className="text-muted-foreground ml-auto font-mono text-[0.625rem] tabular-nums">
+                    {domain.items.length}
+                  </span>
+                </header>
+
+                <ul className="mt-4 space-y-0.5">
+                  {domain.items.map((category) => (
+                    <li key={category}>
+                      <Link
+                        href={`/harta?categorie=${category}`}
+                        className="group hover:bg-background/60 focus-visible:ring-ring/50 -mx-2 flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="block size-1.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: categoryColor[category] }}
+                        />
+                        <Image
+                          src={reportIconUrl(category)}
+                          alt=""
+                          width={18}
+                          height={18}
+                          className="size-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110"
+                        />
+                        <span className="group-hover:text-foreground text-muted-foreground transition-colors">
+                          {categoryLabel(category)}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </Reveal>
+          ))}
+        </div>
       </div>
     </section>
   );

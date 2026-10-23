@@ -1,9 +1,9 @@
 "use client";
 
-import { useReducedMotion } from "motion/react";
+import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { reportIconUrl } from "@/components/map/report-icons";
 import {
@@ -52,6 +52,9 @@ const TILT = 40;
 
 /** Rotirea orașului în plan. Fixă: harta e un desen, nu un instrument. */
 const SPIN = -8;
+
+/** Cât se înclină planul după cursor. Atât cât să pară viu, nu cât să fugă. */
+const SWAY = 3;
 
 /**
  * Cât „urcă" acoperișul față de amprenta clădirii, în unități de desen. Banda
@@ -105,17 +108,47 @@ const PULSING = new Set([2, 9, 17]);
 export function CityMap({
   className,
   clearTextColumn = false,
+  highlight = null,
 }: {
   className?: string;
   /** Lasă coloana din stânga goală, pentru paginile care pun text peste hartă. */
   clearTextColumn?: boolean;
+  /** Categoria cerută din afară: semnele ei ies în față, restul se retrag. */
+  highlight?: ReportCategory | null;
 }) {
   const reduce = useReducedMotion();
   const [hovered, setHovered] = useState<number | null>(null);
 
+  /**
+   * Planul se înclină puțin după cursor. Nu e o cameră de film și nu depinde de
+   * derulare: e atât cât să simți că orașul e un obiect pe masă, nu o poză.
+   */
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+  const spring = { stiffness: 90, damping: 22, mass: 0.6 };
+  const swayZ = useSpring(useTransform(pointerX, [-1, 1], [-SWAY, SWAY]), spring);
+  const swayX = useSpring(useTransform(pointerY, [-1, 1], [SWAY, -SWAY]), spring);
+  const rotateZ = useTransform(swayZ, (value) => `${SPIN + (reduce ? 0 : value)}deg`);
+  const rotateX = useTransform(swayX, (value) => `${TILT + (reduce ? 0 : value)}deg`);
+
+  const follow = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (reduce) return;
+      const box = event.currentTarget.getBoundingClientRect();
+      pointerX.set(((event.clientX - box.left) / box.width) * 2 - 1);
+      pointerY.set(((event.clientY - box.top) / box.height) * 2 - 1);
+    },
+    [pointerX, pointerY, reduce],
+  );
+
   return (
     <div
-      onPointerLeave={() => setHovered(null)}
+      onPointerMove={follow}
+      onPointerLeave={() => {
+        pointerX.set(0);
+        pointerY.set(0);
+        setHovered(null);
+      }}
       className={cn(
         "relative h-full overflow-hidden [perspective-origin:50%_28%] [perspective:1600px]",
         className,
@@ -128,14 +161,12 @@ export function CityMap({
        * n-ar mai anula înclinarea — semnele ar rămâne turtite pe asfalt. Separate,
        * inversa semnului cade exact peste înclinare și el se ridică drept.
        */}
-      <div
-        style={
-          { transform: `rotateZ(${SPIN}deg)`, "--plane-z": `${SPIN}deg` } as React.CSSProperties
-        }
+      <motion.div
+        style={{ rotateZ, "--plane-z": rotateZ } as never}
         className="absolute inset-0 [transform-style:preserve-3d]"
       >
-        <div
-          style={{ transform: `rotateX(${TILT}deg)` }}
+        <motion.div
+          style={{ rotateX }}
           className="absolute -inset-x-[12%] -top-[42%] -bottom-[6%] [transform-style:preserve-3d]"
         >
           <svg
@@ -206,7 +237,9 @@ export function CityMap({
             const left = (x / CITY_VIEW_WIDTH) * 100;
             const top = (y / CITY_VIEW_HEIGHT) * 100;
             const open = hovered === index;
-            const dimmed = hovered !== null && !open;
+            const dimmed =
+              (hovered !== null && !open) || (highlight !== null && highlight !== category);
+            const lifted = highlight === category;
 
             return (
               <Link
@@ -221,6 +254,7 @@ export function CityMap({
                     left: `${left}%`,
                     top: `${top}%`,
                     "--pin-delay": `${index * 48}ms`,
+                    "--pin-height": lifted ? "34px" : undefined,
                     "--pin-tilt": `${TILT}deg`,
                     zIndex: open ? 40 : 10 + Math.round(top / 3),
                   } as React.CSSProperties
@@ -340,8 +374,8 @@ export function CityMap({
               </Link>
             );
           })}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

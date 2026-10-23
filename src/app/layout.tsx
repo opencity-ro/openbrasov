@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Montserrat, Newsreader } from "next/font/google";
+import { Bodoni_Moda, JetBrains_Mono, Montserrat } from "next/font/google";
 
 import { ThemeProvider } from "@/components/site/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -15,18 +15,20 @@ const montserrat = Montserrat({
 });
 
 /**
- * Vocea de afiș, numai pe titluri. E croită pentru citit lung, deci la corp mare
- * are desenul așezat al unei pagini tipărite, nu zvâcul unui titlu de reclamă.
- * Lângă geometria lui Montserrat face contrastul care lipsea când tot ce scria pe
- * pagină era același sans îngroșat.
+ * Vocea de afiș, numai pe titluri.
  *
- * Cursivul ei poartă cuvântul accentuat dintr-un titlu; nu amestecăm două familii
- * ca să scoatem un cuvânt în față.
+ * E o didonă: tranziții verticale, contrast mare între plin și subțire, serife
+ * drepte. La corp mare desenul ei are autoritatea unui afiș tipărit, iar lângă
+ * geometria lui Montserrat face un contrast pe care două sanserife nu-l pot face.
+ *
+ * Are mărime optică, deci la titlu alege singură tăietura subțire, cea pentru
+ * care a fost desenată. Pe interfață nu intră: la corp mic, contrastul ei mare
+ * se subțiază până dispare.
  */
-const newsreader = Newsreader({
+const bodoni = Bodoni_Moda({
   subsets: ["latin", "latin-ext"],
   style: ["normal", "italic"],
-  variable: "--font-newsreader",
+  variable: "--font-bodoni",
   display: "swap",
 });
 
@@ -67,7 +69,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ro"
-      className={`${montserrat.variable} ${newsreader.variable} ${mono.variable} antialiased`}
+      className={`${montserrat.variable} ${bodoni.variable} ${mono.variable} antialiased`}
       suppressHydrationWarning
     >
       <body className="bg-background text-foreground flex min-h-dvh flex-col">

@@ -9,7 +9,7 @@ export function Marked({ children }: { children: React.ReactNode }) {
     <span className="relative inline-block">
       <span
         aria-hidden="true"
-        className="bg-primary/70 absolute inset-x-[-0.1em] bottom-[0.2em] block h-[0.3em] -rotate-[0.5deg]"
+        className="bg-primary/80 absolute inset-x-[-0.1em] bottom-[0.01em] block h-[0.16em] -rotate-[0.5deg]"
       />
       <span className="relative">{children}</span>
     </span>

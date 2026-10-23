@@ -39,7 +39,7 @@ colors-dark:
 
 typography:
   sans: Montserrat
-  display: Newsreader
+  display: Bodoni Moda
   mono: JetBrains Mono
   scale: [12, 14, 16, 18, 20, 24, 30, 36, 48, 60, 72]
   display-tracking: "-0.025em"
@@ -97,8 +97,8 @@ Niciuna nu devine culoare de fundal de secțiune, de buton principal sau de navi
 Două familii, cu meserii care nu se suprapun.
 
 - **Montserrat** duce tot ce e interfață: butoane, etichete, titluri de card, text curent. O singură voce, de la buton la paragraf.
-- **Newsreader** apare numai pe titluri de pagină și de secțiune. E croită pentru citit lung, deci la corp mare are desenul așezat al unei pagini tipărite, nu zvâcul unui titlu de reclamă. Lângă geometria lui Montserrat face contrastul care lipsea când tot ce scria pe pagină era același sans îngroșat.
-- Pe display, greutatea **500** și tracking negativ (`-0.025em`). Serifele nu se îngroașă la 700: la corp mare desenul lor se umflă și pierde exact eleganța pentru care au fost alese.
+- **Bodoni Moda** apare numai pe titluri. E o didonă: tranziții verticale, contrast mare între plin și subțire, serife drepte. La corp mare are autoritatea unui afiș tipărit, iar lângă geometria lui Montserrat face un contrast pe care două sanserife nu-l pot face. Are mărime optică, deci la titlu alege singură tăietura subțire. Pe interfață nu intră: la corp mic contrastul ei se subțiază până dispare.
+- Pe display, greutatea **500**, tracking `-0.02em` și interliniaj **1.08**. O didonă la corp mare are nevoie de aer: sub 1.05, coada literelor cu codiță atinge randul de dedesubt. Serifele nu se ingroasa la 700, fiindca la corp mare desenul se umfla si pierde eleganta pentru care au fost alese.
 - Accentul dintr-un titlu se face cu **cursivul aceleiași familii**, niciodată amestecând două familii într-un rând.
 - **JetBrains Mono** e vocea tehnică: etichete, coduri, cifre, legende de planșă. Apare doar unde conținutul chiar e dată, niciodată ca să dea un aer „tehnologic" unui text obișnuit. Se scrie mic, cu majuscule și tracking larg.
 - Textul curent rămâne la tracking normal și 1.6 înălțime de rând.

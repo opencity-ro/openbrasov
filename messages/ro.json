@@ -51,7 +51,16 @@
       }
     ],
     "indexTitle": "Ce poți raporta",
-    "indexNote": "34 de categorii · apasă una ca s-o vezi pe hartă"
+    "indexNote": "34 de categorii · 6 domenii",
+    "indexBody": "Treizeci și patru de categorii, grupate pe domenii. Fiecare duce la sesizările ei de pe hartă.",
+    "categoryGroups": {
+      "road": "Drum și trotuar",
+      "parking": "Parcare și vehicule",
+      "clean": "Curățenie, mediu și spații verzi",
+      "order": "Ordine publică și construcții",
+      "animals": "Animale",
+      "utilities": "Utilități și altele"
+    }
   },
   "map": {
     "title": "Harta sesizărilor",
