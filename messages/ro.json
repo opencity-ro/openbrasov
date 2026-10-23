@@ -19,36 +19,23 @@
     "ctaMap": "Vezi harta",
     "ctaReport": "Sesizează o problemă",
     "ctaReportSoon": "în curând",
-    "mapAria": "Vezi harta sesizărilor din Brașov",
-    "statement": "Un oraș nu se strică dintr-odată. Se strică dintr-o groapă pe care n-a raportat-o nimeni și dintr-un bec ars pe lângă care am trecut toți.",
-    "stepsTitle": "Cum funcționează",
     "steps": [
       {
         "title": "Fotografiezi problema",
-        "body": "Orice problemă din spațiul public al Brașovului, direct de pe telefon. Locul îl ia din poză sau de pe hartă."
+        "body": "Orice problemă din spațiul public al Brașovului, direct de pe telefon. Locul îl ia din poză sau de pe hartă.",
+        "short": "O groapă, un stâlp căzut, gunoi lăsat pe stradă."
       },
       {
         "title": "AI-ul scrie sesizarea",
-        "body": "Text oficial, temei legal, instituția responsabilă. Tu citești, corectezi și aprobi înainte să plece ceva."
+        "body": "Text oficial, temei legal, instituția responsabilă. Tu citești, corectezi și aprobi înainte să plece ceva.",
+        "short": "Text oficial, temei legal, instituția responsabilă."
       },
       {
         "title": "Instituția primește",
-        "body": "Sesizarea pleacă din emailul tău către Primărie, Poliția Locală sau operatorul responsabil. Rămâne pe hartă până se rezolvă."
+        "body": "Sesizarea pleacă din emailul tău către Primărie, Poliția Locală sau operatorul responsabil. Rămâne pe hartă până se rezolvă.",
+        "short": "Pleacă din emailul tău și rămâne pe hartă până se rezolvă."
       }
     ],
-    "categoriesTitle": "Ce poți raporta",
-    "categoriesBody": "Treizeci și patru de categorii, fiecare cu instituția ei. Dacă problema ta nu se potrivește nicăieri, rămâne „Altceva”.",
-    "categoryGroups": {
-      "road": "Drum și trotuar",
-      "parking": "Parcare și vehicule",
-      "clean": "Curățenie, mediu și spații verzi",
-      "order": "Ordine publică și construcții",
-      "animals": "Animale",
-      "utilities": "Utilități și altele"
-    },
-    "openSourceTitle": "Deschis de la primul commit",
-    "openSourceBody": "Codul este public sub licență AGPL-3.0. Poți citi cum se construiește sesizarea, ce date păstrăm și ce plecă mai departe. Proiectul e independent și nu e afiliat Primăriei Brașov sau altei instituții publice.",
-    "openSourceCta": "Vezi codul pe GitHub",
     "facts": [
       {
         "value": "34",
@@ -63,11 +50,8 @@
         "label": "cod sursă public"
       }
     ],
-    "categoriesAll": "Toate",
-    "finalTitle": "Harta e deschisă. Intră și uită-te.",
-    "finalBody": "Vezi ce s-a raportat în cartierul tău, pe categorii și pe stări, fără cont și fără nimic de instalat.",
-    "plateCaption": "Brașov · zona metropolitană",
-    "plateLabel": "Harta sesizărilor"
+    "indexTitle": "Ce poți raporta",
+    "indexNote": "34 de categorii · apasă una ca s-o vezi pe hartă"
   },
   "map": {
     "title": "Harta sesizărilor",

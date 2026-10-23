@@ -39,6 +39,13 @@ const HEIGHT = 900;
 const MIN_STEP = 3.0;
 
 /**
+ * Drumurile se simplifică mai puțin decât restul. Un giratoriu are vreo
+ * cincisprezece puncte pe douăzeci de pixeli: la pasul obișnuit rămâneau trei și
+ * cercul se rupea. La fel și racordurile scurte dintre artere.
+ */
+const ROAD_STEP = 1.5;
+
+/**
  * Clădirile se simplifică mai tare și se cern după suprafață. Sunt de zece ori
  * mai multe decât toate drumurile la un loc, iar o casă de patru metri pe plan
  * înclinat e un punct. Rămân blocurile, halele și clădirile de centru, adică
@@ -53,9 +60,9 @@ const PIN_SPACING = 58;
 
 /** Sub lungimea asta un contur e un ciot care nu se citește ca drum. */
 const MIN_LENGTH = {
-  street: 22,
-  minor: 10,
-  major: 8,
+  street: 16,
+  minor: 0,
+  major: 0,
   water: 0,
   waterway: 14,
   green: 26,
@@ -110,13 +117,17 @@ const roadPoints = [];
  * Un contur, scris ca o comandă SVG, cu punctele prea apropiate aruncate.
  * Întoarce un șir gol dacă din formă n-a mai rămas nimic de desenat.
  */
-function toPath(ring, tx, ty, close, minLength, collectPoints = false, minArea = 0) {
+function toPath(ring, tx, ty, close, minLength, collectPoints = false, minArea = 0, road = false) {
   const points = [];
-  const step = minArea > 0 ? BUILDING_STEP : MIN_STEP;
-  for (const point of ring) {
-    const [x, y] = project(point, tx, ty);
+  const step = minArea > 0 ? BUILDING_STEP : road ? ROAD_STEP : MIN_STEP;
+  const projected = ring.map((point) => project(point, tx, ty));
+  for (const [index, [x, y]] of projected.entries()) {
     const last = points.at(-1);
-    if (last && Math.hypot(x - last[0], y - last[1]) < step) continue;
+    const isLast = index === projected.length - 1;
+    // Ultimul punct se păstrează întotdeauna. Aruncat, linia se oprea înainte de
+    // marginea dalei, iar la cusătura dintre dale rămânea o întrerupere — exact
+    // golurile care se vedeau pe arterele galbene, la fiecare intersecție.
+    if (!isLast && last && Math.hypot(x - last[0], y - last[1]) < step) continue;
     points.push([x, y]);
   }
   if (points.length < 2) return "";
@@ -180,6 +191,7 @@ for (const tx of TILES_X) {
             MIN_LENGTH[bucket],
             bucket === "street" || bucket === "minor",
             bucket === "building" ? BUILDING_MIN_AREA : 0,
+            bucket === "major" || bucket === "minor" || bucket === "street",
           );
           if (path) groups[bucket].push(path);
         }

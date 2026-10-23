@@ -1,16 +1,9 @@
 "use client";
 
-import {
-  motion,
-  type MotionValue,
-  useMotionValue,
-  useReducedMotion,
-  useSpring,
-  useTransform,
-} from "motion/react";
+import { useReducedMotion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 import { reportIconUrl } from "@/components/map/report-icons";
 import {
@@ -57,8 +50,8 @@ import {
 /** Cât de culcat stă planul. Mai mult și străzile din fund se string într-o dungă. */
 const TILT = 40;
 
-/** Cât se mișcă planul după cursor. Atât cât să pară viu, nu cât să fugă. */
-const SWAY = 3.5;
+/** Rotirea orașului în plan. Fixă: harta e un desen, nu un instrument. */
+const SPIN = -8;
 
 /**
  * Cât „urcă" acoperișul față de amprenta clădirii, în unități de desen. Banda
@@ -109,65 +102,20 @@ const PIN_SCALE = 0.96;
 /** Semnele cu puls: cele mai noi sesizări, ca pe hartă. Câteva, nu toate. */
 const PULSING = new Set([2, 9, 17]);
 
-/**
- * Camera, când o conduce altcineva decât cursorul: derularea paginii. Valorile
- * sunt de mișcare, deci harta urmează fără să redeseneze React la fiecare cadru.
- */
-export type CityCamera = {
-  zoom: MotionValue<number>;
-  panX: MotionValue<number>;
-  panY: MotionValue<number>;
-  tilt: MotionValue<number>;
-  spin: MotionValue<number>;
-};
-
 export function CityMap({
   className,
-  camera,
   clearTextColumn = false,
 }: {
   className?: string;
-  camera?: CityCamera;
   /** Lasă coloana din stânga goală, pentru paginile care pun text peste hartă. */
   clearTextColumn?: boolean;
 }) {
   const reduce = useReducedMotion();
   const [hovered, setHovered] = useState<number | null>(null);
 
-  const pointerX = useMotionValue(0);
-  const pointerY = useMotionValue(0);
-  const spring = { stiffness: 85, damping: 20, mass: 0.7 };
-  const swayZ = useSpring(useTransform(pointerX, [-1, 1], [-SWAY, SWAY]), spring);
-  const swayX = useSpring(useTransform(pointerY, [-1, 1], [SWAY, -SWAY]), spring);
-  const driftX = useSpring(useTransform(pointerX, [-1, 1], [26, -26]), spring);
-  const driftY = useSpring(useTransform(pointerY, [-1, 1], [14, -14]), spring);
-  const ownRotateX = useTransform(swayX, (value) => `${TILT + (reduce ? 0 : value)}deg`);
-  const ownRotateZ = useTransform(swayZ, (value) => `${-8 + (reduce ? 0 : value)}deg`);
-  const camRotateX = useTransform(camera?.tilt ?? swayX, (value) => `${value}deg`);
-  const camRotateZ = useTransform(camera?.spin ?? swayZ, (value) => `${value}deg`);
-  const rotateX = camera ? camRotateX : ownRotateX;
-  const rotateZ = camera ? camRotateZ : ownRotateZ;
-
-  const follow = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      if (reduce) return;
-      const box = event.currentTarget.getBoundingClientRect();
-      pointerX.set(((event.clientX - box.left) / box.width) * 2 - 1);
-      pointerY.set(((event.clientY - box.top) / box.height) * 2 - 1);
-    },
-    [pointerX, pointerY, reduce],
-  );
-
-  const release = useCallback(() => {
-    pointerX.set(0);
-    pointerY.set(0);
-    setHovered(null);
-  }, [pointerX, pointerY]);
-
   return (
     <div
-      onPointerMove={follow}
-      onPointerLeave={release}
+      onPointerLeave={() => setHovered(null)}
       className={cn(
         "relative h-full overflow-hidden [perspective-origin:50%_28%] [perspective:1600px]",
         className,
@@ -180,20 +128,14 @@ export function CityMap({
        * n-ar mai anula înclinarea — semnele ar rămâne turtite pe asfalt. Separate,
        * inversa semnului cade exact peste înclinare și el se ridică drept.
        */}
-      <motion.div
+      <div
         style={
-          {
-            rotateZ,
-            "--plane-z": rotateZ,
-            x: camera ? camera.panX : reduce ? 0 : driftX,
-            y: camera ? camera.panY : reduce ? 0 : driftY,
-            scale: camera ? camera.zoom : 1,
-          } as never
+          { transform: `rotateZ(${SPIN}deg)`, "--plane-z": `${SPIN}deg` } as React.CSSProperties
         }
         className="absolute inset-0 [transform-style:preserve-3d]"
       >
-        <motion.div
-          style={{ rotateX }}
+        <div
+          style={{ transform: `rotateX(${TILT}deg)` }}
           className="absolute -inset-x-[12%] -top-[42%] -bottom-[6%] [transform-style:preserve-3d]"
         >
           <svg
@@ -398,8 +340,8 @@ export function CityMap({
               </Link>
             );
           })}
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }
