@@ -40,6 +40,7 @@ colors-dark:
 typography:
   sans: Montserrat
   display: Newsreader
+  mono: JetBrains Mono
   scale: [12, 14, 16, 18, 20, 24, 30, 36, 48, 60, 72]
   display-tracking: "-0.025em"
   display-weight: 500
@@ -99,7 +100,14 @@ Două familii, cu meserii care nu se suprapun.
 - **Newsreader** apare numai pe titluri de pagină și de secțiune. E croită pentru citit lung, deci la corp mare are desenul așezat al unei pagini tipărite, nu zvâcul unui titlu de reclamă. Lângă geometria lui Montserrat face contrastul care lipsea când tot ce scria pe pagină era același sans îngroșat.
 - Pe display, greutatea **500** și tracking negativ (`-0.025em`). Serifele nu se îngroașă la 700: la corp mare desenul lor se umflă și pierde exact eleganța pentru care au fost alese.
 - Accentul dintr-un titlu se face cu **cursivul aceleiași familii**, niciodată amestecând două familii într-un rând.
+- **JetBrains Mono** e vocea tehnică: etichete, coduri, cifre, legende de planșă. Apare doar unde conținutul chiar e dată, niciodată ca să dea un aer „tehnologic" unui text obișnuit. Se scrie mic, cu majuscule și tracking larg.
 - Textul curent rămâne la tracking normal și 1.6 înălțime de rând.
+
+## Planșa
+
+Zonele importante nu se închid în carduri, se marchează ca pe o fișă tehnică: patru colțare, o etichetă monospațiată sus-stânga, o legendă jos-dreapta. Cadrul nu are fundal și nu are umbră, deci conținutul curge mai departe pe sub el în loc să fie înrămat.
+
+Verdele mărcii apare o singură dată pe pagină ca **marker peste un cuvânt** din titlu. E singura lui apariție decorativă admisă, fiindcă acolo chiar face o treabă: spune unde se uită ochiul întâi.
 
 ## Formele și adâncimea
 

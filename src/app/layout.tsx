@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Montserrat, Newsreader } from "next/font/google";
+import { JetBrains_Mono, Montserrat, Newsreader } from "next/font/google";
 
 import { ThemeProvider } from "@/components/site/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -30,6 +30,19 @@ const newsreader = Newsreader({
   display: "swap",
 });
 
+/**
+ * Vocea tehnică: etichete, coduri, cifre, legende de planșă.
+ *
+ * Nu e un costum de „tehnologic" pus peste text obișnuit. Monospațiatul apare
+ * exact acolo unde conținutul chiar e dată — o categorie, un număr, o licență —
+ * și nicăieri altundeva. Cifrele ei au lățime egală, deci coloanele nu mai joacă.
+ */
+const mono = JetBrains_Mono({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-jetbrains",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   openGraph: { type: "website", locale: "ro_RO", siteName: "Open Brașov" },
@@ -54,7 +67,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ro"
-      className={`${montserrat.variable} ${newsreader.variable} antialiased`}
+      className={`${montserrat.variable} ${newsreader.variable} ${mono.variable} antialiased`}
       suppressHydrationWarning
     >
       <body className="bg-background text-foreground flex min-h-dvh flex-col">

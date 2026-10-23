@@ -55,17 +55,19 @@
         "label": "categorii de sesizări"
       },
       {
-        "value": "0",
-        "label": "conturi cerute ca să vezi harta"
+        "value": "Brașov",
+        "label": "zona metropolitană"
       },
       {
         "value": "AGPL-3.0",
-        "label": "cod public, de la primul commit"
+        "label": "cod sursă public"
       }
     ],
     "categoriesAll": "Toate",
     "finalTitle": "Harta e deschisă. Intră și uită-te.",
-    "finalBody": "Vezi ce s-a raportat în cartierul tău, pe categorii și pe stări, fără cont și fără nimic de instalat."
+    "finalBody": "Vezi ce s-a raportat în cartierul tău, pe categorii și pe stări, fără cont și fără nimic de instalat.",
+    "plateCaption": "Brașov · zona metropolitană",
+    "plateLabel": "Harta sesizărilor"
   },
   "map": {
     "title": "Harta sesizărilor",
