@@ -48,7 +48,24 @@
     },
     "openSourceTitle": "Deschis de la primul commit",
     "openSourceBody": "Codul este public sub licență AGPL-3.0. Poți citi cum se construiește sesizarea, ce date păstrăm și ce plecă mai departe. Proiectul e independent și nu e afiliat Primăriei Brașov sau altei instituții publice.",
-    "openSourceCta": "Vezi codul pe GitHub"
+    "openSourceCta": "Vezi codul pe GitHub",
+    "facts": [
+      {
+        "value": "34",
+        "label": "categorii de sesizări"
+      },
+      {
+        "value": "0",
+        "label": "conturi cerute ca să vezi harta"
+      },
+      {
+        "value": "AGPL-3.0",
+        "label": "cod public, de la primul commit"
+      }
+    ],
+    "categoriesAll": "Toate",
+    "finalTitle": "Harta e deschisă. Intră și uită-te.",
+    "finalBody": "Vezi ce s-a raportat în cartierul tău, pe categorii și pe stări, fără cont și fără nimic de instalat."
   },
   "map": {
     "title": "Harta sesizărilor",

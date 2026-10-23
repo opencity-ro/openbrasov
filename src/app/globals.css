@@ -137,6 +137,10 @@
   --map-building-wall: #c9cdc6;
   --map-building-edge: #d2d6cf;
   --map-pin-ring: #ffffff;
+  /* Umbra semnului, pe pământ. Pe hârtie e negru obișnuit. */
+  --map-pin-shadow: rgb(0 0 0 / 0.34);
+  --map-pin-shadow-core: rgb(0 0 0 / 0.5);
+  --map-pin-glow: transparent;
 }
 
 /* Pe Onyx suprafețele urcă în trepte mici, iar separarea o fac liniile de o
@@ -195,6 +199,12 @@
   --map-building-wall: #1c2128;
   --map-building-edge: #343b44;
   --map-pin-ring: #ffffff;
+  /* Pe pânza închisă o umbră neagră nu se mai vede: se îngroașă, iar sub ea se
+   * pune un halou rece, ca pământul care prinde lumina în jurul obiectului.
+   * Despărțirea o face haloul, nu întunericul. */
+  --map-pin-shadow: rgb(0 0 0 / 0.72);
+  --map-pin-shadow-core: rgb(0 0 0 / 0.92);
+  --map-pin-glow: rgb(190 214 255 / 0.1);
 }
 
 @layer base {
@@ -315,6 +325,12 @@
   initial-value: 0px;
 }
 
+@property --pin-height {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 16px;
+}
+
 @layer components {
   /*
    * Semnele de pe harta desenată.
@@ -351,15 +367,26 @@
     animation-delay: var(--pin-delay, 0ms);
   }
 
+  /*
+   * Semnul anulează exact ce i-a făcut planul, în ordine inversă: întâi scoate
+   * înclinarea, apoi rotirea în plan. Fără a doua, semnele stau strâmbe cu atât
+   * cât e rotit orașul sub ele.
+   *
+   * Pe urmă se ridică pe `translateZ`, adică chiar spre privitor, nu doar mai sus
+   * pe ecran. Asta plus umbra lăsată culcată pe asfalt e ce face relieful: la
+   * mișcarea hărții, semnul și umbra lui se despart, cum se despart în realitate.
+   */
   .city-pin-body {
     transform: translate(-50%, -100%) rotateX(calc(-1 * var(--pin-tilt)))
+      rotateZ(calc(-1 * var(--plane-z, 0deg))) translateZ(var(--pin-height, 16px))
       translateY(var(--pin-lift, 0px));
     transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .city-pin:hover,
   .city-pin:focus-visible {
-    --pin-lift: -14px;
+    --pin-lift: -10px;
+    --pin-height: 34px;
   }
 
   .city-pin-head {

@@ -149,7 +149,9 @@ export function CityMap({ className }: { className?: string }) {
        * inversa semnului cade exact peste înclinare și el se ridică drept.
        */}
       <motion.div
-        style={{ rotateZ, x: reduce ? 0 : driftX, y: reduce ? 0 : driftY }}
+        style={
+          { rotateZ, "--plane-z": rotateZ, x: reduce ? 0 : driftX, y: reduce ? 0 : driftY } as never
+        }
         className="absolute inset-0 [transform-style:preserve-3d]"
       >
         <motion.div
@@ -245,13 +247,43 @@ export function CityMap({ className }: { className?: string }) {
                 }
                 className="city-pin group absolute block [transform-style:preserve-3d] focus-visible:outline-none"
               >
-                {/* Umbra rămâne culcată pe plan: ea e ce spune că semnul stă deasupra lui. */}
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "city-pin-shadow absolute top-0 left-0 block h-[9px] w-[26px] -translate-x-1/2 -translate-y-1/2 rounded-[50%] bg-black/50 blur-[3px] transition-opacity duration-200",
+                    "city-pin-shadow absolute top-0 left-0 block h-[22px] w-[54px] rounded-[50%] blur-[9px] transition-opacity duration-200",
                     dimmed && "opacity-25",
                   )}
+                  style={{ background: "var(--map-pin-glow)", transform: "translate(-50%, -50%)" }}
+                />
+                {/*
+                 * Umbra, în două straturi culcate pe asfalt: una lată și moale,
+                 * care spune cât de sus stă semnul, și un miez strâns chiar sub
+                 * vârf, care îl lipește de locul pe care îl arată. Amândouă sunt
+                 * decalate spre dreapta-jos, fiindcă lumina vine din stânga-sus,
+                 * ca peste tot în pagină. Pe tema deschisă ele sunt singurul lucru
+                 * care spune că semnul nu e lipit pe hartă.
+                 */}
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "city-pin-shadow absolute top-0 left-0 block h-[13px] w-[38px] rounded-[50%] blur-[6px] transition-opacity duration-200",
+                    dimmed && "opacity-25",
+                  )}
+                  style={{
+                    background: "var(--map-pin-shadow)",
+                    transform: "translate(-44%, -46%)",
+                  }}
+                />
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "city-pin-shadow absolute top-0 left-0 block h-[6px] w-[15px] rounded-[50%] blur-[2px] transition-opacity duration-200",
+                    dimmed && "opacity-25",
+                  )}
+                  style={{
+                    background: "var(--map-pin-shadow-core)",
+                    transform: "translate(-46%, -48%)",
+                  }}
                 />
 
                 <span
@@ -293,7 +325,7 @@ export function CityMap({ className }: { className?: string }) {
                    */}
                   <span
                     className={cn(
-                      "city-pin-head relative block size-full origin-bottom drop-shadow-[0_6px_10px_rgb(0_0_0/0.45)] group-hover:scale-110",
+                      "city-pin-head relative block size-full origin-bottom drop-shadow-[0_10px_16px_rgb(0_0_0/0.45)] group-hover:scale-110",
                       dimmed && "opacity-45",
                     )}
                   >

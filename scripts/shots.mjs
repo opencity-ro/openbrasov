@@ -46,11 +46,21 @@ for (const theme of ["dark", "light"]) {
     });
 
     if (viewport.name === "desktop") {
-      const map = page.locator("svg[aria-label='Harta Brașovului']").first();
-      const panel = map.locator("xpath=ancestor::div[contains(@class,'rounded-2xl')][1]");
-      if (await panel.count()) {
-        await panel.screenshot({ path: `${OUT}/${theme}-map.png` });
+      const hero = page.locator("main > section").first();
+      if (await hero.count()) {
+        await hero.screenshot({ path: `${OUT}/${theme}-hero.png` });
       }
+      // Blocurile intră la prima trecere prin dreptul lor, deci pagina trebuie
+      // parcursă o dată înainte de captura întreagă; altfel ies secțiuni goale.
+      await page.evaluate(async () => {
+        const step = window.innerHeight * 0.7;
+        for (let y = 0; y < document.body.scrollHeight; y += step) {
+          window.scrollTo(0, y);
+          await new Promise((resolve) => setTimeout(resolve, 120));
+        }
+        window.scrollTo(0, 0);
+      });
+      await page.waitForTimeout(700);
       await page.screenshot({ path: `${OUT}/${theme}-full.png`, fullPage: true });
     }
   }
